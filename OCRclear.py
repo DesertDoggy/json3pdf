@@ -2,6 +2,7 @@ from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.lib.colors import Color
 import os
 import json
 
@@ -28,14 +29,17 @@ for json_file in json_files:
         with open(ocr_json_path, 'r', encoding='utf-8') as f:
             ocr_data = json.load(f)
 
-        # 新しいPDFファイル名を設定（'.pdf' を削除してから '_TextOnly.pdf' を追加）
+        # 新しいPDFファイル名を設定（'.pdf' を削除してから '_ClearText.pdf' を追加）
         base_filename = os.path.splitext(json_file)[0]
         base_filename = base_filename.replace('.pdf', '')  # '.pdf' を削除
-        new_pdf_filename = base_filename + '_TextOnly.pdf'
+        new_pdf_filename = base_filename + '_ClearText.pdf'
         new_pdf_path = os.path.join(output_folder, new_pdf_filename)
 
         # ReportLabのキャンバスを作成
         c = canvas.Canvas(new_pdf_path, pagesize=letter)
+
+        # 透明色を定義（赤、緑、青、アルファ）
+        transparent_color = Color(0, 0, 0, alpha=0)
 
         # JSONファイルからページ情報を取得し、テキストを書き込む
         for page in ocr_data['analyzeResult']['pages']:
@@ -51,6 +55,8 @@ for json_file in json_files:
                 # OCR結果のポリゴンから座標を取得し、PDFの座標系に変換
                 x = word_info['polygon'][0] * 72
                 y = page_height - (word_info['polygon'][1] * 72)
+                # テキストの色を透明に設定
+                c.setFillColor(transparent_color)
                 c.drawString(x, y, text)
 
             # 次のページに移動
