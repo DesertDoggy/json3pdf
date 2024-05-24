@@ -1,20 +1,39 @@
+import argparse
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.lib.colors import Color
 import os
+import sys
 import json
 
-# Yu Gothicフォントのパスを設定
-# 通常はWindowsのフォントディレクトリにあります
-yu_gothic_path = 'C:\\Windows\\Fonts\\YuGothM.ttc'
+# コマンドライン引数を解析する
+parser = argparse.ArgumentParser(description='PDFファイルにテキストを書き込む')
+parser.add_argument('-s', '--size', type=int, default=60, help='フォントのサイズを指定します（デフォルトは60）')
+parser.add_argument('-f', '--font', default='NotoSansJP-Regular', help='使用するフォントの名前を指定します（デフォルトはNotoSansJP-Regular）')
+args = parser.parse_args()
+
+# フォント名とパス
+font_name = args.font
+font_path = './data/fonts/' + font_name + '.ttf'
 
 # フォントを登録
-pdfmetrics.registerFont(TTFont('YuGothic', yu_gothic_path))
+pdfmetrics.registerFont(TTFont(font_name, font_path))
 
 # 入力フォルダと出力フォルダのパスを設定
-input_folder = "C:\\Data\\Documents\\OCR\\before"
-output_folder = "C:\\Data\\Documents\\OCR\\after"
+input_folder = './before'
+if not os.path.exists(input_folder):
+    os.makedirs(input_folder,exist_ok=True)
+    print(f'{input_folder}フォルダを生成しました create {input_folder} folder')
+else:
+    print(f'{input_folder}フォルダは既に存在します {input_folder} folder already exists')
+output_folder = './after'
+if not os.path.exists(output_folder):
+    os.makedirs(output_folder,exist_ok=True)
+    print(f'{output_folder}フォルダを生成しました create {output_folder} folder')
+else:
+    print(f'{output_folder}フォルダは既に存在します {output_folder} folder already exists')
 
 # 入力フォルダ内の全てのJSONファイルを取得
 json_files = [f for f in os.listdir(input_folder) if f.endswith('.pdf.json')]
@@ -43,8 +62,8 @@ for json_file in json_files:
             page_height = page['height'] * 72
             c.setPageSize((page_width, page_height))
 
-            # フォントを設定
-            c.setFont('YuGothic', 8)
+            # フォントを設定（引数から取得したサイズを使用）
+            c.setFont(font_name, args.size)
 
             for word_info in page['words']:
                 text = word_info['content']
