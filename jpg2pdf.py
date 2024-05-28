@@ -181,8 +181,12 @@ for index, subdir in enumerate(total_subdirs + total_optimized_subdirs, start=1)
                             f.write(img2pdf.convert(image_files, layout_fun=layout_fun))
 
 # 全てのPDFが作成された後の結果の表示
-print("\nSimple check results:")
-print("Number of successfully created lossless PDFs: {} / {}".format(successful_lossless_pdfs, total_lossless_pdfs))
-print("Number of failed lossless PDFs: {} / {}".format(failed_lossless_pdfs, total_lossless_pdfs))
-print("Number of successfully created optimized PDFs: {} / {}".format(successful_optimized_pdfs, total_optimized_pdfs))
-print("Number of failed optimized PDFs: {} / {}".format(failed_optimized_pdfs, total_optimized_pdfs))
+if args.simple_check == 1:
+    print("\nSimple check results:")
+    print("Number of successfully created lossless PDFs: {} / {}".format(successful_lossless_pdfs, total_lossless_pdfs))
+    print("Number of failed lossless PDFs: {} / {}".format(failed_lossless_pdfs, total_lossless_pdfs))
+    print("Number of successfully created optimized PDFs: {} / {}".format(successful_optimized_pdfs, total_optimized_pdfs))
+    print("Number of failed optimized PDFs: {} / {}".format(failed_optimized_pdfs, total_optimized_pdfs))
+    print("\nConversion completed.")
+else:
+    print("\nConversion completed. Simple check was skipped.")
