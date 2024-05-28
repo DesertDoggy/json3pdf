@@ -6,6 +6,7 @@ from PIL import Image
 from PyPDF2 import PdfReader
 from datetime import datetime
 import logging
+import json
 
 # ログ設定
 log_folder = Path('./logs')
@@ -59,14 +60,11 @@ def is_lossless(img):
     else:
         return 'Unknown'
 
-#画像情報を取得する関数
+# 画像情報を取得する関数
 def imagelog_image_info(img):
     try:
         # 画像情報ファイルのパス
         imagelog_file_path = './imagelog_folder/imagelog_file.imglog'
-
-        # 画像情報を取得
-        image_info = "Image format: {}, Image size: {}, Image mode: {}\n".format(img.format, img.size, img.mode)
 
         filename = img.filename
         resolution = img.size
@@ -96,17 +94,23 @@ def imagelog_image_info(img):
         imagelog_filename = f'{now.strftime("%Y%m%d%H%M%S")}.imglog'
         imagelog_filepath = imagelog_folder / imagelog_filename
 
+        # 画像情報を辞書に格納
+        image_info = {
+            "Filename": filename,
+            "Resolution": resolution,
+            "DPI": dpi,
+            "Estimated DPI": estimated_dpi,
+            "Encoding Format": encoding_format,
+            "Is Lossless": is_lossless_result,
+            "Image format": img.format,
+            "Image size": img.size,
+            "Image mode": img.mode
+        }
+
         # 画像情報ファイルに書き込む
-        with open(imagelog_filepath, 'a') as imagelog_file:
-            imagelog_file.write(f'Filename: {filename}\n')
-            imagelog_file.write(f'Resolution: {resolution}\n')
-            imagelog_file.write(f'DPI: {dpi}\n')
-            imagelog_file.write(f'Estimated DPI: {estimated_dpi}\n')
-            imagelog_file.write(f'Encoding Format: {encoding_format}\n')
-            imagelog_file.write(f'Is Lossless: {is_lossless_result}\n')
-            imagelog_file.write(image_info)
-            imagelog_file.write('\n')
-               
+        with open(imagelog_filepath, 'a', encoding='utf-8') as imagelog_file:
+            json.dump(image_info, imagelog_file, ensure_ascii=False)
+
     except Exception as e:
         logging.error("Error in imagelog_image_info: {}".format(e))
 
