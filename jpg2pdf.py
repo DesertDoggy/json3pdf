@@ -92,6 +92,13 @@ def imagelog_image_info(img):
         # 画像情報ファイル名を生成
         now = datetime.now()
         imagelog_filename = f'{now.strftime("%Y%m%d%H%M%S")}.imglog'
+
+        # スクリプトのあるディレクトリのパスを取得
+        base_path = os.path.dirname(os.path.abspath(__file__))
+
+        # filenameを相対パスに変換
+        filename = os.path.relpath(filename, base_path)
+
         imagelog_filepath = imagelog_folder / imagelog_filename
 
         # 画像情報を辞書に格納
@@ -107,9 +114,21 @@ def imagelog_image_info(img):
             "Image mode": img.mode
         }
 
+        # スクリプトのあるディレクトリのパスを取得
+        base_path = os.path.dirname(os.path.abspath(__file__))
+
+        # filenameを相対パスに変換
+        filename = os.path.relpath(filename, base_path)
+
         # 画像情報ファイルに書き込む
-        with open(imagelog_filepath, 'a', encoding='utf-8') as imagelog_file:
-            json.dump(image_info, imagelog_file, ensure_ascii=False)
+        try:
+            with open(imagelog_filepath, 'a', encoding='utf-8') as imagelog_file:
+                for key, value in image_info.items():
+                    json.dump({key: value}, imagelog_file, ensure_ascii=False)
+                    imagelog_file.write('\n')  # Add a newline after each image info
+        except Exception as e:
+            logging.error("Error writing image info to imagelog file: {}".format(e))
+
 
     except Exception as e:
         logging.error("Error in imagelog_image_info: {}".format(e))
