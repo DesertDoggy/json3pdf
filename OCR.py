@@ -12,7 +12,11 @@ import json
 parser = argparse.ArgumentParser(description='PDFファイルにテキストを書き込む')
 parser.add_argument('-s', '--size', type=int, default=60, help='フォントのサイズを指定します（デフォルトは60）')
 parser.add_argument('-f', '--font', default='NotoSansJP-Regular', help='使用するフォントの名前を指定します（デフォルトはNotoSansJP-Regular）')
+parser.add_argument('-d', '--dpi', type=int, default=600, help='文書のDPIを指定します（デフォルトは600）')
 args = parser.parse_args()
+
+# DPI変換のための係数を設定
+DPI_CONVERSION_FACTOR = args.dpi / 72
 
 # フォント名とパス
 font_name = args.font
@@ -58,18 +62,18 @@ for json_file in json_files:
 
         # JSONファイルからページ情報を取得し、テキストを書き込む
         for page in ocr_data['analyzeResult']['pages']:
-            page_width = page['width'] * 72  # インチからポイントへの変換
-            page_height = page['height'] * 72
+            page_width = page['width'] * DPI_CONVERSION_FACTOR  # DPI変換を適用
+            page_height = page['height'] * DPI_CONVERSION_FACTOR
             c.setPageSize((page_width, page_height))
 
             # フォントを設定（引数から取得したサイズを使用）
-            c.setFont(font_name, args.size)
+            c.setFont(font_name, args.size * DPI_CONVERSION_FACTOR)  # DPI変換を適用
 
             for word_info in page['words']:
                 text = word_info['content']
-                # OCR結果のポリゴンから座標を取得し、PDFの座標系に変換
-                x = word_info['polygon'][0] * 72
-                y = page_height - (word_info['polygon'][1] * 72)
+                # OCR結果のポリゴンから座標を取得し、PDFの座標系に変換（DPI変換を適用）
+                x = word_info['polygon'][0] * DPI_CONVERSION_FACTOR
+                y = page_height - (word_info['polygon'][1] * DPI_CONVERSION_FACTOR)
                 c.drawString(x, y, text)
 
             # 次のページに移動

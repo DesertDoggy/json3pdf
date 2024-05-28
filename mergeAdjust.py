@@ -8,10 +8,12 @@ parser.add_argument('--left', type=int, default=0, help='左に移動する単�
 parser.add_argument('--right', type=int, default=0, help='右に移動する単位数')
 parser.add_argument('--up', type=int, default=0, help='上に移動する単位数')
 parser.add_argument('--down', type=int, default=48, help='下に移動する単位数')
+parser.add_argument('--dpi', type=int, default=600, help='文書のDPIを指定します。デフォルトは600dpiです。')
 args = parser.parse_args()
 
-# 変換行列を設定
-translation_matrix = [1, 0, 0, 1, args.left - args.right, args.up - args.down]
+# DPIに基づいた変換行列を設定
+units_per_inch = args.dpi
+translation_matrix = [1, 0, 0, 1, (args.left - args.right) * units_per_inch, (args.up - args.down) * units_per_inch]
 
 # フォルダのパスを設定
 text_layer_folder = './after'
@@ -33,10 +35,10 @@ if not os.path.exists(output_folder):
 else:
     print(f'{output_folder}フォルダは既に存在します {output_folder} folder already exists')
 
-# 透明テキストレイヤーPDFのファイル名を取得
+# テキストレイヤーPDFのファイル名を取得
 text_pdf_files = [f for f in os.listdir(text_layer_folder) if f.endswith('_TextOnly.pdf')]
 
-# 各透明テキストレイヤーPDFに対して処理を実行
+# 各テキストレイヤーPDFに対して処理を実行
 for text_pdf_file in text_pdf_files:
     base_name = text_pdf_file.replace('_TextOnly.pdf', '')
     existing_pdf_file = base_name + '.pdf'

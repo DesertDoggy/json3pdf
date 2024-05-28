@@ -8,10 +8,12 @@ parser.add_argument('--left', type=int, default=0, help='左に移動する単�
 parser.add_argument('--right', type=int, default=0, help='右に移動する単位数')
 parser.add_argument('--up', type=int, default=0, help='上に移動する単位数')
 parser.add_argument('--down', type=int, default=48, help='下に移動する単位数')
+parser.add_argument('--dpi', type=int, default=600, help='文書のDPIを指定します。デフォルトは600dpiです。')
 args = parser.parse_args()
 
-# 変換行列を設定
-translation_matrix = [1, 0, 0, 1, args.left - args.right, args.up - args.down]
+# DPIに基づいた変換行列を設定
+units_per_inch = args.dpi
+translation_matrix = [1, 0, 0, 1, (args.left - args.right) * units_per_inch, (args.up - args.down) * units_per_inch]
 
 # フォルダのパスを設定
 text_layer_folder = './after'
