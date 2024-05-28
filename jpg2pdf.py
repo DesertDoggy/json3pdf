@@ -63,7 +63,7 @@ def is_lossless(img):
 def imagelog_image_info(img):
     try:
         # 画像情報ファイルのパス
-        imagelog_file_path = './imagelog_folder/imagelog_file.txt'
+        imagelog_file_path = './imagelog_folder/imagelog_file.imglog'
 
         # 画像情報を取得
         image_info = "Image format: {}, Image size: {}, Image mode: {}\n".format(img.format, img.size, img.mode)
@@ -93,7 +93,7 @@ def imagelog_image_info(img):
 
         # 画像情報ファイル名を生成
         now = datetime.now()
-        imagelog_filename = f'inserted-images-log-{now.strftime("%Y%m%d%H%M%S")}.txt'
+        imagelog_filename = f'{now.strftime("%Y%m%d%H%M%S")}.imglog'
         imagelog_filepath = imagelog_folder / imagelog_filename
 
         # 画像情報ファイルに書き込む
