@@ -32,10 +32,10 @@ output_folder = Path('./OriginalPDF')
 optimized_folder = Path('./TEMP/optimized')
 optpdf_folder = Path('./OptimizedPDF')
 
-# ログフォルダのパス
+# 画像情報フォルダのパス
 imagelog_folder = Path('./TEMP/imagelogs')
 
-# 出力フォルダとログフォルダが存在しない場合は作成
+# 出力フォルダと画像情報フォルダが存在しない場合は作成
 output_folder.mkdir(parents=True, exist_ok=True)
 optpdf_folder.mkdir(parents=True, exist_ok=True)
 imagelog_folder.mkdir(parents=True, exist_ok=True)
