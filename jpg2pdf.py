@@ -218,8 +218,9 @@ for index, subdir in enumerate(total_subdirs + total_optimized_subdirs, start=1)
                     print("Error reading image size for {}: {}".format(image_path.name, e))
                 image_files.append(str(image_path))
 
+             # img2pdfのconvert関数にページサイズを渡す
             with open(pdf_filename, "wb") as f:
-                f.write(img2pdf.convert([str(image_path) for image_path in image_files]))
+                f.write(img2pdf.convert([str(image_path) for image_path in image_files], layout_fun=layout_fun))
 
             # 簡易チェックの実行
             if args.simple_check:
@@ -242,9 +243,6 @@ for index, subdir in enumerate(total_subdirs + total_optimized_subdirs, start=1)
                         else:
                             failed_optimized_pdfs += 1
                         
-                        # img2pdfのconvert関数にページサイズを渡す
-                        with open(pdf_filename, 'wb') as f:
-                            f.write(img2pdf.convert(image_files, layout_fun=layout_fun))
 
 # 全てのPDFが作成された後の結果の表示
 if args.simple_check == 1:
