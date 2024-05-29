@@ -127,7 +127,10 @@ def imagelog_image_info(img,total_p):
             "Image format": img.format,
             "Image size": img.size,
             "Image mode": img.mode,
-            "PDF page number": filename_page
+            "PDF page number": filename_page,
+            "PDF file name": subdirectory_name+'.pdf',
+            "PDF directory name": pdf_directory_name,
+            "PDF file path": './'+pdf_directory_name+'/'+subdirectory_name+'.pdf',
         }
 
         # スクリプトのあるディレクトリのパスを取得
@@ -188,6 +191,20 @@ for index, subdir in enumerate(total_subdirs + total_optimized_subdirs, start=1)
                 print("Converting image {} of {} in subdir {}".format(image_index, total_images_count, subdir.name))
                 try:
                     with Image.open(image_path) as img:
+                        # 画像ファイルのパス
+                        img_path = Path(img.filename)
+                        # サブディレクトリ名を取得
+                        subdirectory_name = img_path.parent.name
+
+                        # 画像ファイルがどのフォルダにあるかによってPDFディレクトリ名を設定
+
+                        if img_path.parent.parent.name == lossless_folder.name:
+                            pdf_directory_name = output_folder.name
+                        elif img_path.parent.parent.name == optimized_folder.name:
+                            pdf_directory_name = optpdf_folder.name
+                        else:
+                            pdf_directory_name = None
+
                         # 画像情報を取得し、ログに書き込む
                         imagelog_image_info(img,total_p)
                         # DPI情報を取得、またはデフォルト値を設定
