@@ -7,6 +7,7 @@ from PyPDF2 import PdfReader
 from datetime import datetime
 import logging
 import json
+import re
 
 # ログ設定
 log_folder = Path('./logs')
@@ -61,7 +62,7 @@ def is_lossless(img):
         return 'Unknown'
 
 # 画像情報を取得する関数
-def imagelog_image_info(img):
+def imagelog_image_info(img,total_p):
     try:
         # 画像情報ファイルのパス
         imagelog_file_path = './imagelog_folder/imagelog_file.imglog'
@@ -69,6 +70,20 @@ def imagelog_image_info(img):
         filename = img.filename
         resolution = img.size
         encoding_format = img.format
+
+        # filenameからページ番号を抽出
+        match_p = re.search(r'_p(\d+)', filename)
+        match_z = re.search(r'_z(\d+)', filename)
+
+        if "_cover" in filename:
+            filename_page = 1
+        elif match_p:
+            filename_page = int(match_p.group(1)) + 2
+        elif match_z:
+            filename_page = int(match_z.group(1)) + total_p + 3
+            total_p += 1  # _zの接尾辞がついたファイルが処理されたので、total_pを更新
+        else:
+            filename_page = None
 
         # DPIを取得
         dpi = img.info.get('dpi', 'N/A')
@@ -111,7 +126,8 @@ def imagelog_image_info(img):
             "Is Lossless": is_lossless_result,
             "Image format": img.format,
             "Image size": img.size,
-            "Image mode": img.mode
+            "Image mode": img.mode,
+            "PDF page number": filename_page
         }
 
         # スクリプトのあるディレクトリのパスを取得
@@ -146,10 +162,18 @@ for index, subdir in enumerate(total_subdirs + total_optimized_subdirs, start=1)
         print("\nProcessing subdir {} of {}: {}".format(index, total_subdirs_count + total_optimized_subdirs_count, subdir.name))
         # サブディレクトリ内の対応する画像ファイルを取得
         images = []
+        total_p = 0  # total_pを初期化
         for extension in image_extensions:
             images.extend(sorted(subdir.glob('*{}'.format(extension))))
             
         total_images_count = len(images)
+
+        # サブディレクトリ内の_pxxxxの総数を取得
+        try:
+            total_p += len([img for img in subdir.glob('*_p*{}'.format(extension))])
+        except Exception as e:
+            logging.error("Error in counting _p files: {}".format(e))
+
         # PDFファイル名をサブディレクトリ名に設定
         if subdir in total_subdirs:
             pdf_filename = output_folder / "{}.pdf".format(subdir.name)
@@ -165,7 +189,7 @@ for index, subdir in enumerate(total_subdirs + total_optimized_subdirs, start=1)
                 try:
                     with Image.open(image_path) as img:
                         # 画像情報を取得し、ログに書き込む
-                        imagelog_image_info(img)
+                        imagelog_image_info(img,total_p)
                         # DPI情報を取得、またはデフォルト値を設定
                         dpi = img.info.get('dpi', (600, 600))
                         width_px, height_px = img.size
