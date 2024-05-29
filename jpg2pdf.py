@@ -8,6 +8,7 @@ from datetime import datetime
 import logging
 import json
 import re
+from colorama import Fore, Style
 
 # ログ設定
 log_folder = Path('./logs')
@@ -44,6 +45,18 @@ imagelog_folder.mkdir(parents=True, exist_ok=True)
 
 # 対応する画像ファイルの拡張子
 image_extensions = ['.jpeg', '.jpg', '.jpe', '.jif', '.jfif', '.jfi', '.jp2', '.j2k', '.jpf', '.jpx', '.jpm', '.mj2', '.png']
+
+# Define page sizes in points
+page_sizes = {
+    "A3": (842, 1191),
+    "A4": (595, 842),
+    "A5": (420, 595),
+    "A6": (298, 420),
+    "B4": (729, 1032),
+    "B5": (516, 729),
+    "B6": (363, 516),
+    "B7": (258, 363)
+}
 
 # ロスレスかどうかを判断する関数
 def is_lossless(img):
@@ -147,10 +160,24 @@ def imagelog_image_info(img,total_p):
         except Exception as e:
             logging.error("Error writing image info to imagelog file: {}".format(e))
 
+        return estimated_dpi
+
 
     except Exception as e:
         logging.error("Error in imagelog_image_info: {}".format(e))
 
+def layout_fun(img_width_px, img_height_px, ndpi):
+    # 背景ページのサイズをポイントからピクセルに変換
+    page_width_pt, page_height_pt = closest_page_size
+
+    # 画像をそのままのサイズで表示
+    img_width_pt, img_height_pt = img_width_px * 72 / ndpi, img_height_px * 72 / ndpi
+
+    # 画像を中央に配置
+    x = (page_width_pt - img_width_pt) / 2
+    y = (page_height_pt - img_height_pt) / 2
+
+    return (page_width_pt, page_height_pt, x, y, x + img_width_pt, y + img_height_pt)
 
 # lossless_folderとoptimized_folder内のサブディレクトリの総数を取得
 total_subdirs = [subdir for subdir in lossless_folder.iterdir() if subdir.is_dir()]
@@ -204,15 +231,43 @@ for index, subdir in enumerate(total_subdirs + total_optimized_subdirs, start=1)
                         else:
                             pdf_directory_name = None
 
-                        # 画像情報を取得し、ログに書き込む
-                        imagelog_image_info(img,total_p)
                         # DPI情報を取得、またはデフォルト値を設定
                         dpi = img.info.get('dpi', (600, 600))
+                        estimated_dpi = imagelog_image_info(img,total_p)
+                        print("Estimated DPI: {}".format(estimated_dpi))
                         width_px, height_px = img.size
-                        width_in = width_px / dpi[0]  # 幅をインチで計算
-                        height_in = height_px / dpi[1]  # 高さをインチで計算
-                        layout_fun = img2pdf.get_layout_fun((img2pdf.mm_to_pt(width_in * 25.4), img2pdf.mm_to_pt(height_in * 25.4)))
-                        print("Page size for {}: {} x {} inches".format(image_path.name, width_in, height_in))
+                        width_pt = width_px / estimated_dpi * 72  # 幅をポイントで計算
+                        height_pt = height_px / estimated_dpi * 72  # 高さをポイントで計算
+
+                        # Convert points to inches for console output
+                        width_in = width_pt / 72
+                        height_in = height_pt / 72
+                        
+                        # Find the closest page size
+                        closest_page_size = min(page_sizes.items(), key=lambda size: abs(width_pt - size[1][0]) + abs(height_pt - size[1][1]))
+
+                        print("Estimated page size for {}: {} ({} x {} inches)".format(image_path.name, closest_page_size[0], width_in, height_in))
+
+                        print("Closest page size: {}".format(closest_page_size[1]))
+                        layout_fun = img2pdf.get_layout_fun(closest_page_size[1])
+
+                        if layout_fun is None:
+                            print("Failed to get layout function.")
+                            sys.exit(1)
+
+                        # Get the actual page size from the layout function
+                        imgwidthpx = width_px  # 画像の幅（ピクセル）
+                        imgheightpx = height_px  # 画像の高さ（ピクセル）
+                        ndpi = (estimated_dpi)  # DPI
+                        pdf_page_size = layout_fun(imgwidthpx,imgheightpx, ndpi)
+
+                        print("PDF page size will be: {}".format(pdf_page_size))
+
+                        # Check if the actual page size matches the estimated page size
+                        if pdf_page_size == closest_page_size[1]:
+                            print(Fore.GREEN + "Page size for {}: matches estimated size ({} x {} inches)".format(image_path.name, width_in, height_in) + Style.RESET_ALL)
+                        else:
+                            print(Fore.YELLOW + "Page size for {}: does not match estimated size ({} x {} inches)".format(image_path.name, width_in, height_in) + Style.RESET_ALL)
 
                 except Exception as e:
                     print("Error reading image size for {}: {}".format(image_path.name, e))
