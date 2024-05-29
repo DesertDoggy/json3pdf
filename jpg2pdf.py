@@ -142,9 +142,8 @@ def imagelog_image_info(img,total_p):
         # 画像情報ファイルに書き込む
         try:
             with open(imagelog_filepath, 'a', encoding='utf-8') as imagelog_file:
-                for key, value in image_info.items():
-                    json.dump({key: value}, imagelog_file, ensure_ascii=False)
-                    imagelog_file.write('\n')  # Add a newline after each image info
+                json.dump(image_info, imagelog_file, ensure_ascii=False)
+                imagelog_file.write('\n')  # Add a newline after each image info
         except Exception as e:
             logging.error("Error writing image info to imagelog file: {}".format(e))
 
