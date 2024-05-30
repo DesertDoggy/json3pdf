@@ -1,9 +1,9 @@
+import powerlog  # カスタムログレベルVERBOSEとログの設定を追加するスクリプトをインポート
+import logging
 import fitz  # PyMuPDF
 from PIL import Image
 from pathlib import Path
 import io
-import logging
-import verbose_logging  # カスタムログレベルVERBOSEとログの設定を追加するスクリプトをインポート
 
 # 入力と出力のフォルダを設定
 pdf_folder = Path('./OriginalPDF')

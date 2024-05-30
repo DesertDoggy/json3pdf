@@ -1,3 +1,5 @@
+import powerlog  # カスタムログレベルVERBOSEとログの設定を追加するスクリプトをインポート
+import logging
 import argparse
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
@@ -7,8 +9,6 @@ from reportlab.lib.colors import Color
 import os
 import sys
 import json
-import logging
-import verbose_logging  # カスタムログレベルVERBOSEとログの設定を追加するスクリプトをインポート
 
 # コマンドライン引数を解析する
 parser = argparse.ArgumentParser(description='PDFファイルにテキストを書き込む')

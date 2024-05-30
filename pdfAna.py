@@ -1,7 +1,7 @@
+import powerlog  # カスタムログレベルVERBOSEとログの設定を追加するスクリプトをインポート
+import logging
 import fitz  # PyMuPDF
 import os
-import logging
-import verbose_logging  # カスタムログレベルVERBOSEとログの設定を追加するスクリプトをインポート
 
 def analyze_pdf_images(pdf_path):
     # PDFファイルを開く

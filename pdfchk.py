@@ -1,10 +1,10 @@
+import powerlog  # カスタムログレベルVERBOSEとログの設定を追加するスクリプトをインポート
+import logging
 import os
 import json
 import argparse
 from pathlib import Path
 from datetime import datetime
-import logging
-import verbose_logging  # カスタムログレベルVERBOSEとログの設定を追加するスクリプトをインポート
 import fitz # PyMuPDF
 import io
 from PIL import Image

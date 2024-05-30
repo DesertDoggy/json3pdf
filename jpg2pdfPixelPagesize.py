@@ -1,3 +1,5 @@
+import powerlog  # カスタムログレベルVERBOSEとログの設定を追加するスクリプトをインポート
+import logging
 import os
 import argparse
 from pathlib import Path
@@ -5,8 +7,6 @@ import img2pdf
 from PIL import Image
 from PyPDF2 import PdfReader
 from datetime import datetime
-import logging
-import verbose_logging  # カスタムログレベルVERBOSEとログの設定を追加するスクリプトをインポート
 import json
 import re
 

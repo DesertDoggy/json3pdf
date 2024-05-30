@@ -1,8 +1,8 @@
+import powerlog  # カスタムログレベルVERBOSEとログの設定を追加するスクリプトをインポート
+import logging
 import argparse
 from pypdf import PdfReader, PdfWriter
 import os
-import logging
-import verbose_logging  # カスタムログレベルVERBOSEとログの設定を追加するスクリプトをインポート
 
 # コマンドライン引数を解析する
 parser = argparse.ArgumentParser(description='PDFファイルにテキストレイヤーを追加します。')
