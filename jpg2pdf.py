@@ -275,7 +275,7 @@ for index, subdir in enumerate(total_subdirs + total_optimized_subdirs, start=1)
 
              # img2pdfのconvert関数にページサイズを渡す
             with open(pdf_filename, "wb") as f:
-                f.write(img2pdf.convert([str(image_path) for image_path in image_files], layout_fun=layout_fun))
+                f.write(img2pdf.convert([str(image_path) for image_path in image_files], layout_fun=layout_fun, dpi=estimated_dpi))
 
             # 簡易チェックの実行
             if args.simple_check:
