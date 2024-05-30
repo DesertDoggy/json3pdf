@@ -22,7 +22,7 @@ def detailed(self, message, *args, **kws):
 logging.Logger.detailed = detailed
 
 # print関数をオーバーライド
-old_print = print
+old_print = builtins.print
 
 def new_print(*args, **kwargs):
     old_print(*args, **kwargs)
