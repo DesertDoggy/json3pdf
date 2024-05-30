@@ -3,6 +3,8 @@ from PIL import Image
 from PIL import ImageChops
 import os
 import shutil
+import logging
+import verbose_logging  # カスタムログレベルVERBOSEとログの設定を追加するスクリプトをインポート
 
 # コマンドライン引数を解析する
 parser = argparse.ArgumentParser(description='Convert images to JP2 format and create optimized images for OCR.')
