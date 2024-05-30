@@ -1,4 +1,4 @@
-import powerlog  # カスタムログレベルVERBOSEとログの設定を追加するスクリプトをインポート
+import powerlog
 import logging
 import os
 import argparse

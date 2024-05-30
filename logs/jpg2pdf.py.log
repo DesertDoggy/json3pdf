@@ -1408,3 +1408,473 @@
 2024-05-30 17:52:33,227 - __main__ - DEBUG - Converting images to PDF: ['TEMP\\optimized\\ドラクエ4\\ドラゴンクエストⅣ 導かれし者たち 公式ガイドブック_p0008.jp2', 'TEMP\\optimized\\ドラクエ4\\ドラゴンクエストⅣ 導かれし者たち 公式ガイドブック_p0009.jp2']
 2024-05-30 17:52:33,256 - __main__ - DEBUG - Read PDF file: OptimizedPDF\ドラクエ4.pdf
 2024-05-30 17:52:33,257 - __main__ - DEBUG - Simple check passed for: OptimizedPDF\ドラクエ4.pdf
+2024-05-30 20:13:59,679 - __main__ - DEBUG - Setting up CLI options.
+2024-05-30 20:13:59,685 - __main__ - DEBUG - Setting up counters for simple check results.
+2024-05-30 20:13:59,685 - __main__ - DEBUG - Setting up input and output folder paths.
+2024-05-30 20:13:59,685 - __main__ - DEBUG - Setting up image info folder path.
+2024-05-30 20:13:59,686 - __main__ - DEBUG - Creating output and image info folders if they do not exist.
+2024-05-30 20:13:59,687 - __main__ - DEBUG - Setting up image file extensions.
+2024-05-30 20:13:59,687 - __main__ - DEBUG - Getting subdirectories in lossless_folder.
+2024-05-30 20:13:59,688 - __main__ - DEBUG - Counting subdirectories in lossless_folder.
+2024-05-30 20:13:59,688 - __main__ - DEBUG - Getting subdirectories in optimized_folder.
+2024-05-30 20:13:59,690 - __main__ - DEBUG - Counting subdirectories in optimized_folder.
+2024-05-30 20:13:59,690 - __main__ - DEBUG - Processing subdir 1 of 4: FF5 A
+2024-05-30 20:13:59,706 - __main__ - DEBUG - Got images from subdirectory: [WindowsPath('TEMP/lossless/FF5 A/ファイナルファンタジーⅤ アドバンス 公式コンプリートガイド_cover.jp2'), WindowsPath('TEMP/lossless/FF5 A/ファイナルファンタジーⅤ アドバンス 公式コンプリートガイド_p0000.jp2'), WindowsPath('TEMP/lossless/FF5 A/ファイナルファンタジーⅤ アドバンス 公式コンプリートガイド_p0001.jp2'), WindowsPath('TEMP/lossless/FF5 A/ファイナルファンタジーⅤ アドバンス 公式コンプリートガイド_z0001.jp2'), WindowsPath('TEMP/lossless/FF5 A/ファイナルファンタジーⅤ アドバンス 公式コンプリートガイド_z0002.jp2')]
+2024-05-30 20:13:59,708 - __main__ - DEBUG - Got total images count: 5
+2024-05-30 20:13:59,710 - __main__ - DEBUG - Got total _p images count: 0
+2024-05-30 20:13:59,710 - __main__ - DEBUG - Set PDF filename: OriginalPDF\FF5 A.pdf
+2024-05-30 20:13:59,712 - __main__ - DEBUG - Set layout function as None.
+2024-05-30 20:13:59,712 - __main__ - DEBUG - Converting image 1 of 5 in subdir FF5 A
+2024-05-30 20:13:59,902 - __main__ - DEBUG - Got image path and subdirectory name: C:\Data\Documents\Programming\MyProjects\json3pdf\TEMP\lossless\FF5 A\ファイナルファンタジーⅤ アドバンス 公式コンプリートガイド_cover.jp2, FF5 A
+2024-05-30 20:13:59,902 - __main__ - DEBUG - Set PDF directory name: OriginalPDF
+2024-05-30 20:13:59,903 - __main__ - DEBUG - Getting image information.
+2024-05-30 20:13:59,903 - __main__ - DEBUG - Image log file path: ./imagelog_folder/imagelog_file.imglog
+2024-05-30 20:13:59,903 - __main__ - DEBUG - Image filename: C:\Data\Documents\Programming\MyProjects\json3pdf\TEMP\lossless\FF5 A\ファイナルファンタジーⅤ アドバンス 公式コンプリートガイド_cover.jp2
+2024-05-30 20:13:59,903 - __main__ - DEBUG - Image resolution: (3487, 5016)
+2024-05-30 20:13:59,903 - __main__ - DEBUG - Image encoding format: JPEG2000
+2024-05-30 20:13:59,904 - __main__ - DEBUG - Filename page: 1
+2024-05-30 20:13:59,904 - __main__ - DEBUG - Calculating estimated DPI.
+2024-05-30 20:13:59,904 - __main__ - DEBUG - Determining if the image is lossless.
+2024-05-30 20:13:59,905 - __main__ - DEBUG - Determining if the image is lossless.
+2024-05-30 20:13:59,905 - __main__ - DEBUG - Generating image info filename.
+2024-05-30 20:13:59,905 - __main__ - DEBUG - Getting the path of the directory where the script is located.
+2024-05-30 20:13:59,905 - __main__ - DEBUG - Converting filename to relative path.
+2024-05-30 20:13:59,905 - __main__ - DEBUG - Image log file path: TEMP\imagelogs\20240530201359.imglog
+2024-05-30 20:13:59,905 - __main__ - DEBUG - Storing image info in a dictionary.
+2024-05-30 20:13:59,905 - __main__ - DEBUG - Getting the path of the directory where the script is located.
+2024-05-30 20:13:59,906 - __main__ - DEBUG - Converting filename to relative path.
+2024-05-30 20:13:59,906 - __main__ - DEBUG - Writing image info to imagelog file.
+2024-05-30 20:13:59,908 - __main__ - DEBUG - Returning estimated DPI: 600
+2024-05-30 20:13:59,909 - __main__ - DEBUG - Got DPI, estimated DPI, width and height in points: (600, 600), 600, 418.44, 601.92
+2024-05-30 20:13:59,910 - __main__ - DEBUG - Converted width and height to inches: 5.8116666666666665, 8.36
+2024-05-30 20:13:59,910 - __main__ - DEBUG - Found closest page size: A5, (420, 595)
+2024-05-30 20:13:59,911 - __main__ - DEBUG - Got layout function: <function get_layout_fun.<locals>.layout_fun at 0x0000019641F13CE0>
+2024-05-30 20:13:59,911 - __main__ - DEBUG - Got actual page size: 3487, 5016
+2024-05-30 20:13:59,912 - __main__ - DEBUG - Set NDPI: 600
+2024-05-30 20:13:59,912 - root - ERROR - Error in getting PDF page size from layout_fun: 'int' object is not subscriptable
+2024-05-30 20:13:59,912 - root - ERROR - Error in checking page size match: name 'pdf_page_size' is not defined
+2024-05-30 20:13:59,913 - __main__ - DEBUG - Appended image path to image_files: TEMP\lossless\FF5 A\ファイナルファンタジーⅤ アドバンス 公式コンプリートガイド_cover.jp2
+2024-05-30 20:13:59,913 - __main__ - DEBUG - Converting image 2 of 5 in subdir FF5 A
+2024-05-30 20:13:59,915 - __main__ - DEBUG - Got image path and subdirectory name: C:\Data\Documents\Programming\MyProjects\json3pdf\TEMP\lossless\FF5 A\ファイナルファンタジーⅤ アドバンス 公式コンプリートガイド_p0000.jp2, FF5 A
+2024-05-30 20:13:59,915 - __main__ - DEBUG - Set PDF directory name: OriginalPDF
+2024-05-30 20:13:59,915 - __main__ - DEBUG - Getting image information.
+2024-05-30 20:13:59,915 - __main__ - DEBUG - Image log file path: ./imagelog_folder/imagelog_file.imglog
+2024-05-30 20:13:59,915 - __main__ - DEBUG - Image filename: C:\Data\Documents\Programming\MyProjects\json3pdf\TEMP\lossless\FF5 A\ファイナルファンタジーⅤ アドバンス 公式コンプリートガイド_p0000.jp2
+2024-05-30 20:13:59,915 - __main__ - DEBUG - Image resolution: (3487, 5016)
+2024-05-30 20:13:59,915 - __main__ - DEBUG - Image encoding format: JPEG2000
+2024-05-30 20:13:59,916 - __main__ - DEBUG - Filename page: 2
+2024-05-30 20:13:59,916 - __main__ - DEBUG - Calculating estimated DPI.
+2024-05-30 20:13:59,916 - __main__ - DEBUG - Determining if the image is lossless.
+2024-05-30 20:13:59,916 - __main__ - DEBUG - Determining if the image is lossless.
+2024-05-30 20:13:59,916 - __main__ - DEBUG - Generating image info filename.
+2024-05-30 20:13:59,917 - __main__ - DEBUG - Getting the path of the directory where the script is located.
+2024-05-30 20:13:59,917 - __main__ - DEBUG - Converting filename to relative path.
+2024-05-30 20:13:59,917 - __main__ - DEBUG - Image log file path: TEMP\imagelogs\20240530201359.imglog
+2024-05-30 20:13:59,917 - __main__ - DEBUG - Storing image info in a dictionary.
+2024-05-30 20:13:59,917 - __main__ - DEBUG - Getting the path of the directory where the script is located.
+2024-05-30 20:13:59,918 - __main__ - DEBUG - Converting filename to relative path.
+2024-05-30 20:13:59,918 - __main__ - DEBUG - Writing image info to imagelog file.
+2024-05-30 20:13:59,919 - __main__ - DEBUG - Returning estimated DPI: 600
+2024-05-30 20:13:59,919 - __main__ - DEBUG - Got DPI, estimated DPI, width and height in points: (600, 600), 600, 418.44, 601.92
+2024-05-30 20:13:59,920 - __main__ - DEBUG - Converted width and height to inches: 5.8116666666666665, 8.36
+2024-05-30 20:13:59,920 - __main__ - DEBUG - Found closest page size: A5, (420, 595)
+2024-05-30 20:13:59,921 - __main__ - DEBUG - Got layout function: <function get_layout_fun.<locals>.layout_fun at 0x0000019641F54180>
+2024-05-30 20:13:59,921 - __main__ - DEBUG - Got actual page size: 3487, 5016
+2024-05-30 20:13:59,921 - __main__ - DEBUG - Set NDPI: 600
+2024-05-30 20:13:59,921 - root - ERROR - Error in getting PDF page size from layout_fun: 'int' object is not subscriptable
+2024-05-30 20:13:59,921 - root - ERROR - Error in checking page size match: name 'pdf_page_size' is not defined
+2024-05-30 20:13:59,922 - __main__ - DEBUG - Appended image path to image_files: TEMP\lossless\FF5 A\ファイナルファンタジーⅤ アドバンス 公式コンプリートガイド_p0000.jp2
+2024-05-30 20:13:59,922 - __main__ - DEBUG - Converting image 3 of 5 in subdir FF5 A
+2024-05-30 20:13:59,924 - __main__ - DEBUG - Got image path and subdirectory name: C:\Data\Documents\Programming\MyProjects\json3pdf\TEMP\lossless\FF5 A\ファイナルファンタジーⅤ アドバンス 公式コンプリートガイド_p0001.jp2, FF5 A
+2024-05-30 20:13:59,924 - __main__ - DEBUG - Set PDF directory name: OriginalPDF
+2024-05-30 20:13:59,925 - __main__ - DEBUG - Getting image information.
+2024-05-30 20:13:59,925 - __main__ - DEBUG - Image log file path: ./imagelog_folder/imagelog_file.imglog
+2024-05-30 20:13:59,925 - __main__ - DEBUG - Image filename: C:\Data\Documents\Programming\MyProjects\json3pdf\TEMP\lossless\FF5 A\ファイナルファンタジーⅤ アドバンス 公式コンプリートガイド_p0001.jp2
+2024-05-30 20:13:59,925 - __main__ - DEBUG - Image resolution: (3495, 5008)
+2024-05-30 20:13:59,925 - __main__ - DEBUG - Image encoding format: JPEG2000
+2024-05-30 20:13:59,925 - __main__ - DEBUG - Filename page: 3
+2024-05-30 20:13:59,925 - __main__ - DEBUG - Calculating estimated DPI.
+2024-05-30 20:13:59,925 - __main__ - DEBUG - Determining if the image is lossless.
+2024-05-30 20:13:59,925 - __main__ - DEBUG - Determining if the image is lossless.
+2024-05-30 20:13:59,925 - __main__ - DEBUG - Generating image info filename.
+2024-05-30 20:13:59,925 - __main__ - DEBUG - Getting the path of the directory where the script is located.
+2024-05-30 20:13:59,926 - __main__ - DEBUG - Converting filename to relative path.
+2024-05-30 20:13:59,926 - __main__ - DEBUG - Image log file path: TEMP\imagelogs\20240530201359.imglog
+2024-05-30 20:13:59,926 - __main__ - DEBUG - Storing image info in a dictionary.
+2024-05-30 20:13:59,926 - __main__ - DEBUG - Getting the path of the directory where the script is located.
+2024-05-30 20:13:59,926 - __main__ - DEBUG - Converting filename to relative path.
+2024-05-30 20:13:59,927 - __main__ - DEBUG - Writing image info to imagelog file.
+2024-05-30 20:13:59,928 - __main__ - DEBUG - Returning estimated DPI: 600
+2024-05-30 20:13:59,928 - __main__ - DEBUG - Got DPI, estimated DPI, width and height in points: (600, 600), 600, 419.40000000000003, 600.9599999999999
+2024-05-30 20:13:59,929 - __main__ - DEBUG - Converted width and height to inches: 5.825, 8.346666666666666
+2024-05-30 20:13:59,929 - __main__ - DEBUG - Found closest page size: A5, (420, 595)
+2024-05-30 20:13:59,932 - __main__ - DEBUG - Got layout function: <function get_layout_fun.<locals>.layout_fun at 0x0000019641F544A0>
+2024-05-30 20:13:59,933 - __main__ - DEBUG - Got actual page size: 3495, 5008
+2024-05-30 20:13:59,933 - __main__ - DEBUG - Set NDPI: 600
+2024-05-30 20:13:59,933 - root - ERROR - Error in getting PDF page size from layout_fun: 'int' object is not subscriptable
+2024-05-30 20:13:59,933 - root - ERROR - Error in checking page size match: name 'pdf_page_size' is not defined
+2024-05-30 20:13:59,933 - __main__ - DEBUG - Appended image path to image_files: TEMP\lossless\FF5 A\ファイナルファンタジーⅤ アドバンス 公式コンプリートガイド_p0001.jp2
+2024-05-30 20:13:59,933 - __main__ - DEBUG - Converting image 4 of 5 in subdir FF5 A
+2024-05-30 20:13:59,935 - __main__ - DEBUG - Got image path and subdirectory name: C:\Data\Documents\Programming\MyProjects\json3pdf\TEMP\lossless\FF5 A\ファイナルファンタジーⅤ アドバンス 公式コンプリートガイド_z0001.jp2, FF5 A
+2024-05-30 20:13:59,935 - __main__ - DEBUG - Set PDF directory name: OriginalPDF
+2024-05-30 20:13:59,935 - __main__ - DEBUG - Getting image information.
+2024-05-30 20:13:59,935 - __main__ - DEBUG - Image log file path: ./imagelog_folder/imagelog_file.imglog
+2024-05-30 20:13:59,936 - __main__ - DEBUG - Image filename: C:\Data\Documents\Programming\MyProjects\json3pdf\TEMP\lossless\FF5 A\ファイナルファンタジーⅤ アドバンス 公式コンプリートガイド_z0001.jp2
+2024-05-30 20:13:59,936 - __main__ - DEBUG - Image resolution: (3495, 5008)
+2024-05-30 20:13:59,936 - __main__ - DEBUG - Image encoding format: JPEG2000
+2024-05-30 20:13:59,936 - __main__ - DEBUG - Updated total_p to: 1
+2024-05-30 20:13:59,936 - __main__ - DEBUG - Filename page: 4
+2024-05-30 20:13:59,936 - __main__ - DEBUG - Calculating estimated DPI.
+2024-05-30 20:13:59,936 - __main__ - DEBUG - Determining if the image is lossless.
+2024-05-30 20:13:59,936 - __main__ - DEBUG - Determining if the image is lossless.
+2024-05-30 20:13:59,936 - __main__ - DEBUG - Generating image info filename.
+2024-05-30 20:13:59,936 - __main__ - DEBUG - Getting the path of the directory where the script is located.
+2024-05-30 20:13:59,937 - __main__ - DEBUG - Converting filename to relative path.
+2024-05-30 20:13:59,937 - __main__ - DEBUG - Image log file path: TEMP\imagelogs\20240530201359.imglog
+2024-05-30 20:13:59,937 - __main__ - DEBUG - Storing image info in a dictionary.
+2024-05-30 20:13:59,937 - __main__ - DEBUG - Getting the path of the directory where the script is located.
+2024-05-30 20:13:59,937 - __main__ - DEBUG - Converting filename to relative path.
+2024-05-30 20:13:59,937 - __main__ - DEBUG - Writing image info to imagelog file.
+2024-05-30 20:13:59,938 - __main__ - DEBUG - Returning estimated DPI: 600
+2024-05-30 20:13:59,939 - __main__ - DEBUG - Got DPI, estimated DPI, width and height in points: (600, 600), 600, 419.40000000000003, 600.9599999999999
+2024-05-30 20:13:59,939 - __main__ - DEBUG - Converted width and height to inches: 5.825, 8.346666666666666
+2024-05-30 20:13:59,939 - __main__ - DEBUG - Found closest page size: A5, (420, 595)
+2024-05-30 20:13:59,940 - __main__ - DEBUG - Got layout function: <function get_layout_fun.<locals>.layout_fun at 0x0000019641F547C0>
+2024-05-30 20:13:59,940 - __main__ - DEBUG - Got actual page size: 3495, 5008
+2024-05-30 20:13:59,940 - __main__ - DEBUG - Set NDPI: 600
+2024-05-30 20:13:59,940 - root - ERROR - Error in getting PDF page size from layout_fun: 'int' object is not subscriptable
+2024-05-30 20:13:59,941 - root - ERROR - Error in checking page size match: name 'pdf_page_size' is not defined
+2024-05-30 20:13:59,941 - __main__ - DEBUG - Appended image path to image_files: TEMP\lossless\FF5 A\ファイナルファンタジーⅤ アドバンス 公式コンプリートガイド_z0001.jp2
+2024-05-30 20:13:59,941 - __main__ - DEBUG - Converting image 5 of 5 in subdir FF5 A
+2024-05-30 20:13:59,943 - __main__ - DEBUG - Got image path and subdirectory name: C:\Data\Documents\Programming\MyProjects\json3pdf\TEMP\lossless\FF5 A\ファイナルファンタジーⅤ アドバンス 公式コンプリートガイド_z0002.jp2, FF5 A
+2024-05-30 20:13:59,944 - __main__ - DEBUG - Set PDF directory name: OriginalPDF
+2024-05-30 20:13:59,945 - __main__ - DEBUG - Getting image information.
+2024-05-30 20:13:59,945 - __main__ - DEBUG - Image log file path: ./imagelog_folder/imagelog_file.imglog
+2024-05-30 20:13:59,945 - __main__ - DEBUG - Image filename: C:\Data\Documents\Programming\MyProjects\json3pdf\TEMP\lossless\FF5 A\ファイナルファンタジーⅤ アドバンス 公式コンプリートガイド_z0002.jp2
+2024-05-30 20:13:59,945 - __main__ - DEBUG - Image resolution: (3495, 5008)
+2024-05-30 20:13:59,945 - __main__ - DEBUG - Image encoding format: JPEG2000
+2024-05-30 20:13:59,945 - __main__ - DEBUG - Updated total_p to: 1
+2024-05-30 20:13:59,945 - __main__ - DEBUG - Filename page: 5
+2024-05-30 20:13:59,945 - __main__ - DEBUG - Calculating estimated DPI.
+2024-05-30 20:13:59,945 - __main__ - DEBUG - Determining if the image is lossless.
+2024-05-30 20:13:59,945 - __main__ - DEBUG - Determining if the image is lossless.
+2024-05-30 20:13:59,945 - __main__ - DEBUG - Generating image info filename.
+2024-05-30 20:13:59,945 - __main__ - DEBUG - Getting the path of the directory where the script is located.
+2024-05-30 20:13:59,946 - __main__ - DEBUG - Converting filename to relative path.
+2024-05-30 20:13:59,946 - __main__ - DEBUG - Image log file path: TEMP\imagelogs\20240530201359.imglog
+2024-05-30 20:13:59,946 - __main__ - DEBUG - Storing image info in a dictionary.
+2024-05-30 20:13:59,946 - __main__ - DEBUG - Getting the path of the directory where the script is located.
+2024-05-30 20:13:59,946 - __main__ - DEBUG - Converting filename to relative path.
+2024-05-30 20:13:59,946 - __main__ - DEBUG - Writing image info to imagelog file.
+2024-05-30 20:13:59,948 - __main__ - DEBUG - Returning estimated DPI: 600
+2024-05-30 20:13:59,948 - __main__ - DEBUG - Got DPI, estimated DPI, width and height in points: (600, 600), 600, 419.40000000000003, 600.9599999999999
+2024-05-30 20:13:59,948 - __main__ - DEBUG - Converted width and height to inches: 5.825, 8.346666666666666
+2024-05-30 20:13:59,948 - __main__ - DEBUG - Found closest page size: A5, (420, 595)
+2024-05-30 20:13:59,949 - __main__ - DEBUG - Got layout function: <function get_layout_fun.<locals>.layout_fun at 0x0000019641F54AE0>
+2024-05-30 20:13:59,949 - __main__ - DEBUG - Got actual page size: 3495, 5008
+2024-05-30 20:13:59,949 - __main__ - DEBUG - Set NDPI: 600
+2024-05-30 20:13:59,950 - root - ERROR - Error in getting PDF page size from layout_fun: 'int' object is not subscriptable
+2024-05-30 20:13:59,950 - root - ERROR - Error in checking page size match: name 'pdf_page_size' is not defined
+2024-05-30 20:13:59,950 - __main__ - DEBUG - Appended image path to image_files: TEMP\lossless\FF5 A\ファイナルファンタジーⅤ アドバンス 公式コンプリートガイド_z0002.jp2
+2024-05-30 20:13:59,951 - __main__ - DEBUG - Converting images to PDF: ['TEMP\\lossless\\FF5 A\\ファイナルファンタジーⅤ アドバンス 公式コンプリートガイド_cover.jp2', 'TEMP\\lossless\\FF5 A\\ファイナルファンタジーⅤ アドバンス 公式コンプリートガイド_p0000.jp2', 'TEMP\\lossless\\FF5 A\\ファイナルファンタジーⅤ アドバンス 公式コンプリートガイド_p0001.jp2', 'TEMP\\lossless\\FF5 A\\ファイナルファンタジーⅤ アドバンス 公式コンプリートガイド_z0001.jp2', 'TEMP\\lossless\\FF5 A\\ファイナルファンタジーⅤ アドバンス 公式コンプリートガイド_z0002.jp2']
+2024-05-30 20:14:00,607 - __main__ - DEBUG - Read PDF file: OriginalPDF\FF5 A.pdf
+2024-05-30 20:14:00,611 - __main__ - DEBUG - Simple check passed for: OriginalPDF\FF5 A.pdf
+2024-05-30 20:14:00,611 - __main__ - DEBUG - Processing subdir 2 of 4: ドラクエ4
+2024-05-30 20:14:00,614 - __main__ - DEBUG - Got images from subdirectory: [WindowsPath('TEMP/lossless/ドラクエ4/ドラゴンクエストⅣ 導かれし者たち 公式ガイドブック_p0008.jp2'), WindowsPath('TEMP/lossless/ドラクエ4/ドラゴンクエストⅣ 導かれし者たち 公式ガイドブック_p0009.jp2')]
+2024-05-30 20:14:00,615 - __main__ - DEBUG - Got total images count: 2
+2024-05-30 20:14:00,616 - __main__ - DEBUG - Got total _p images count: 0
+2024-05-30 20:14:00,616 - __main__ - DEBUG - Set PDF filename: OriginalPDF\ドラクエ4.pdf
+2024-05-30 20:14:00,617 - __main__ - DEBUG - Set layout function as None.
+2024-05-30 20:14:00,617 - __main__ - DEBUG - Converting image 1 of 2 in subdir ドラクエ4
+2024-05-30 20:14:00,618 - __main__ - DEBUG - Got image path and subdirectory name: C:\Data\Documents\Programming\MyProjects\json3pdf\TEMP\lossless\ドラクエ4\ドラゴンクエストⅣ 導かれし者たち 公式ガイドブック_p0008.jp2, ドラクエ4
+2024-05-30 20:14:00,618 - __main__ - DEBUG - Set PDF directory name: OriginalPDF
+2024-05-30 20:14:00,619 - __main__ - DEBUG - Getting image information.
+2024-05-30 20:14:00,619 - __main__ - DEBUG - Image log file path: ./imagelog_folder/imagelog_file.imglog
+2024-05-30 20:14:00,619 - __main__ - DEBUG - Image filename: C:\Data\Documents\Programming\MyProjects\json3pdf\TEMP\lossless\ドラクエ4\ドラゴンクエストⅣ 導かれし者たち 公式ガイドブック_p0008.jp2
+2024-05-30 20:14:00,619 - __main__ - DEBUG - Image resolution: (3447, 5008)
+2024-05-30 20:14:00,619 - __main__ - DEBUG - Image encoding format: JPEG2000
+2024-05-30 20:14:00,619 - __main__ - DEBUG - Filename page: 10
+2024-05-30 20:14:00,619 - __main__ - DEBUG - Calculating estimated DPI.
+2024-05-30 20:14:00,619 - __main__ - DEBUG - Determining if the image is lossless.
+2024-05-30 20:14:00,619 - __main__ - DEBUG - Determining if the image is lossless.
+2024-05-30 20:14:00,619 - __main__ - DEBUG - Generating image info filename.
+2024-05-30 20:14:00,620 - __main__ - DEBUG - Getting the path of the directory where the script is located.
+2024-05-30 20:14:00,620 - __main__ - DEBUG - Converting filename to relative path.
+2024-05-30 20:14:00,620 - __main__ - DEBUG - Image log file path: TEMP\imagelogs\20240530201400.imglog
+2024-05-30 20:14:00,620 - __main__ - DEBUG - Storing image info in a dictionary.
+2024-05-30 20:14:00,620 - __main__ - DEBUG - Getting the path of the directory where the script is located.
+2024-05-30 20:14:00,620 - __main__ - DEBUG - Converting filename to relative path.
+2024-05-30 20:14:00,620 - __main__ - DEBUG - Writing image info to imagelog file.
+2024-05-30 20:14:00,622 - __main__ - DEBUG - Returning estimated DPI: 600
+2024-05-30 20:14:00,622 - __main__ - DEBUG - Got DPI, estimated DPI, width and height in points: (600, 600), 600, 413.64, 600.9599999999999
+2024-05-30 20:14:00,623 - __main__ - DEBUG - Converted width and height to inches: 5.745, 8.346666666666666
+2024-05-30 20:14:00,623 - __main__ - DEBUG - Found closest page size: A5, (420, 595)
+2024-05-30 20:14:00,623 - __main__ - DEBUG - Got layout function: <function get_layout_fun.<locals>.layout_fun at 0x0000019641F54180>
+2024-05-30 20:14:00,624 - __main__ - DEBUG - Got actual page size: 3447, 5008
+2024-05-30 20:14:00,624 - __main__ - DEBUG - Set NDPI: 600
+2024-05-30 20:14:00,624 - root - ERROR - Error in getting PDF page size from layout_fun: 'int' object is not subscriptable
+2024-05-30 20:14:00,624 - root - ERROR - Error in checking page size match: name 'pdf_page_size' is not defined
+2024-05-30 20:14:00,625 - __main__ - DEBUG - Appended image path to image_files: TEMP\lossless\ドラクエ4\ドラゴンクエストⅣ 導かれし者たち 公式ガイドブック_p0008.jp2
+2024-05-30 20:14:00,625 - __main__ - DEBUG - Converting image 2 of 2 in subdir ドラクエ4
+2024-05-30 20:14:00,626 - __main__ - DEBUG - Got image path and subdirectory name: C:\Data\Documents\Programming\MyProjects\json3pdf\TEMP\lossless\ドラクエ4\ドラゴンクエストⅣ 導かれし者たち 公式ガイドブック_p0009.jp2, ドラクエ4
+2024-05-30 20:14:00,626 - __main__ - DEBUG - Set PDF directory name: OriginalPDF
+2024-05-30 20:14:00,626 - __main__ - DEBUG - Getting image information.
+2024-05-30 20:14:00,627 - __main__ - DEBUG - Image log file path: ./imagelog_folder/imagelog_file.imglog
+2024-05-30 20:14:00,627 - __main__ - DEBUG - Image filename: C:\Data\Documents\Programming\MyProjects\json3pdf\TEMP\lossless\ドラクエ4\ドラゴンクエストⅣ 導かれし者たち 公式ガイドブック_p0009.jp2
+2024-05-30 20:14:00,627 - __main__ - DEBUG - Image resolution: (3455, 5008)
+2024-05-30 20:14:00,627 - __main__ - DEBUG - Image encoding format: JPEG2000
+2024-05-30 20:14:00,627 - __main__ - DEBUG - Filename page: 11
+2024-05-30 20:14:00,627 - __main__ - DEBUG - Calculating estimated DPI.
+2024-05-30 20:14:00,627 - __main__ - DEBUG - Determining if the image is lossless.
+2024-05-30 20:14:00,627 - __main__ - DEBUG - Determining if the image is lossless.
+2024-05-30 20:14:00,627 - __main__ - DEBUG - Generating image info filename.
+2024-05-30 20:14:00,627 - __main__ - DEBUG - Getting the path of the directory where the script is located.
+2024-05-30 20:14:00,627 - __main__ - DEBUG - Converting filename to relative path.
+2024-05-30 20:14:00,628 - __main__ - DEBUG - Image log file path: TEMP\imagelogs\20240530201400.imglog
+2024-05-30 20:14:00,628 - __main__ - DEBUG - Storing image info in a dictionary.
+2024-05-30 20:14:00,628 - __main__ - DEBUG - Getting the path of the directory where the script is located.
+2024-05-30 20:14:00,628 - __main__ - DEBUG - Converting filename to relative path.
+2024-05-30 20:14:00,628 - __main__ - DEBUG - Writing image info to imagelog file.
+2024-05-30 20:14:00,629 - __main__ - DEBUG - Returning estimated DPI: 600
+2024-05-30 20:14:00,630 - __main__ - DEBUG - Got DPI, estimated DPI, width and height in points: (600, 600), 600, 414.6, 600.9599999999999
+2024-05-30 20:14:00,631 - __main__ - DEBUG - Converted width and height to inches: 5.758333333333334, 8.346666666666666
+2024-05-30 20:14:00,631 - __main__ - DEBUG - Found closest page size: A5, (420, 595)
+2024-05-30 20:14:00,633 - __main__ - DEBUG - Got layout function: <function get_layout_fun.<locals>.layout_fun at 0x0000019641F55DA0>
+2024-05-30 20:14:00,633 - __main__ - DEBUG - Got actual page size: 3455, 5008
+2024-05-30 20:14:00,633 - __main__ - DEBUG - Set NDPI: 600
+2024-05-30 20:14:00,634 - root - ERROR - Error in getting PDF page size from layout_fun: 'int' object is not subscriptable
+2024-05-30 20:14:00,634 - root - ERROR - Error in checking page size match: name 'pdf_page_size' is not defined
+2024-05-30 20:14:00,635 - __main__ - DEBUG - Appended image path to image_files: TEMP\lossless\ドラクエ4\ドラゴンクエストⅣ 導かれし者たち 公式ガイドブック_p0009.jp2
+2024-05-30 20:14:00,637 - __main__ - DEBUG - Converting images to PDF: ['TEMP\\lossless\\ドラクエ4\\ドラゴンクエストⅣ 導かれし者たち 公式ガイドブック_p0008.jp2', 'TEMP\\lossless\\ドラクエ4\\ドラゴンクエストⅣ 導かれし者たち 公式ガイドブック_p0009.jp2']
+2024-05-30 20:14:00,991 - __main__ - DEBUG - Read PDF file: OriginalPDF\ドラクエ4.pdf
+2024-05-30 20:14:00,992 - __main__ - DEBUG - Simple check passed for: OriginalPDF\ドラクエ4.pdf
+2024-05-30 20:14:00,994 - __main__ - DEBUG - Processing subdir 3 of 4: FF5 A
+2024-05-30 20:14:00,998 - __main__ - DEBUG - Got images from subdirectory: [WindowsPath('TEMP/optimized/FF5 A/ファイナルファンタジーⅤ アドバンス 公式コンプリートガイド_cover.jp2'), WindowsPath('TEMP/optimized/FF5 A/ファイナルファンタジーⅤ アドバンス 公式コンプリートガイド_p0009.jp2'), WindowsPath('TEMP/optimized/FF5 A/ファイナルファンタジーⅤ アドバンス 公式コンプリートガイド_p0010.jp2'), WindowsPath('TEMP/optimized/FF5 A/ファイナルファンタジーⅤ アドバンス 公式コンプリートガイド_z0001 copy.jp2'), WindowsPath('TEMP/optimized/FF5 A/ファイナルファンタジーⅤ アドバンス 公式コンプリートガイド_z0002.jp2')]
+2024-05-30 20:14:00,999 - __main__ - DEBUG - Got total images count: 5
+2024-05-30 20:14:00,999 - __main__ - DEBUG - Got total _p images count: 0
+2024-05-30 20:14:00,999 - __main__ - DEBUG - Set PDF filename: OptimizedPDF\FF5 A.pdf
+2024-05-30 20:14:01,000 - __main__ - DEBUG - Set layout function as None.
+2024-05-30 20:14:01,000 - __main__ - DEBUG - Converting image 1 of 5 in subdir FF5 A
+2024-05-30 20:14:01,001 - __main__ - DEBUG - Got image path and subdirectory name: C:\Data\Documents\Programming\MyProjects\json3pdf\TEMP\optimized\FF5 A\ファイナルファンタジーⅤ アドバンス 公式コンプリートガイド_cover.jp2, FF5 A
+2024-05-30 20:14:01,002 - __main__ - DEBUG - Set PDF directory name: OptimizedPDF
+2024-05-30 20:14:01,002 - __main__ - DEBUG - Getting image information.
+2024-05-30 20:14:01,002 - __main__ - DEBUG - Image log file path: ./imagelog_folder/imagelog_file.imglog
+2024-05-30 20:14:01,002 - __main__ - DEBUG - Image filename: C:\Data\Documents\Programming\MyProjects\json3pdf\TEMP\optimized\FF5 A\ファイナルファンタジーⅤ アドバンス 公式コンプリートガイド_cover.jp2
+2024-05-30 20:14:01,002 - __main__ - DEBUG - Image resolution: (3487, 5016)
+2024-05-30 20:14:01,002 - __main__ - DEBUG - Image encoding format: JPEG2000
+2024-05-30 20:14:01,002 - __main__ - DEBUG - Filename page: 1
+2024-05-30 20:14:01,002 - __main__ - DEBUG - Calculating estimated DPI.
+2024-05-30 20:14:01,002 - __main__ - DEBUG - Determining if the image is lossless.
+2024-05-30 20:14:01,002 - __main__ - DEBUG - Determining if the image is lossless.
+2024-05-30 20:14:01,003 - __main__ - DEBUG - Generating image info filename.
+2024-05-30 20:14:01,003 - __main__ - DEBUG - Getting the path of the directory where the script is located.
+2024-05-30 20:14:01,003 - __main__ - DEBUG - Converting filename to relative path.
+2024-05-30 20:14:01,003 - __main__ - DEBUG - Image log file path: TEMP\imagelogs\20240530201401.imglog
+2024-05-30 20:14:01,003 - __main__ - DEBUG - Storing image info in a dictionary.
+2024-05-30 20:14:01,003 - __main__ - DEBUG - Getting the path of the directory where the script is located.
+2024-05-30 20:14:01,003 - __main__ - DEBUG - Converting filename to relative path.
+2024-05-30 20:14:01,004 - __main__ - DEBUG - Writing image info to imagelog file.
+2024-05-30 20:14:01,006 - __main__ - DEBUG - Returning estimated DPI: 600
+2024-05-30 20:14:01,006 - __main__ - DEBUG - Got DPI, estimated DPI, width and height in points: (600, 600), 600, 418.44, 601.92
+2024-05-30 20:14:01,007 - __main__ - DEBUG - Converted width and height to inches: 5.8116666666666665, 8.36
+2024-05-30 20:14:01,007 - __main__ - DEBUG - Found closest page size: A5, (420, 595)
+2024-05-30 20:14:01,008 - __main__ - DEBUG - Got layout function: <function get_layout_fun.<locals>.layout_fun at 0x0000019641F57060>
+2024-05-30 20:14:01,008 - __main__ - DEBUG - Got actual page size: 3487, 5016
+2024-05-30 20:14:01,008 - __main__ - DEBUG - Set NDPI: 600
+2024-05-30 20:14:01,008 - root - ERROR - Error in getting PDF page size from layout_fun: 'int' object is not subscriptable
+2024-05-30 20:14:01,009 - root - ERROR - Error in checking page size match: name 'pdf_page_size' is not defined
+2024-05-30 20:14:01,009 - __main__ - DEBUG - Appended image path to image_files: TEMP\optimized\FF5 A\ファイナルファンタジーⅤ アドバンス 公式コンプリートガイド_cover.jp2
+2024-05-30 20:14:01,009 - __main__ - DEBUG - Converting image 2 of 5 in subdir FF5 A
+2024-05-30 20:14:01,012 - __main__ - DEBUG - Got image path and subdirectory name: C:\Data\Documents\Programming\MyProjects\json3pdf\TEMP\optimized\FF5 A\ファイナルファンタジーⅤ アドバンス 公式コンプリートガイド_p0009.jp2, FF5 A
+2024-05-30 20:14:01,013 - __main__ - DEBUG - Set PDF directory name: OptimizedPDF
+2024-05-30 20:14:01,013 - __main__ - DEBUG - Getting image information.
+2024-05-30 20:14:01,013 - __main__ - DEBUG - Image log file path: ./imagelog_folder/imagelog_file.imglog
+2024-05-30 20:14:01,013 - __main__ - DEBUG - Image filename: C:\Data\Documents\Programming\MyProjects\json3pdf\TEMP\optimized\FF5 A\ファイナルファンタジーⅤ アドバンス 公式コンプリートガイド_p0009.jp2
+2024-05-30 20:14:01,013 - __main__ - DEBUG - Image resolution: (3487, 5016)
+2024-05-30 20:14:01,013 - __main__ - DEBUG - Image encoding format: JPEG2000
+2024-05-30 20:14:01,013 - __main__ - DEBUG - Filename page: 11
+2024-05-30 20:14:01,013 - __main__ - DEBUG - Calculating estimated DPI.
+2024-05-30 20:14:01,013 - __main__ - DEBUG - Determining if the image is lossless.
+2024-05-30 20:14:01,014 - __main__ - DEBUG - Determining if the image is lossless.
+2024-05-30 20:14:01,014 - __main__ - DEBUG - Generating image info filename.
+2024-05-30 20:14:01,014 - __main__ - DEBUG - Getting the path of the directory where the script is located.
+2024-05-30 20:14:01,015 - __main__ - DEBUG - Converting filename to relative path.
+2024-05-30 20:14:01,015 - __main__ - DEBUG - Image log file path: TEMP\imagelogs\20240530201401.imglog
+2024-05-30 20:14:01,015 - __main__ - DEBUG - Storing image info in a dictionary.
+2024-05-30 20:14:01,015 - __main__ - DEBUG - Getting the path of the directory where the script is located.
+2024-05-30 20:14:01,016 - __main__ - DEBUG - Converting filename to relative path.
+2024-05-30 20:14:01,016 - __main__ - DEBUG - Writing image info to imagelog file.
+2024-05-30 20:14:01,017 - __main__ - DEBUG - Returning estimated DPI: 600
+2024-05-30 20:14:01,018 - __main__ - DEBUG - Got DPI, estimated DPI, width and height in points: (600, 600), 600, 418.44, 601.92
+2024-05-30 20:14:01,018 - __main__ - DEBUG - Converted width and height to inches: 5.8116666666666665, 8.36
+2024-05-30 20:14:01,019 - __main__ - DEBUG - Found closest page size: A5, (420, 595)
+2024-05-30 20:14:01,020 - __main__ - DEBUG - Got layout function: <function get_layout_fun.<locals>.layout_fun at 0x0000019641F574C0>
+2024-05-30 20:14:01,021 - __main__ - DEBUG - Got actual page size: 3487, 5016
+2024-05-30 20:14:01,021 - __main__ - DEBUG - Set NDPI: 600
+2024-05-30 20:14:01,021 - root - ERROR - Error in getting PDF page size from layout_fun: 'int' object is not subscriptable
+2024-05-30 20:14:01,021 - root - ERROR - Error in checking page size match: name 'pdf_page_size' is not defined
+2024-05-30 20:14:01,021 - __main__ - DEBUG - Appended image path to image_files: TEMP\optimized\FF5 A\ファイナルファンタジーⅤ アドバンス 公式コンプリートガイド_p0009.jp2
+2024-05-30 20:14:01,023 - __main__ - DEBUG - Converting image 3 of 5 in subdir FF5 A
+2024-05-30 20:14:01,024 - __main__ - DEBUG - Got image path and subdirectory name: C:\Data\Documents\Programming\MyProjects\json3pdf\TEMP\optimized\FF5 A\ファイナルファンタジーⅤ アドバンス 公式コンプリートガイド_p0010.jp2, FF5 A
+2024-05-30 20:14:01,024 - __main__ - DEBUG - Set PDF directory name: OptimizedPDF
+2024-05-30 20:14:01,024 - __main__ - DEBUG - Getting image information.
+2024-05-30 20:14:01,024 - __main__ - DEBUG - Image log file path: ./imagelog_folder/imagelog_file.imglog
+2024-05-30 20:14:01,024 - __main__ - DEBUG - Image filename: C:\Data\Documents\Programming\MyProjects\json3pdf\TEMP\optimized\FF5 A\ファイナルファンタジーⅤ アドバンス 公式コンプリートガイド_p0010.jp2
+2024-05-30 20:14:01,024 - __main__ - DEBUG - Image resolution: (3495, 5008)
+2024-05-30 20:14:01,024 - __main__ - DEBUG - Image encoding format: JPEG2000
+2024-05-30 20:14:01,024 - __main__ - DEBUG - Filename page: 12
+2024-05-30 20:14:01,024 - __main__ - DEBUG - Calculating estimated DPI.
+2024-05-30 20:14:01,024 - __main__ - DEBUG - Determining if the image is lossless.
+2024-05-30 20:14:01,024 - __main__ - DEBUG - Determining if the image is lossless.
+2024-05-30 20:14:01,024 - __main__ - DEBUG - Generating image info filename.
+2024-05-30 20:14:01,026 - __main__ - DEBUG - Getting the path of the directory where the script is located.
+2024-05-30 20:14:01,026 - __main__ - DEBUG - Converting filename to relative path.
+2024-05-30 20:14:01,026 - __main__ - DEBUG - Image log file path: TEMP\imagelogs\20240530201401.imglog
+2024-05-30 20:14:01,026 - __main__ - DEBUG - Storing image info in a dictionary.
+2024-05-30 20:14:01,026 - __main__ - DEBUG - Getting the path of the directory where the script is located.
+2024-05-30 20:14:01,027 - __main__ - DEBUG - Converting filename to relative path.
+2024-05-30 20:14:01,027 - __main__ - DEBUG - Writing image info to imagelog file.
+2024-05-30 20:14:01,030 - __main__ - DEBUG - Returning estimated DPI: 600
+2024-05-30 20:14:01,030 - __main__ - DEBUG - Got DPI, estimated DPI, width and height in points: (600, 600), 600, 419.40000000000003, 600.9599999999999
+2024-05-30 20:14:01,030 - __main__ - DEBUG - Converted width and height to inches: 5.825, 8.346666666666666
+2024-05-30 20:14:01,030 - __main__ - DEBUG - Found closest page size: A5, (420, 595)
+2024-05-30 20:14:01,031 - __main__ - DEBUG - Got layout function: <function get_layout_fun.<locals>.layout_fun at 0x0000019641F577E0>
+2024-05-30 20:14:01,031 - __main__ - DEBUG - Got actual page size: 3495, 5008
+2024-05-30 20:14:01,031 - __main__ - DEBUG - Set NDPI: 600
+2024-05-30 20:14:01,032 - root - ERROR - Error in getting PDF page size from layout_fun: 'int' object is not subscriptable
+2024-05-30 20:14:01,033 - root - ERROR - Error in checking page size match: name 'pdf_page_size' is not defined
+2024-05-30 20:14:01,033 - __main__ - DEBUG - Appended image path to image_files: TEMP\optimized\FF5 A\ファイナルファンタジーⅤ アドバンス 公式コンプリートガイド_p0010.jp2
+2024-05-30 20:14:01,033 - __main__ - DEBUG - Converting image 4 of 5 in subdir FF5 A
+2024-05-30 20:14:01,038 - __main__ - DEBUG - Got image path and subdirectory name: C:\Data\Documents\Programming\MyProjects\json3pdf\TEMP\optimized\FF5 A\ファイナルファンタジーⅤ アドバンス 公式コンプリートガイド_z0001 copy.jp2, FF5 A
+2024-05-30 20:14:01,039 - __main__ - DEBUG - Set PDF directory name: OptimizedPDF
+2024-05-30 20:14:01,039 - __main__ - DEBUG - Getting image information.
+2024-05-30 20:14:01,039 - __main__ - DEBUG - Image log file path: ./imagelog_folder/imagelog_file.imglog
+2024-05-30 20:14:01,040 - __main__ - DEBUG - Image filename: C:\Data\Documents\Programming\MyProjects\json3pdf\TEMP\optimized\FF5 A\ファイナルファンタジーⅤ アドバンス 公式コンプリートガイド_z0001 copy.jp2
+2024-05-30 20:14:01,040 - __main__ - DEBUG - Image resolution: (3495, 5008)
+2024-05-30 20:14:01,040 - __main__ - DEBUG - Image encoding format: JPEG2000
+2024-05-30 20:14:01,040 - __main__ - DEBUG - Updated total_p to: 1
+2024-05-30 20:14:01,040 - __main__ - DEBUG - Filename page: 4
+2024-05-30 20:14:01,041 - __main__ - DEBUG - Calculating estimated DPI.
+2024-05-30 20:14:01,041 - __main__ - DEBUG - Determining if the image is lossless.
+2024-05-30 20:14:01,043 - __main__ - DEBUG - Determining if the image is lossless.
+2024-05-30 20:14:01,045 - __main__ - DEBUG - Generating image info filename.
+2024-05-30 20:14:01,046 - __main__ - DEBUG - Getting the path of the directory where the script is located.
+2024-05-30 20:14:01,046 - __main__ - DEBUG - Converting filename to relative path.
+2024-05-30 20:14:01,046 - __main__ - DEBUG - Image log file path: TEMP\imagelogs\20240530201401.imglog
+2024-05-30 20:14:01,046 - __main__ - DEBUG - Storing image info in a dictionary.
+2024-05-30 20:14:01,046 - __main__ - DEBUG - Getting the path of the directory where the script is located.
+2024-05-30 20:14:01,046 - __main__ - DEBUG - Converting filename to relative path.
+2024-05-30 20:14:01,047 - __main__ - DEBUG - Writing image info to imagelog file.
+2024-05-30 20:14:01,048 - __main__ - DEBUG - Returning estimated DPI: 600
+2024-05-30 20:14:01,048 - __main__ - DEBUG - Got DPI, estimated DPI, width and height in points: (600, 600), 600, 419.40000000000003, 600.9599999999999
+2024-05-30 20:14:01,049 - __main__ - DEBUG - Converted width and height to inches: 5.825, 8.346666666666666
+2024-05-30 20:14:01,050 - __main__ - DEBUG - Found closest page size: A5, (420, 595)
+2024-05-30 20:14:01,051 - __main__ - DEBUG - Got layout function: <function get_layout_fun.<locals>.layout_fun at 0x0000019641F57BA0>
+2024-05-30 20:14:01,052 - __main__ - DEBUG - Got actual page size: 3495, 5008
+2024-05-30 20:14:01,052 - __main__ - DEBUG - Set NDPI: 600
+2024-05-30 20:14:01,053 - root - ERROR - Error in getting PDF page size from layout_fun: 'int' object is not subscriptable
+2024-05-30 20:14:01,053 - root - ERROR - Error in checking page size match: name 'pdf_page_size' is not defined
+2024-05-30 20:14:01,053 - __main__ - DEBUG - Appended image path to image_files: TEMP\optimized\FF5 A\ファイナルファンタジーⅤ アドバンス 公式コンプリートガイド_z0001 copy.jp2
+2024-05-30 20:14:01,054 - __main__ - DEBUG - Converting image 5 of 5 in subdir FF5 A
+2024-05-30 20:14:01,056 - __main__ - DEBUG - Got image path and subdirectory name: C:\Data\Documents\Programming\MyProjects\json3pdf\TEMP\optimized\FF5 A\ファイナルファンタジーⅤ アドバンス 公式コンプリートガイド_z0002.jp2, FF5 A
+2024-05-30 20:14:01,057 - __main__ - DEBUG - Set PDF directory name: OptimizedPDF
+2024-05-30 20:14:01,057 - __main__ - DEBUG - Getting image information.
+2024-05-30 20:14:01,058 - __main__ - DEBUG - Image log file path: ./imagelog_folder/imagelog_file.imglog
+2024-05-30 20:14:01,058 - __main__ - DEBUG - Image filename: C:\Data\Documents\Programming\MyProjects\json3pdf\TEMP\optimized\FF5 A\ファイナルファンタジーⅤ アドバンス 公式コンプリートガイド_z0002.jp2
+2024-05-30 20:14:01,058 - __main__ - DEBUG - Image resolution: (3495, 5008)
+2024-05-30 20:14:01,058 - __main__ - DEBUG - Image encoding format: JPEG2000
+2024-05-30 20:14:01,058 - __main__ - DEBUG - Updated total_p to: 1
+2024-05-30 20:14:01,058 - __main__ - DEBUG - Filename page: 5
+2024-05-30 20:14:01,058 - __main__ - DEBUG - Calculating estimated DPI.
+2024-05-30 20:14:01,058 - __main__ - DEBUG - Determining if the image is lossless.
+2024-05-30 20:14:01,058 - __main__ - DEBUG - Determining if the image is lossless.
+2024-05-30 20:14:01,058 - __main__ - DEBUG - Generating image info filename.
+2024-05-30 20:14:01,058 - __main__ - DEBUG - Getting the path of the directory where the script is located.
+2024-05-30 20:14:01,058 - __main__ - DEBUG - Converting filename to relative path.
+2024-05-30 20:14:01,058 - __main__ - DEBUG - Image log file path: TEMP\imagelogs\20240530201401.imglog
+2024-05-30 20:14:01,058 - __main__ - DEBUG - Storing image info in a dictionary.
+2024-05-30 20:14:01,059 - __main__ - DEBUG - Getting the path of the directory where the script is located.
+2024-05-30 20:14:01,059 - __main__ - DEBUG - Converting filename to relative path.
+2024-05-30 20:14:01,059 - __main__ - DEBUG - Writing image info to imagelog file.
+2024-05-30 20:14:01,061 - __main__ - DEBUG - Returning estimated DPI: 600
+2024-05-30 20:14:01,061 - __main__ - DEBUG - Got DPI, estimated DPI, width and height in points: (600, 600), 600, 419.40000000000003, 600.9599999999999
+2024-05-30 20:14:01,062 - __main__ - DEBUG - Converted width and height to inches: 5.825, 8.346666666666666
+2024-05-30 20:14:01,062 - __main__ - DEBUG - Found closest page size: A5, (420, 595)
+2024-05-30 20:14:01,063 - __main__ - DEBUG - Got layout function: <function get_layout_fun.<locals>.layout_fun at 0x0000019641F57F60>
+2024-05-30 20:14:01,064 - __main__ - DEBUG - Got actual page size: 3495, 5008
+2024-05-30 20:14:01,064 - __main__ - DEBUG - Set NDPI: 600
+2024-05-30 20:14:01,065 - root - ERROR - Error in getting PDF page size from layout_fun: 'int' object is not subscriptable
+2024-05-30 20:14:01,065 - root - ERROR - Error in checking page size match: name 'pdf_page_size' is not defined
+2024-05-30 20:14:01,066 - __main__ - DEBUG - Appended image path to image_files: TEMP\optimized\FF5 A\ファイナルファンタジーⅤ アドバンス 公式コンプリートガイド_z0002.jp2
+2024-05-30 20:14:01,067 - __main__ - DEBUG - Converting images to PDF: ['TEMP\\optimized\\FF5 A\\ファイナルファンタジーⅤ アドバンス 公式コンプリートガイド_cover.jp2', 'TEMP\\optimized\\FF5 A\\ファイナルファンタジーⅤ アドバンス 公式コンプリートガイド_p0009.jp2', 'TEMP\\optimized\\FF5 A\\ファイナルファンタジーⅤ アドバンス 公式コンプリートガイド_p0010.jp2', 'TEMP\\optimized\\FF5 A\\ファイナルファンタジーⅤ アドバンス 公式コンプリートガイド_z0001 copy.jp2', 'TEMP\\optimized\\FF5 A\\ファイナルファンタジーⅤ アドバンス 公式コンプリートガイド_z0002.jp2']
+2024-05-30 20:14:01,163 - __main__ - DEBUG - Read PDF file: OptimizedPDF\FF5 A.pdf
+2024-05-30 20:14:01,165 - __main__ - DEBUG - Simple check passed for: OptimizedPDF\FF5 A.pdf
+2024-05-30 20:14:01,167 - __main__ - DEBUG - Processing subdir 4 of 4: ドラクエ4
+2024-05-30 20:14:01,170 - __main__ - DEBUG - Got images from subdirectory: [WindowsPath('TEMP/optimized/ドラクエ4/ドラゴンクエストⅣ 導かれし者たち 公式ガイドブック_p0008.jp2'), WindowsPath('TEMP/optimized/ドラクエ4/ドラゴンクエストⅣ 導かれし者たち 公式ガイドブック_p0009.jp2')]
+2024-05-30 20:14:01,170 - __main__ - DEBUG - Got total images count: 2
+2024-05-30 20:14:01,170 - __main__ - DEBUG - Got total _p images count: 0
+2024-05-30 20:14:01,171 - __main__ - DEBUG - Set PDF filename: OptimizedPDF\ドラクエ4.pdf
+2024-05-30 20:14:01,171 - __main__ - DEBUG - Set layout function as None.
+2024-05-30 20:14:01,171 - __main__ - DEBUG - Converting image 1 of 2 in subdir ドラクエ4
+2024-05-30 20:14:01,186 - __main__ - DEBUG - Got image path and subdirectory name: C:\Data\Documents\Programming\MyProjects\json3pdf\TEMP\optimized\ドラクエ4\ドラゴンクエストⅣ 導かれし者たち 公式ガイドブック_p0008.jp2, ドラクエ4
+2024-05-30 20:14:01,186 - __main__ - DEBUG - Set PDF directory name: OptimizedPDF
+2024-05-30 20:14:01,187 - __main__ - DEBUG - Getting image information.
+2024-05-30 20:14:01,187 - __main__ - DEBUG - Image log file path: ./imagelog_folder/imagelog_file.imglog
+2024-05-30 20:14:01,187 - __main__ - DEBUG - Image filename: C:\Data\Documents\Programming\MyProjects\json3pdf\TEMP\optimized\ドラクエ4\ドラゴンクエストⅣ 導かれし者たち 公式ガイドブック_p0008.jp2
+2024-05-30 20:14:01,187 - __main__ - DEBUG - Image resolution: (3447, 5008)
+2024-05-30 20:14:01,187 - __main__ - DEBUG - Image encoding format: JPEG2000
+2024-05-30 20:14:01,187 - __main__ - DEBUG - Filename page: 10
+2024-05-30 20:14:01,187 - __main__ - DEBUG - Calculating estimated DPI.
+2024-05-30 20:14:01,187 - __main__ - DEBUG - Determining if the image is lossless.
+2024-05-30 20:14:01,187 - __main__ - DEBUG - Determining if the image is lossless.
+2024-05-30 20:14:01,188 - __main__ - DEBUG - Generating image info filename.
+2024-05-30 20:14:01,188 - __main__ - DEBUG - Getting the path of the directory where the script is located.
+2024-05-30 20:14:01,188 - __main__ - DEBUG - Converting filename to relative path.
+2024-05-30 20:14:01,188 - __main__ - DEBUG - Image log file path: TEMP\imagelogs\20240530201401.imglog
+2024-05-30 20:14:01,188 - __main__ - DEBUG - Storing image info in a dictionary.
+2024-05-30 20:14:01,188 - __main__ - DEBUG - Getting the path of the directory where the script is located.
+2024-05-30 20:14:01,188 - __main__ - DEBUG - Converting filename to relative path.
+2024-05-30 20:14:01,188 - __main__ - DEBUG - Writing image info to imagelog file.
+2024-05-30 20:14:01,190 - __main__ - DEBUG - Returning estimated DPI: 600
+2024-05-30 20:14:01,190 - __main__ - DEBUG - Got DPI, estimated DPI, width and height in points: (600, 600), 600, 413.64, 600.9599999999999
+2024-05-30 20:14:01,191 - __main__ - DEBUG - Converted width and height to inches: 5.745, 8.346666666666666
+2024-05-30 20:14:01,191 - __main__ - DEBUG - Found closest page size: A5, (420, 595)
+2024-05-30 20:14:01,192 - __main__ - DEBUG - Got layout function: <function get_layout_fun.<locals>.layout_fun at 0x0000019641F89D00>
+2024-05-30 20:14:01,192 - __main__ - DEBUG - Got actual page size: 3447, 5008
+2024-05-30 20:14:01,193 - __main__ - DEBUG - Set NDPI: 600
+2024-05-30 20:14:01,193 - root - ERROR - Error in getting PDF page size from layout_fun: 'int' object is not subscriptable
+2024-05-30 20:14:01,193 - root - ERROR - Error in checking page size match: name 'pdf_page_size' is not defined
+2024-05-30 20:14:01,194 - __main__ - DEBUG - Appended image path to image_files: TEMP\optimized\ドラクエ4\ドラゴンクエストⅣ 導かれし者たち 公式ガイドブック_p0008.jp2
+2024-05-30 20:14:01,194 - __main__ - DEBUG - Converting image 2 of 2 in subdir ドラクエ4
+2024-05-30 20:14:01,196 - __main__ - DEBUG - Got image path and subdirectory name: C:\Data\Documents\Programming\MyProjects\json3pdf\TEMP\optimized\ドラクエ4\ドラゴンクエストⅣ 導かれし者たち 公式ガイドブック_p0009.jp2, ドラクエ4
+2024-05-30 20:14:01,197 - __main__ - DEBUG - Set PDF directory name: OptimizedPDF
+2024-05-30 20:14:01,197 - __main__ - DEBUG - Getting image information.
+2024-05-30 20:14:01,197 - __main__ - DEBUG - Image log file path: ./imagelog_folder/imagelog_file.imglog
+2024-05-30 20:14:01,198 - __main__ - DEBUG - Image filename: C:\Data\Documents\Programming\MyProjects\json3pdf\TEMP\optimized\ドラクエ4\ドラゴンクエストⅣ 導かれし者たち 公式ガイドブック_p0009.jp2
+2024-05-30 20:14:01,198 - __main__ - DEBUG - Image resolution: (3455, 5008)
+2024-05-30 20:14:01,198 - __main__ - DEBUG - Image encoding format: JPEG2000
+2024-05-30 20:14:01,198 - __main__ - DEBUG - Filename page: 11
+2024-05-30 20:14:01,199 - __main__ - DEBUG - Calculating estimated DPI.
+2024-05-30 20:14:01,199 - __main__ - DEBUG - Determining if the image is lossless.
+2024-05-30 20:14:01,199 - __main__ - DEBUG - Determining if the image is lossless.
+2024-05-30 20:14:01,199 - __main__ - DEBUG - Generating image info filename.
+2024-05-30 20:14:01,199 - __main__ - DEBUG - Getting the path of the directory where the script is located.
+2024-05-30 20:14:01,199 - __main__ - DEBUG - Converting filename to relative path.
+2024-05-30 20:14:01,200 - __main__ - DEBUG - Image log file path: TEMP\imagelogs\20240530201401.imglog
+2024-05-30 20:14:01,200 - __main__ - DEBUG - Storing image info in a dictionary.
+2024-05-30 20:14:01,200 - __main__ - DEBUG - Getting the path of the directory where the script is located.
+2024-05-30 20:14:01,200 - __main__ - DEBUG - Converting filename to relative path.
+2024-05-30 20:14:01,200 - __main__ - DEBUG - Writing image info to imagelog file.
+2024-05-30 20:14:01,202 - __main__ - DEBUG - Returning estimated DPI: 600
+2024-05-30 20:14:01,202 - __main__ - DEBUG - Got DPI, estimated DPI, width and height in points: (600, 600), 600, 414.6, 600.9599999999999
+2024-05-30 20:14:01,203 - __main__ - DEBUG - Converted width and height to inches: 5.758333333333334, 8.346666666666666
+2024-05-30 20:14:01,203 - __main__ - DEBUG - Found closest page size: A5, (420, 595)
+2024-05-30 20:14:01,204 - __main__ - DEBUG - Got layout function: <function get_layout_fun.<locals>.layout_fun at 0x0000019641F57D80>
+2024-05-30 20:14:01,205 - __main__ - DEBUG - Got actual page size: 3455, 5008
+2024-05-30 20:14:01,205 - __main__ - DEBUG - Set NDPI: 600
+2024-05-30 20:14:01,205 - root - ERROR - Error in getting PDF page size from layout_fun: 'int' object is not subscriptable
+2024-05-30 20:14:01,205 - root - ERROR - Error in checking page size match: name 'pdf_page_size' is not defined
+2024-05-30 20:14:01,206 - __main__ - DEBUG - Appended image path to image_files: TEMP\optimized\ドラクエ4\ドラゴンクエストⅣ 導かれし者たち 公式ガイドブック_p0009.jp2
+2024-05-30 20:14:01,207 - __main__ - DEBUG - Converting images to PDF: ['TEMP\\optimized\\ドラクエ4\\ドラゴンクエストⅣ 導かれし者たち 公式ガイドブック_p0008.jp2', 'TEMP\\optimized\\ドラクエ4\\ドラゴンクエストⅣ 導かれし者たち 公式ガイドブック_p0009.jp2']
+2024-05-30 20:14:01,245 - __main__ - DEBUG - Read PDF file: OptimizedPDF\ドラクエ4.pdf
+2024-05-30 20:14:01,246 - __main__ - DEBUG - Simple check passed for: OptimizedPDF\ドラクエ4.pdf
