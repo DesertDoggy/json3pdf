@@ -60,7 +60,7 @@ log_level = getattr(logging, args.log_level.upper())
 logger.setLevel(log_level)
 
 # ログファイルのパスを取得
-log_files = sorted(glob.glob(str(log_folder / 'j2k2pdf_*.log')))
+log_files = sorted(glob.glob(str(log_folder / 'img2j2k_*.log')))
 
 # ログファイルが5個以上ある場合、古いものから削除
 while len(log_files) > 5:
