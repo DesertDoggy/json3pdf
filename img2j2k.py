@@ -95,6 +95,13 @@ convert_subdir_total = sum(1 for subdir, _, _ in os.walk(input_folder) if subdir
 # 現在処理しているサブディレクトリのカウント
 convert_subdir_count = 0
 
+# ロスレス変換が確認できた画像の数
+lossless_OK = 0
+# ロスレスでなかった画像の数
+lossless_NO = 0
+# 変換を確認を行った画像の総数
+lossless_check_total = 0
+
 # 入力フォルダ内の全サブディレクトリを走査
 for subdir, _, files in os.walk(input_folder):
     # 入力フォルダ自体はカウントしない
@@ -162,11 +169,18 @@ for subdir, _, files in os.walk(input_folder):
                             # 差分があるかどうかを確認
                             if diff.getbbox() is None:
                                 verbose_print(f'Bit-perfect lossless conversion confirmed for {file}.')
+                                lossless_OK += 1
                             else:
                                 verbose_print(f'The converted image differs from the original: {file}')
+                                lossless_NO += 1
+                        lossless_check_total += 1
+            print(f'Lossless conversion check results: {lossless_OK} OK, {lossless_NO} Error, {lossless_check_total} Total')
             # 次の画像の処理に移る前に行を空ける
             print()
 
 # quickオプションが指定された場合のメッセージ
 if args.quick:
     info_print('Conversion completed. The bit-perfect lossless conversion check was skipped due to the --quick option.')
+else:
+    info_print('Conversion completed. The bit-perfect lossless conversion check was performed.')
+    info_print(f'Lossless conversion check results: {lossless_OK} OK, {lossless_NO} Error, {lossless_check_total} Total')
