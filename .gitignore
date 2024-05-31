@@ -2,3 +2,4 @@
 *.jp2
 *.pdf
 /TEMP/imagelogs
+*.log

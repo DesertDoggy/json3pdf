@@ -2,6 +2,7 @@ import os
 import argparse
 from pathlib import Path
 import logging
+import glob
 import img2pdf
 from PIL import Image
 from PyPDF2 import PdfReader
@@ -46,12 +47,26 @@ def error_print(message):
 # ログ設定
 log_folder = Path('./logs')
 log_folder.mkdir(parents=True, exist_ok=True)
-logging.basicConfig(filename=log_folder / 'j2k2pdf.py.log', filemode='a', format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', encoding='utf-8')
+
+# 現在の日時を取得
+now = datetime.now()
+
+# ログファイル名に日時を含める
+log_filename = log_folder / f'j2k2pdf_{now.strftime("%Y%m%d_%H%M%S")}.log'
+
+logging.basicConfig(filename=log_filename, filemode='a', format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', encoding='utf-8')
 logger = logging.getLogger('j2k2pdf')  # ロガーの作成
 
 # ログレベルの設定
 log_level = getattr(logging, args.log_level.upper())
 logger.setLevel(log_level)
+
+# ログファイルのパスを取得
+log_files = sorted(glob.glob(str(log_folder / 'j2k2pdf_*.log')))
+
+# ログファイルが5個以上ある場合、古いものから削除
+while len(log_files) > 5:
+    os.remove(log_files.pop(0))
 
 # 簡易チェックの結果を保存するカウンター
 logger.debug('Setting up counters for simple check results.')  # ログメッセージの追加
