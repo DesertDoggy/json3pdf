@@ -18,19 +18,19 @@ units_per_inch = args.dpi
 translation_matrix = [1, 0, 0, 1, (args.left - args.right) * units_per_inch, (args.up - args.down) * units_per_inch]
 
 # フォルダのパスを設定
-text_layer_folder = './after'
+text_layer_folder = './OCRtextPDF'
 if not os.path.exists(text_layer_folder):
     os.makedirs(text_layer_folder,exist_ok=True)
     print(f'{text_layer_folder}フォルダを生成しました create {text_layer_folder} folder')
 else:
     print(f'{text_layer_folder}フォルダは既に存在します {text_layer_folder} folder already exists')
-existing_pdf_folder = './before'
+existing_pdf_folder = './OptimizedPDF'
 if not os.path.exists(existing_pdf_folder):
     os.makedirs(existing_pdf_folder,exist_ok=True)
     print(f'{existing_pdf_folder}フォルダを生成しました create {existing_pdf_folder} folder')
 else:
     print(f'{existing_pdf_folder}フォルダは既に存在します {existing_pdf_folder} folder already exists')
-output_folder = './merged'
+output_folder = './DraftPDF'
 if not os.path.exists(output_folder):
     os.makedirs(output_folder,exist_ok=True)
     print(f'{output_folder}フォルダを生成しました create {output_folder} folder')

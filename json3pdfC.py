@@ -25,13 +25,13 @@ font_path = './data/fonts/' + font_name + '.ttf'
 pdfmetrics.registerFont(TTFont(font_name, font_path))
 
 # 入力フォルダと出力フォルダのパスを設定
-input_folder = './before'
+input_folder = './DIjson'
 if not os.path.exists(input_folder):
     os.makedirs(input_folder,exist_ok=True)
     print(f'{input_folder}フォルダを生成しました create {input_folder} folder')
 else:
     print(f'{input_folder}フォルダは既に存在します {input_folder} folder already exists')
-output_folder = './after'
+output_folder = './OCRclearPDF'
 if not os.path.exists(output_folder):
     os.makedirs(output_folder,exist_ok=True)
     print(f'{output_folder}フォルダを生成しました create {output_folder} folder')
