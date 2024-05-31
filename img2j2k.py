@@ -89,13 +89,18 @@ supported_extensions = (
     '.jpm', '.jpg2', '.jpx', '.mj2', '.png', '.psd', '.tif', '.tiff', '.webp'
 )
 
-# 変換カウンター
-lossless_count = 0
-optimized_count = 0
-total_images = 0
+# 入力フォルダ内の全サブディレクトリの総数をカウント
+convert_subdir_total = sum(1 for subdir, _, _ in os.walk(input_folder) if subdir != input_folder)
+
+# 現在処理しているサブディレクトリのカウント
+convert_subdir_count = 0
 
 # 入力フォルダ内の全サブディレクトリを走査
 for subdir, _, files in os.walk(input_folder):
+    # 入力フォルダ自体はカウントしない
+    if subdir == input_folder:
+        continue
+
     # サブディレクトリ構造を出力フォルダに反映
     subfolder_path_lossless = subdir.replace(input_folder, lossless_folder)
     subfolder_path_optimized = subdir.replace(input_folder, optimized_folder)
@@ -106,10 +111,21 @@ for subdir, _, files in os.walk(input_folder):
     
     # ファイル名順にソート
     files.sort()
+    
+    # サブディレクトリ内の画像ファイルの数をカウント
+    total_images = sum(1 for file in files if file.lower().endswith(supported_extensions))
+
+    # 変換カウンターの初期化
+    lossless_count = 0
+    optimized_count = 0
+
+    # 現在処理しているサブディレクトリのカウントを更新
+    convert_subdir_count += 1
+    print(f'Processing subdirectory {convert_subdir_count} of {convert_subdir_total}')
+
     for file in files:
         # Pillowがサポートする画像形式のファイルのみを処理
         if file.lower().endswith(supported_extensions):
-            total_images += 1
             # 元のファイルパス
             original_path = os.path.join(subdir, file)
             # 出力ファイルパス
@@ -127,12 +143,12 @@ for subdir, _, files in os.walk(input_folder):
                     img.save(output_path_lossless, 'JPEG2000', quality_mode='lossless')
                     lossless_count += 1
                     verbose_print(f'Lossless conversion for {file}.')
-                    print(f'Lossless ({lossless_count}/{total_images})')
+                    print(f'Lossless ({lossless_count}/{total_images}) of ({convert_subdir_count}/{convert_subdir_total})subdir')
                     # 最適化画像の生成
                     img.save(output_path_optimized, 'JPEG2000', quality_mode='lossy', quality_layers=[20])
                     optimized_count += 1
-                    verbose_print(f'Optimized image created for {file}. ({optimized_count}/{total_images})')
-                    print(f'Optimize ({optimized_count}/{total_images})')
+                    verbose_print(f'Optimized image created for {file}.')
+                    print(f'Optimize ({optimized_count}/{total_images}) of ({convert_subdir_count}/{convert_subdir_total})subdir')
 
                 # ビットパーフェクトなロスレス変換を確認する部分をスキップするオプションが指定されているかチェック
                 if not args.quick:
@@ -145,12 +161,12 @@ for subdir, _, files in os.walk(input_folder):
                             diff = ImageChops.difference(original_img, converted_img)
                             # 差分があるかどうかを確認
                             if diff.getbbox() is None:
-                                print(f'Bit-perfect lossless conversion confirmed for {file}.')
+                                verbose_print(f'Bit-perfect lossless conversion confirmed for {file}.')
                             else:
-                                print(f'The converted image differs from the original: {file}')
+                                verbose_print(f'The converted image differs from the original: {file}')
             # 次の画像の処理に移る前に行を空ける
             print()
 
 # quickオプションが指定された場合のメッセージ
 if args.quick:
-    print('Conversion completed. The bit-perfect lossless conversion check was skipped due to the --quick option.')
+    info_print('Conversion completed. The bit-perfect lossless conversion check was skipped due to the --quick option.')
