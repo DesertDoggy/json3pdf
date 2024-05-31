@@ -3,10 +3,10 @@ import argparse
 from pathlib import Path
 import logging
 import glob
+from datetime import datetime
 import img2pdf
 from PIL import Image
 from PyPDF2 import PdfReader
-from datetime import datetime
 import json
 import re
 from colorama import Fore, Style
