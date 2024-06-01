@@ -9,6 +9,8 @@ from datetime import datetime
 from PIL import Image
 from PIL import ImageChops
 import shutil
+import glymur
+import numpy as np
 
 # コマンドライン引数を解析する
 parser = argparse.ArgumentParser(description='Convert images to JP2 format and create optimized images for OCR.')
@@ -45,10 +47,6 @@ def error_print(message):
     print(message)
     logger.error(message)
 
-def debug_print(message):
-    print(message)
-    logger.debug(message)
-
 # ログ設定
 log_folder = Path('./logs')
 log_folder.mkdir(parents=True, exist_ok=True)
@@ -65,6 +63,12 @@ logger = logging.getLogger('img2j2kM')  # ロガーの作成
 # ログレベルの設定
 log_level = getattr(logging, args.log_level.upper())
 logger.setLevel(log_level)
+
+# デバッグメッセージを出力すメッセージ
+def debug_print(message):
+    if log_level == logging.DEBUG:
+        print(message)
+        logger.debug(message)
 
 # ログファイルのパスを取得
 log_files = sorted(glob.glob(str(log_folder / 'img2j2kM_*.log')))
@@ -129,9 +133,17 @@ def convert_image():
                         write_img_dpi = abs(args.dpi)
                     else:
                         write_img_dpi = estimated_img_dpi
+                debug_print(f"DPI of {file_path} Original: {original_img_dpi}, Estimated: {estimated_img_dpi}, Write: {write_img_dpi}")
+                
+                debug_print
+                # Pillow Imageをnumpy arrayに変換
+                img_array = np.array(img)
 
-                output_path = os.path.join(lossless_folder, os.path.splitext(os.path.basename(file_path))[0] + '.jpf')
-                img.save(output_path, 'JPEG2000', quality_mode='lossless', dpi=(write_img_dpi, write_img_dpi))
+            output_path = os.path.join(lossless_folder, os.path.splitext(os.path.basename(file_path))[0] + '.jpf')
+
+            # 画像の変換と出力
+            glymur.Jp2k(output_path, data=img_array)
+
         except Exception as e:
             logger.error(f"Error converting file {file_path}: {e}")
         finally:
