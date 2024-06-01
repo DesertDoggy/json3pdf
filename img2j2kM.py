@@ -1,4 +1,5 @@
 import os
+import sys
 import queue
 import threading
 import argparse
@@ -11,6 +12,12 @@ from PIL import ImageChops
 import shutil
 import glymur
 import numpy as np
+
+# DLLのパスを取得
+dll_path = os.path.join(sys.path[0], '.data', 'openjpeg')
+
+# DLLのパスをシステムのPATH環境変数に追加
+os.environ['PATH'] = dll_path + os.pathsep + os.environ['PATH']
 
 # コマンドライン引数を解析する
 parser = argparse.ArgumentParser(description='Convert images to JP2 format and create optimized images for OCR.')
@@ -159,7 +166,7 @@ def convert_image():
             file_queue.task_done()
 
 # スレッドの作成と開始
-for _ in range(5):  # 5スレッドを作成
+for _ in range(4):  # 4スレッドを作成
     t = threading.Thread(target=convert_image)
     t.daemon = True
     t.start()
