@@ -84,18 +84,25 @@ pdfmetrics.registerFont(TTFont(font_name, font_path))
 input_folder = './DIjson'
 if not os.path.exists(input_folder):
     os.makedirs(input_folder,exist_ok=True)
-    print(f'{input_folder}フォルダを生成しました create {input_folder} folder')
+    print(f'Created {input_folder} folder')
 else:
-    print(f'{input_folder}フォルダは既に存在します {input_folder} folder already exists')
+    print(f'{input_folder} folder already exists')
 output_folder = './OCRtextPDF'
 if not os.path.exists(output_folder):
     os.makedirs(output_folder,exist_ok=True)
-    print(f'{output_folder}フォルダを生成しました create {output_folder} folder')
+    print(f'Created {output_folder} folder')
 else:
-    print(f'{output_folder}フォルダは既に存在します {output_folder} folder already exists')
+    print(f'{output_folder} folder already exists')
 
 # 入力フォルダ内の全てのJSONファイルを取得
 json_files = [f for f in os.listdir(input_folder) if f.endswith('.pdf.json')]
+
+# JSONファイルの総数を取得し、コンソールに表示
+total_json_files = len(json_files)
+info_print(f'Total JSON files: {total_json_files}')
+
+# PDFファイルのカウンターを初期化
+pdf_counter = 0
 
 for json_file in json_files:
     # OCR結果のJSONファイル名を設定
@@ -137,4 +144,13 @@ for json_file in json_files:
         # PDFファイルを保存
         c.save()
 
-print('全てのPDFファイルの処理が完了しました。')
+        # PDFファイルのカウンターを増やす
+        pdf_counter += 1
+
+        # PDFファイルが作成されたことを表示（何個目/総数の形で表示）
+        info_print(f'PDF file {new_pdf_filename} has been created. ({pdf_counter}/{total_json_files})')
+else:
+    # JSONファイルが存在しないことを表示
+    info_print(f'No JSON files found, so no PDF file was created.')
+
+info_print('All PDF file processing is complete.')
