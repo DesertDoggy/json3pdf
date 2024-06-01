@@ -15,7 +15,7 @@ import shutil
 import numpy as np
 import ctypes
 import glymur
-import tempfile
+import uuid
 
 # コマンドライン引数を解析する
 parser = argparse.ArgumentParser(description='Convert images to JP2 format and create optimized images for OCR.')
@@ -85,13 +85,16 @@ while len(log_files) > 5:
 # 入力フォルダと出力フォルダのパス
 input_folder = './OriginalImages/DQ5'
 lossless_folder = './TEMP/lossless/DQ5'  
-optimized_folder = './TEMP/optimized/DQ5'  
+optimized_folder = './TEMP/optimized/DQ5'
+tmp_path = './TEMP/tmp'  
 
 # 出力フォルダが存在しない場合は作成
 if not os.path.exists(lossless_folder):
     os.makedirs(lossless_folder)
 if not os.path.exists(optimized_folder):
     os.makedirs(optimized_folder)
+if not os.path.exists(tmp_path):
+    os.makedirs(tmp_path)
 
 # 変換をスキップする拡張子リスト
 skip_conversion_extensions = (
@@ -192,10 +195,15 @@ def convert_image():
                 # Pillow Imageをnumpy arrayに変換
                 img_array = np.array(img)
 
-                output_path = os.path.join(lossless_folder, os.path.splitext(os.path.basename(file_path))[0] + '.jpf')
+                # 一時的なファイル名を作成（日本語をglymurに渡さないため）
+                tmp_filename = os.path.join(tmp_path, str(uuid.uuid4()) + '_temp.jpf')
 
                 # 画像の変換と出力
-                glymur.Jp2k(output_path, data=img_array)
+                glymur.Jp2k(tmp_filename, data=img_array)
+
+                # 一時的なファイルを最終的な出力パスにリネーム
+                output_path = os.path.join(lossless_folder, os.path.splitext(os.path.basename(file_path))[0] + '.jpf')
+                shutil.move(tmp_filename, output_path)
 
         except Exception as e:
             logger.error(f"Error converting file {file_path}: {e}")
