@@ -140,6 +140,16 @@ def convert_image():
 
             output_path = os.path.join(lossless_folder, os.path.splitext(os.path.basename(file_path))[0] + '.jpf')
 
+            try:
+                import glymur
+                print("Glymur is installed correctly.")
+            except ImportError:
+                print("Glymur is not installed.")
+            if glymur.lib.openjp2.OPENJP2:
+                print("OpenJPEG is available. JP2K conversion is supported.")
+            else:
+                print("OpenJPEG is not available. JP2K conversion is not supported.")
+
             # 画像の変換と出力
             glymur.Jp2k(output_path, data=img_array)
 
