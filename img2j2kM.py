@@ -133,20 +133,10 @@ def convert_image():
                         write_img_dpi = abs(args.dpi)
                     else:
                         write_img_dpi = estimated_img_dpi
-                debug_print(f"DPI of {file_path} Original: {original_img_dpi}, Estimated: {estimated_img_dpi}, Write: {write_img_dpi}")
+                verbose_print(f"DPI of {file_path} Original: {original_img_dpi}, Estimated: {estimated_img_dpi}, Write: {write_img_dpi}")
                 
-                
-                debug_print(f"Type of img before conversion: {type(img)}")
-                debug_print(f"Content of img before conversion: {img}")
-
                 # Pillow Imageをnumpy arrayに変換
                 img_array = np.array(img)
-
-                debug_print(f"Type of img_array after conversion: {type(img_array)}")
-                debug_print(f"Content of img_array after conversion: {img_array}")
-                debug_print(f"Shape of img_array after conversion: {img_array.shape}")
-                debug_print(f"Data type of img_array after conversion: {img_array.dtype}")
-
 
             output_path = os.path.join(lossless_folder, os.path.splitext(os.path.basename(file_path))[0] + '.jpf')
 
