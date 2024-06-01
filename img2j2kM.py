@@ -11,9 +11,9 @@ from datetime import datetime
 from PIL import Image
 from PIL import ImageChops
 import shutil
-import glymur
 import numpy as np
 import ctypes
+import glymur
 
 # コマンドライン引数を解析する
 parser = argparse.ArgumentParser(description='Convert images to JP2 format and create optimized images for OCR.')
