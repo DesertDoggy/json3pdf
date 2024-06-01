@@ -102,7 +102,8 @@ supported_extensions = (
     '.jpm', '.jpg2', '.jpx', '.mj2', '.png', '.psd', '.tif', '.tiff', '.webp'
 )
 
-#処理開始の確認事項
+#本処理開始前の確認事項
+
 # DLLのパスを取得
 dll_path = os.path.join(sys.path[0], 'data', 'openjpeg')
 
@@ -119,10 +120,27 @@ if os.path.exists(dll_path):
             print("DLL path is now in the system PATH.")
         else:
             error_print("Failed to add DLL path to system PATH.")
-            error_print(os.environ['PATH'])
+            debug_print(os.environ['PATH'])
 else:
     error_print("Local DLL path does not exist. openjpeg DLLs are required for JP2K conversion. If openjp2.dll is not in system PATH please download it from the official site place them in the data/openjpeg folder.")
     debug_print(os.environ['PATH'])
+
+#DLLの存在を確認する関数
+def check_dll(dll_path):
+    try:
+        ctypes.cdll.LoadLibrary(dll_path)
+        print("DLL was successfully loaded from system PATH.")
+    except OSError:
+        error_print("Failed to load DLL from system PATH.")
+
+# DLLの名前を指定
+dll_name = 'openjp2.dll'
+
+# システムのPATHからDLLを探す
+for path in os.environ['PATH'].split(os.pathsep):
+    full_dll_path = os.path.join(path, dll_name)
+    if os.path.exists(full_dll_path):
+        check_dll(full_dll_path)
 
 # ファイルキューの作成
 file_queue = queue.Queue()
