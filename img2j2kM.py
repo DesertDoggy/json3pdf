@@ -12,12 +12,7 @@ from PIL import ImageChops
 import shutil
 import glymur
 import numpy as np
-
-# DLLのパスを取得
-dll_path = os.path.join(sys.path[0], '.data', 'openjpeg')
-
-# DLLのパスをシステムのPATH環境変数に追加
-os.environ['PATH'] = dll_path + os.pathsep + os.environ['PATH']
+import ctypes
 
 # コマンドライン引数を解析する
 parser = argparse.ArgumentParser(description='Convert images to JP2 format and create optimized images for OCR.')
@@ -106,6 +101,29 @@ supported_extensions = (
     '.bmp', '.gif', '.j2c', '.j2k', '.jpc', '.jp2', '.jpf', '.jpg', '.jpeg', 
     '.jpm', '.jpg2', '.jpx', '.mj2', '.png', '.psd', '.tif', '.tiff', '.webp'
 )
+
+#処理開始の確認事項
+# DLLのパスを取得
+dll_path = os.path.join(sys.path[0], 'data', 'openjpeg')
+
+if os.path.exists(dll_path):
+    print("Local DLL path exists.")
+    if dll_path in os.environ['PATH']:
+        print("DLL path is in the system PATH.")
+    else:
+        error_print("DLL path is not in the system PATH.")
+        error_print("Adding dll_path to system PATH")
+        # DLLのパスをシステムのPATH環境変数に追加
+        os.environ['PATH'] = dll_path + os.pathsep + os.environ['PATH']
+        if dll_path in os.environ['PATH']:
+            print("DLL path is now in the system PATH.")
+        else:
+            error_print("Failed to add DLL path to system PATH.")
+            error_print(os.environ['PATH'])
+else:
+    error_print("Local DLL path does not exist. openjpeg DLLs are required for JP2K conversion. If openjp2.dll is not in system PATH please download it from the official site place them in the data/openjpeg folder.")
+    debug_print(os.environ['PATH'])
+
 # ファイルキューの作成
 file_queue = queue.Queue()
 
@@ -114,7 +132,7 @@ for file in os.listdir(input_folder):
     if file.lower().endswith(supported_extensions):
         file_queue.put(os.path.join(input_folder, file))
 
-# 画像をロスレスのj2kファイルに変換する関数
+# 画像をロスレスのj2kファイルに変換する関数を定義
 def convert_image():
     while not file_queue.empty():
         file_path = file_queue.get()
