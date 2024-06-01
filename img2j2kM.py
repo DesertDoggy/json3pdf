@@ -5,6 +5,7 @@ import threading
 import argparse
 from pathlib import Path
 import logging
+from colorama import Fore, Style
 import traceback
 import glob
 from datetime import datetime
@@ -14,7 +15,7 @@ import shutil
 import numpy as np
 import ctypes
 import glymur
-from colorama import Fore, Style
+import tempfile
 
 # コマンドライン引数を解析する
 parser = argparse.ArgumentParser(description='Convert images to JP2 format and create optimized images for OCR.')
@@ -122,6 +123,16 @@ for path in os.environ['PATH'].split(os.pathsep):
     full_dll_path = os.path.join(path, dll_name)
     if os.path.exists(full_dll_path):
         check_dll(full_dll_path)
+# glymurの確認
+try:
+    import glymur
+    print("Glymur is installed correctly.")
+except ImportError:
+    print("Glymur is not installed.")
+if glymur.lib.openjp2.OPENJP2:
+    print("OpenJPEG is available. JP2K conversion is supported.")
+else:
+    print("OpenJPEG is not available. JP2K conversion is not supported.")
 
 # glymurの設定ファイルの場所を確認する
 glymur_config_path = os.path.join(os.path.expanduser('~'), 'glymur', 'glymurrc')
@@ -130,7 +141,17 @@ if os.path.isfile(glymur_config_path):
     info_print("glymur setting file in " + glymur_config_path)
 else:
     # 設定ファイルが存在しない場合、エラーメッセージを表示
-    error_print("glymur setting file not found.")
+    error_print("glymur setting file not found in "+glymur_config_path)
+
+# 画像出力できるか確認
+test_image_path = './data/test/test.png'
+jp2k_test_path = './data/test/test.jpf'
+# PILライブラリを使用して画像を読み込む
+image = Image.open(test_image_path)
+# 画像データをnumpy配列に変換
+image_data = np.array(image)
+# glymurライブラリを使用してJPEG 2000形式で保存
+jp2 = glymur.Jp2k(jp2k_test_path, data=image_data)
 
 # ファイルキューの作成
 file_queue = queue.Queue()
@@ -171,20 +192,10 @@ def convert_image():
                 # Pillow Imageをnumpy arrayに変換
                 img_array = np.array(img)
 
-            output_path = os.path.join(lossless_folder, os.path.splitext(os.path.basename(file_path))[0] + '.jpf')
+                output_path = os.path.join(lossless_folder, os.path.splitext(os.path.basename(file_path))[0] + '.jpf')
 
-            try:
-                import glymur
-                print("Glymur is installed correctly.")
-            except ImportError:
-                print("Glymur is not installed.")
-            if glymur.lib.openjp2.OPENJP2:
-                print("OpenJPEG is available. JP2K conversion is supported.")
-            else:
-                print("OpenJPEG is not available. JP2K conversion is not supported.")
-            print("output is" +output_path)
-            # 画像の変換と出力
-            glymur.Jp2k(output_path, data=img_array)
+                # 画像の変換と出力
+                glymur.Jp2k(output_path, data=img_array)
 
         except Exception as e:
             logger.error(f"Error converting file {file_path}: {e}")
