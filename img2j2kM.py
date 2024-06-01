@@ -14,6 +14,7 @@ import shutil
 import numpy as np
 import ctypes
 import glymur
+from colorama import Fore, Style
 
 # コマンドライン引数を解析する
 parser = argparse.ArgumentParser(description='Convert images to JP2 format and create optimized images for OCR.')
@@ -47,7 +48,7 @@ def info_print(message):
     logger.info(message)
 
 def error_print(message):
-    print(message)
+    print(Fore.RED + message + Style.RESET_ALL)
     logger.error(message)
 
 # ログ設定
@@ -121,6 +122,15 @@ for path in os.environ['PATH'].split(os.pathsep):
     full_dll_path = os.path.join(path, dll_name)
     if os.path.exists(full_dll_path):
         check_dll(full_dll_path)
+
+# glymurの設定ファイルの場所を確認する
+glymur_config_path = os.path.join(os.path.expanduser('~'), 'glymur', 'glymurrc')
+if os.path.isfile(glymur_config_path):
+    # 設定ファイルが存在する場合、その場所を表示
+    info_print("glymur setting file in " + glymur_config_path)
+else:
+    # 設定ファイルが存在しない場合、エラーメッセージを表示
+    error_print("glymur setting file not found.")
 
 # ファイルキューの作成
 file_queue = queue.Queue()
