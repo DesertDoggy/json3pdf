@@ -52,6 +52,10 @@ def error_print(message):
     print(Fore.RED + message + Style.RESET_ALL)
     logger.error(message)
 
+# コンソールのカラーフォーマット
+def variable_str(obj):
+    return Fore.CYAN + Style.BRIGHT + str(obj) + Style.RESET_ALL
+
 # ログ設定
 log_folder = Path('./logs')
 log_folder.mkdir(parents=True, exist_ok=True)
@@ -156,6 +160,16 @@ image_data = np.array(image)
 # glymurライブラリを使用してJPEG 2000形式で保存
 jp2 = glymur.Jp2k(jp2k_test_path, data=image_data)
 
+# グローバル変数とロックを初期化
+lossless_count = 0
+optimized_count = 0
+img_per_subdir_count = 0
+subdir_count = 0
+lossless_OK = 0
+lossless_NO = 0
+lossless_CHK = 0
+count_lock = threading.Lock()
+
 # ファイルキューの作成
 file_queue = queue.Queue()
 
@@ -163,9 +177,12 @@ file_queue = queue.Queue()
 for file in os.listdir(input_folder):
     if file.lower().endswith(supported_extensions):
         file_queue.put(os.path.join(input_folder, file))
+        img_per_subdir_count += 1
+verbose_print(f"Total images in {input_folder}: {img_per_subdir_count}")
 
 # 画像をロスレスのj2kファイルに変換する関数を定義
 def convert_image():
+    global lossless_count, lossless_OK, lossless_NO, lossless_CHK
     while not file_queue.empty():
         file_path = file_queue.get()
         try:
@@ -190,7 +207,7 @@ def convert_image():
                         write_img_dpi = abs(args.dpi)
                     else:
                         write_img_dpi = estimated_img_dpi
-                verbose_print(f"DPI of {file_path} Original: {original_img_dpi}, Estimated: {estimated_img_dpi}, Write: {write_img_dpi}")
+                verbose_print(Fore.YELLOW + f"DPI" + Fore.WHITE + " of "+file_path+"Original: "+variable_str(original_img_dpi)+", Estimated: "+variable_str(estimated_img_dpi)+", Write: "+variable_str(write_img_dpi))
                 
                 # Pillow Imageをnumpy arrayに変換
                 img_array = np.array(img)
@@ -199,11 +216,31 @@ def convert_image():
                 tmp_filename = os.path.join(tmp_path, str(uuid.uuid4()) + '_temp.jpf')
 
                 # 画像の変換と出力
-                glymur.Jp2k(tmp_filename, data=img_array)
+                glymur.Jp2k(tmp_filename, data=img_array, cratios=[1])
 
                 # 一時的なファイルを最終的な出力パスにリネーム
                 output_path = os.path.join(lossless_folder, os.path.splitext(os.path.basename(file_path))[0] + '.jpf')
                 shutil.move(tmp_filename, output_path)
+                with count_lock:
+                    lossless_count += 1
+                    verbose_print(f"Lossless conversion for "+file_path+" complete!")
+                    print(Fore.BLUE + "Lossless conversion" + Fore.CYAN+ str(lossless_count) + Fore.WHITE +"/" + Fore.CYAN + str(img_per_subdir_count)+Style.RESET_ALL)
+
+                # 変換後の画像を読み込み
+                converted_img_array = glymur.Jp2k(output_path)[:]
+                
+                # 元画像と変換後の画像がビットパーフェクトに一致するかどうかを確認
+                is_bitperfect = np.array_equal(img_array, converted_img_array)
+                with count_lock:
+                    lossless_CHK += 1
+                    if is_bitperfect:
+                        lossless_OK += 1
+                        verbose_print(f"Bitperfect conversion for {file_path} verified!")
+                        print(Fore.YELLOW + "Bitperfect " + Fore.GREEN + " OK " + variable_str(lossless_OK) + Fore.WHITE +"/" +  Fore.RED + "NO " + Fore.CYAN + variable_str(lossless_NO) + Fore.WHITE + "/" + Fore.MAGENTA + "Total " + Fore.CYAN + variable_str(lossless_CHK) + Style.RESET_ALL)
+                    else:
+                        lossless_NO += 1
+                        error_print(f"Bitperfect comparison for {file_path}: False")
+                        print(Fore.YELLOW + "Bitperfect " + Fore.GREEN + " OK " + variable_str(lossless_OK) + Fore.WHITE +"/" +  Fore.RED + "NO " + Fore.CYAN + variable_str(lossless_NO) + Fore.WHITE + "/" + Fore.MAGENTA + "Total " + Fore.CYAN + variable_str(lossless_CHK) + Style.RESET_ALL)
 
         except Exception as e:
             logger.error(f"Error converting file {file_path}: {e}")
