@@ -5,6 +5,7 @@ import threading
 import argparse
 from pathlib import Path
 import logging
+import traceback
 import glob
 from datetime import datetime
 from PIL import Image
@@ -171,12 +172,13 @@ def convert_image():
                 print("OpenJPEG is available. JP2K conversion is supported.")
             else:
                 print("OpenJPEG is not available. JP2K conversion is not supported.")
-
+            print("output is" +output_path)
             # 画像の変換と出力
             glymur.Jp2k(output_path, data=img_array)
 
         except Exception as e:
             logger.error(f"Error converting file {file_path}: {e}")
+            logger.error(traceback.format_exc())
         finally:
             file_queue.task_done()
 
