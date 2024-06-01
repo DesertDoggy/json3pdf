@@ -130,8 +130,8 @@ def convert_image():
                     else:
                         write_img_dpi = estimated_img_dpi
 
-                output_path = os.path.join(lossless_folder, os.path.basename(file_path) + '.jpf')
-                img.save(output_path, 'JPEG2000', quality_mode='rates', quality_layers=[1], dpi=(write_img_dpi, write_img_dpi))
+                output_path = os.path.join(lossless_folder, os.path.splitext(os.path.basename(file_path))[0] + '.jpf')
+                img.save(output_path, 'JPEG2000', quality_mode='lossless', dpi=(write_img_dpi, write_img_dpi))
         except Exception as e:
             logger.error(f"Error converting file {file_path}: {e}")
         finally:
