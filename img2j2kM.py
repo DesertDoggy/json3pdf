@@ -232,7 +232,7 @@ def convert_image():
                 dpi_str = str(write_img_dpi)
                 xml_data = f"""
                 <info>
-                    <DPI>{dpi_str}</DPI>
+                    <dpi>{dpi_str}</dpi>
                 </info>
                 """
                 # XMLデータをパース
@@ -254,6 +254,13 @@ def convert_image():
 
                 # XMLBoxを追加
                 jp2Lossless.append(xmlbox)
+
+                if log_level == logging.DEBUG:
+                    # メタデータを読む関数を定義
+                    jp2Read = glymur.Jp2k(tmp_filename)
+                    #埋め込んだメタデータ確認
+                    glymur.set_option('print.codestream', False)
+                    debug_print(f"Metadata for {file_path}: {jp2Read.box}")
 
                 #チェックの方法に基づいて画像を読み込み
                 if args.check == "fast" and not args.quick:
