@@ -1,5 +1,6 @@
 import os
 import sys
+import tempfile
 import queue
 import threading
 import psutil
@@ -19,15 +20,18 @@ import uuid
 
 # コマンドライン引数を解析する
 parser = argparse.ArgumentParser(description='Convert images to JP2 format and create optimized images for OCR.')
-parser.add_argument('-s', '--simple-check', nargs='?', const=1, type=int, default=1,
-                    help='Perform a simple check after creating each PDF (default: on)')
 parser.add_argument('--log-level', '-log', default='DEBUG', choices=['DEBUG', 'VERBOSE', 'INFO', 'WARNING'],
                     help='Set the logging level (default: DEBUG)')
 parser.add_argument('-debug', action='store_const', const='DEBUG', dest='log_level',
                     help='Set the logging level to DEBUG')
 parser.add_argument('--dpi', type=int, help='DPI for the output image. Default estimates dpi and rounds read DPI to typical integer DPI values or 600 if read DPI N/A. Positive integer will use set value if read DPI is N/A. Negative integer will force set value. --dpi 0 will use read DPI without rounding.')
-parser.add_argument('--quick', '-q', action='store_true', help='Skip bit-perfect lossless conversion check.')
-parser.add_argument("--check", choices=["fast", "slow"], default="slow", help="Check for bit-perfect lossless conversion.Default = slow 'fast' uses glymur before renaming tmp file, 'slow' uses pillow/numpy after final output. This is to avoid Japanese input to glymur")
+group_check = parser.add_mutually_exclusive_group()
+group_check.add_argument('--quick', '-q', action='store_true', help='Skip bit-perfect lossless conversion check.')
+group_check.add_argument("--check", choices=["fast", "slow"], default="slow", help="Check for bit-perfect lossless conversion. Default = slow 'fast' uses glymur before renaming tmp file, 'slow' uses pillow/numpy after final output. This is to avoid Japanese input to glymur")
+parser.add_argument("--temp", "-t", default='./TEMP/tmp', help="Specify the temporary directory path. Default:'./TEMP/tmp'Use 'system' for system's temp directory. Using same drive as output folder is recommended.")
+group_encode_method = parser.add_mutually_exclusive_group()
+group_encode_method.add_argument("--lossless", "-l", action="store_true", help="Perform only lossless conversion.")
+group_encode_method.add_argument("--optimize", "-o", action="store_true", help="Perform only optimized conversion.")
 args = parser.parse_args()
 
 # カスタムログレベルVERBOSEを作成
@@ -91,7 +95,10 @@ while len(log_files) > 5:
 input_folder = './OriginalImages/DQ5'
 lossless_folder = './TEMP/lossless/DQ5'  
 optimized_folder = './TEMP/optimized/DQ5'
-tmp_path = './TEMP/tmp'  
+if args.temp.lower() == 'system':
+    tmp_path = tempfile.gettempdir()
+else:
+    tmp_path = os.path.abspath(args.temp)
 
 # 出力フォルダが存在しない場合は作成
 if not os.path.exists(lossless_folder):
@@ -225,7 +232,7 @@ def convert_image():
                 # 一時的なファイル名を作成（日本語をglymurに渡さないため）
                 tmp_filename = os.path.join(tmp_path, str(uuid.uuid4()) + '_temp.jpf')
 
-                # 画像の変換と出力
+                # ロスレス画像の変換と出力
                 glymur.Jp2k(tmp_filename, data=img_array, cratios=[1])
 
                 #チェックの方法に基づいて画像を読み込み
