@@ -17,6 +17,8 @@ import numpy as np
 import ctypes
 import glymur
 import uuid
+import io
+from lxml import etree as ET
 
 # コマンドライン引数を解析する
 parser = argparse.ArgumentParser(description='Convert images to JP2 format and create optimized images for OCR.')
@@ -160,7 +162,7 @@ else:
 
 # 画像出力できるか確認
 test_image_path = './data/test/test.png'
-jp2k_test_path = './data/test/test.jpf'
+jp2k_test_path = './data/test/test.jp2'
 # PILライブラリを使用して画像を読み込む
 image = Image.open(test_image_path)
 # 画像データをnumpy配列に変換
@@ -225,15 +227,33 @@ def convert_image():
                     else:
                         write_img_dpi = estimated_img_dpi
                 verbose_print(Fore.YELLOW + f"DPI" + Fore.WHITE + " of "+file_path+"Original: "+variable_str(original_img_dpi)+", Estimated: "+variable_str(estimated_img_dpi)+", Write: "+variable_str(write_img_dpi))
+
+                # DPI情報をXMLデータとして作成
+                dpi_str = str(write_img_dpi)
+                xml_data = f"""
+                <info>
+                    <DPI>{dpi_str}</DPI>
+                </info>
+                """
+                # XMLデータをパース
+                xml = io.BytesIO(xml_data.encode())
+                tree = ET.parse(xml)
+
+                # XMLBoxを作成
+                xmlbox = glymur.jp2box.XMLBox(xml=tree)
+
                 
                 # Pillow Imageをnumpy arrayに変換
                 img_array = np.array(img)
 
                 # 一時的なファイル名を作成（日本語をglymurに渡さないため）
-                tmp_filename = os.path.join(tmp_path, str(uuid.uuid4()) + '_temp.jpf')
+                tmp_filename = os.path.join(tmp_path, str(uuid.uuid4()) + '_temp.jp2')
 
                 # ロスレス画像の変換と出力
-                glymur.Jp2k(tmp_filename, data=img_array, cratios=[1])
+                jp2Lossless = glymur.Jp2k(tmp_filename, data=img_array, cratios=[1])
+
+                # XMLBoxを追加
+                jp2Lossless.append(xmlbox)
 
                 #チェックの方法に基づいて画像を読み込み
                 if args.check == "fast" and not args.quick:
@@ -245,7 +265,7 @@ def convert_image():
                     is_bitperfect = np.array_equal(img_array, converted_img_array)
 
                 # 一時的なファイルを最終的な出力パスにリネーム
-                output_path = os.path.join(lossless_folder, os.path.splitext(os.path.basename(file_path))[0] + '.jpf')
+                output_path = os.path.join(lossless_folder, os.path.splitext(os.path.basename(file_path))[0] + '.jp2')
                 shutil.move(tmp_filename, output_path)
                 with count_lock:
                     lossless_count += 1
