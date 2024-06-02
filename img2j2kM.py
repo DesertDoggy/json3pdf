@@ -178,6 +178,7 @@ lossless_count = 0
 optimized_count = 0
 img_per_subdir_count = 0
 subdir_count = 0
+subdir_total = 0
 lossless_OK = 0
 lossless_NO = 0
 lossless_CHK = 0
@@ -201,6 +202,8 @@ num_threads = num_physical_cores // 2
 def convert_all_images(input_folder, lossless_folder, optimized_folder):
     global lossless_count, optimized_count, lossless_OK, lossless_NO, lossless_CHK, img_per_subdir_count, subdir_count, lossless_total, optimized_total, img_total
     for subdir in os.listdir(input_folder):
+        with count_lock:
+            subdir_count += 1
         input_subdir = os.path.join(input_folder, subdir)
         lossless_subdir = os.path.join(lossless_folder, subdir)
         optimized_subdir = os.path.join(optimized_folder, subdir)
@@ -330,7 +333,7 @@ def convert_image(file_queue, lossless_subdir, optimized_subdir):
                     with count_lock:
                         lossless_count += 1
                         verbose_print(f"Lossless conversion for "+file_path+" complete!")
-                        print(Fore.BLUE + "Lossless conversion" + Fore.CYAN+ str(lossless_count) + Fore.WHITE +"/" + Fore.CYAN + str(img_per_subdir_count)+Style.RESET_ALL)
+                        print(Fore.BLUE + "Lossless conversion" + Fore.CYAN+ str(lossless_count) + Fore.WHITE +"/" + Fore.CYAN + str(img_per_subdir_count)+Style.RESET_ALL+"for subdir"+Fore.CYAN+str(subdir_count)+" / "+str(subdir_total)+Style.RESET_ALL)
 
                     if not args.check == "fast" and not args.quick:
                         debug_print("Checking bit-perfect conversion using Pillow...")
@@ -377,8 +380,17 @@ def convert_image(file_queue, lossless_subdir, optimized_subdir):
         finally:
             file_queue.task_done()
 
-
+#本処理開始
+subdir_total = len([name for name in os.listdir(input_folder) if os.path.isdir(os.path.join(input_folder, name))])
 
 convert_all_images(input_folder, lossless_folder, optimized_folder)
 
-info_print(f"Conversion complete!")
+current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
+info_print(f"Conversion complete! {current_time}")
+info_print(f"Total subdirectories processed: {subdir_count} / {subdir_total}")
+info_print(f"Total images processed: {optimized_count} / {img_total}")
+
+if args.quick or args.optimize:
+    info_print("Note: Lossless check was skipped due to --quick or --optimize option.")
+else:
+    info_print(Fore.YELLOW + "Bitperfect " +Fore.WHITE+"lossless convertion check"+ Fore.GREEN + " OK " + variable_str(lossless_OK) + Fore.WHITE +"/" +  Fore.RED + "NO " + Fore.CYAN + variable_str(lossless_NO) + Fore.WHITE + "/" + Fore.MAGENTA + "Total " + Fore.CYAN + variable_str(lossless_CHK) + Style.RESET_ALL)
