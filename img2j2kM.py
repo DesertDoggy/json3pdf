@@ -27,6 +27,7 @@ parser.add_argument('-debug', action='store_const', const='DEBUG', dest='log_lev
                     help='Set the logging level to DEBUG')
 parser.add_argument('--dpi', type=int, help='DPI for the output image. Default estimates dpi and rounds read DPI to typical integer DPI values or 600 if read DPI N/A. Positive integer will use set value if read DPI is N/A. Negative integer will force set value. --dpi 0 will use read DPI without rounding.')
 parser.add_argument('--quick', '-q', action='store_true', help='Skip bit-perfect lossless conversion check.')
+parser.add_argument("--check", choices=["fast", "slow"], default="slow", help="Check for bit-perfect lossless conversion.Default = slow 'fast' uses glymur before renaming tmp file, 'slow' uses pillow/numpy after final output. This is to avoid Japanese input to glymur")
 args = parser.parse_args()
 
 # カスタムログレベルVERBOSEを作成
@@ -227,6 +228,15 @@ def convert_image():
                 # 画像の変換と出力
                 glymur.Jp2k(tmp_filename, data=img_array, cratios=[1])
 
+                #チェックの方法に基づいて画像を読み込み
+                if args.check == "fast" and not args.quick:
+                    debug_print("Checking bit-perfect conversion using glymur...")
+                    # glymurを使用して画像を読み込み
+                    converted_img_array = glymur.Jp2k(tmp_filename)[:]
+
+                    # 元画像と変換後の画像がビットパーフェクトに一致するかどうかを確認
+                    is_bitperfect = np.array_equal(img_array, converted_img_array)
+
                 # 一時的なファイルを最終的な出力パスにリネーム
                 output_path = os.path.join(lossless_folder, os.path.splitext(os.path.basename(file_path))[0] + '.jpf')
                 shutil.move(tmp_filename, output_path)
@@ -235,11 +245,15 @@ def convert_image():
                     verbose_print(f"Lossless conversion for "+file_path+" complete!")
                     print(Fore.BLUE + "Lossless conversion" + Fore.CYAN+ str(lossless_count) + Fore.WHITE +"/" + Fore.CYAN + str(img_per_subdir_count)+Style.RESET_ALL)
 
-                # 変換後の画像を読み込み
-                converted_img_array = glymur.Jp2k(output_path)[:]
-                
-                # 元画像と変換後の画像がビットパーフェクトに一致するかどうかを確認
-                is_bitperfect = np.array_equal(img_array, converted_img_array)
+                if not args.check == "fast" and not args.quick:
+                    debug_print("Checking bit-perfect conversion using Pillow...")
+                    # Pillowを使用して画像を読み込み
+                    converted_img = Image.open(output_path)
+                    converted_img_array = np.array(converted_img)
+
+                    # 元画像と変換後の画像がビットパーフェクトに一致するかどうかを確認
+                    is_bitperfect = np.array_equal(img_array, converted_img_array)
+
                 with count_lock:
                     lossless_CHK += 1
                     if is_bitperfect:
