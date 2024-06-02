@@ -252,89 +252,91 @@ def convert_image():
                 # Pillow Imageをnumpy arrayに変換
                 img_array = np.array(img)
 
-                # 一時的なファイル名を作成（日本語をglymurに渡さないため）
-                tmp_filename = os.path.join(tmp_path, str(uuid.uuid4()) + '_temp.jp2')
+                if not args.optimize:
+                    # 一時的なファイル名を作成（日本語をglymurに渡さないため）
+                    tmp_filename = os.path.join(tmp_path, str(uuid.uuid4()) + '_temp.jp2')
 
-                # ロスレス画像の変換と出力
-                jp2Lossless = glymur.Jp2k(tmp_filename, data=img_array, cratios=[1])
+                    # ロスレス画像の変換と出力
+                    jp2Lossless = glymur.Jp2k(tmp_filename, data=img_array, cratios=[1])
 
-                # XMLBoxを追加
-                jp2Lossless.append(xmlbox)
+                    # XMLBoxを追加
+                    jp2Lossless.append(xmlbox)
 
-                # メタデータを読む関数を定義
-                jp2Read = glymur.Jp2k(tmp_filename)
+                    # メタデータを読む関数を定義
+                    jp2Read = glymur.Jp2k(tmp_filename)
 
-                #デバッグ用作成ファイルメタデータ確認＆詳細出力
-                #if log_level == logging.DEBUG:
-                    #埋め込んだメタデータ確認
-                    #glymur.set_option('print.codestream', False)
-                    #debug_print(f"Metadata for converted {file_path}: {jp2Read.box}")
-                    
-                # メタデータのboxを検索
-                for box in jp2Read.box:
-                    # XMLBoxを探す
-                    if isinstance(box, glymur.jp2box.XMLBox):
-                        # XMLを解析
-                        root = box.xml.getroot()
-                        # dpi要素を探す
-                        dpi_elements = root.findall('.//dpi')
-                        for read_dpi in dpi_elements:
-                            verbose_print(f"Confirming"+Fore.YELLOW+" DPI "+Style.RESET_ALL+"for"+file_path +Fore.CYAN+ read_dpi.text+Style.RESET_ALL)
+                    #デバッグ用作成ファイルメタデータ確認＆詳細出力
+                    #if log_level == logging.DEBUG:
+                        #埋め込んだメタデータ確認
+                        #glymur.set_option('print.codestream', False)
+                        #debug_print(f"Metadata for converted {file_path}: {jp2Read.box}")
+                        
+                    # メタデータのboxを検索
+                    for box in jp2Read.box:
+                        # XMLBoxを探す
+                        if isinstance(box, glymur.jp2box.XMLBox):
+                            # XMLを解析
+                            root = box.xml.getroot()
+                            # dpi要素を探す
+                            dpi_elements = root.findall('.//dpi')
+                            for read_dpi in dpi_elements:
+                                verbose_print(f"Confirming"+Fore.YELLOW+" DPI "+Style.RESET_ALL+"for"+file_path +Fore.CYAN+ read_dpi.text+Style.RESET_ALL)
 
-                #チェックの方法に基づいて画像を読み込み
-                if args.check == "fast" and not args.quick:
-                    debug_print("Checking bit-perfect conversion using glymur...")
-                    # glymurを使用して画像を読み込み
-                    converted_img_array = glymur.Jp2k(tmp_filename)[:]
+                    #チェックの方法に基づいて画像を読み込み
+                    if args.check == "fast" and not args.quick:
+                        debug_print("Checking bit-perfect conversion using glymur...")
+                        # glymurを使用して画像を読み込み
+                        converted_img_array = glymur.Jp2k(tmp_filename)[:]
 
-                    # 元画像と変換後の画像がビットパーフェクトに一致するかどうかを確認
-                    is_bitperfect = np.array_equal(img_array, converted_img_array)
+                        # 元画像と変換後の画像がビットパーフェクトに一致するかどうかを確認
+                        is_bitperfect = np.array_equal(img_array, converted_img_array)
 
-                # 一時的なファイルを最終的な出力パスにリネーム
-                output_path = os.path.join(lossless_folder, os.path.splitext(os.path.basename(file_path))[0] + '.jp2')
-                shutil.move(tmp_filename, output_path)
-                with count_lock:
-                    lossless_count += 1
-                    verbose_print(f"Lossless conversion for "+file_path+" complete!")
-                    print(Fore.BLUE + "Lossless conversion" + Fore.CYAN+ str(lossless_count) + Fore.WHITE +"/" + Fore.CYAN + str(img_per_subdir_count)+Style.RESET_ALL)
+                    # 一時的なファイルを最終的な出力パスにリネーム
+                    output_path = os.path.join(lossless_folder, os.path.splitext(os.path.basename(file_path))[0] + '.jp2')
+                    shutil.move(tmp_filename, output_path)
+                    with count_lock:
+                        lossless_count += 1
+                        verbose_print(f"Lossless conversion for "+file_path+" complete!")
+                        print(Fore.BLUE + "Lossless conversion" + Fore.CYAN+ str(lossless_count) + Fore.WHITE +"/" + Fore.CYAN + str(img_per_subdir_count)+Style.RESET_ALL)
 
-                if not args.check == "fast" and not args.quick:
-                    debug_print("Checking bit-perfect conversion using Pillow...")
-                    # Pillowを使用して画像を読み込み
-                    converted_img = Image.open(output_path)
-                    converted_img_array = np.array(converted_img)
+                    if not args.check == "fast" and not args.quick:
+                        debug_print("Checking bit-perfect conversion using Pillow...")
+                        # Pillowを使用して画像を読み込み
+                        converted_img = Image.open(output_path)
+                        converted_img_array = np.array(converted_img)
 
-                    # 元画像と変換後の画像がビットパーフェクトに一致するかどうかを確認
-                    is_bitperfect = np.array_equal(img_array, converted_img_array)
+                        # 元画像と変換後の画像がビットパーフェクトに一致するかどうかを確認
+                        is_bitperfect = np.array_equal(img_array, converted_img_array)
 
-                with count_lock:
-                    lossless_CHK += 1
-                    if is_bitperfect:
-                        lossless_OK += 1
-                        verbose_print(f"Bitperfect conversion for {file_path} verified!")
-                        print(Fore.YELLOW + "Bitperfect " + Fore.GREEN + " OK " + variable_str(lossless_OK) + Fore.WHITE +"/" +  Fore.RED + "NO " + Fore.CYAN + variable_str(lossless_NO) + Fore.WHITE + "/" + Fore.MAGENTA + "Total " + Fore.CYAN + variable_str(lossless_CHK) + Style.RESET_ALL)
-                    else:
-                        lossless_NO += 1
-                        error_print(f"Bitperfect conversion for {file_path}: Failed!")
-                        print(Fore.YELLOW + "Bitperfect " + Fore.GREEN + " OK " + variable_str(lossless_OK) + Fore.WHITE +"/" +  Fore.RED + "NO " + Fore.CYAN + variable_str(lossless_NO) + Fore.WHITE + "/" + Fore.MAGENTA + "Total " + Fore.CYAN + variable_str(lossless_CHK) + Style.RESET_ALL)
-                    
-                # 一時的なファイル名を作成（日本語をglymurに渡さないため）
-                tmp_filename_opt = os.path.join(tmp_path, str(uuid.uuid4()) + '_temp_opt.jp2')
+                    with count_lock:
+                        lossless_CHK += 1
+                        if is_bitperfect:
+                            lossless_OK += 1
+                            verbose_print(f"Bitperfect conversion for {file_path} verified!")
+                            print(Fore.YELLOW + "Bitperfect " + Fore.GREEN + " OK " + variable_str(lossless_OK) + Fore.WHITE +"/" +  Fore.RED + "NO " + Fore.CYAN + variable_str(lossless_NO) + Fore.WHITE + "/" + Fore.MAGENTA + "Total " + Fore.CYAN + variable_str(lossless_CHK) + Style.RESET_ALL)
+                        else:
+                            lossless_NO += 1
+                            error_print(f"Bitperfect conversion for {file_path}: Failed!")
+                            print(Fore.YELLOW + "Bitperfect " + Fore.GREEN + " OK " + variable_str(lossless_OK) + Fore.WHITE +"/" +  Fore.RED + "NO " + Fore.CYAN + variable_str(lossless_NO) + Fore.WHITE + "/" + Fore.MAGENTA + "Total " + Fore.CYAN + variable_str(lossless_CHK) + Style.RESET_ALL)
+                
+                if not args.lossless:
+                    # 一時的なファイル名を作成（日本語をglymurに渡さないため）
+                    tmp_filename_opt = os.path.join(tmp_path, str(uuid.uuid4()) + '_temp_opt.jp2')
 
-                # 最適化された画像の変換と出力
-                jp2Optimized = glymur.Jp2k(tmp_filename_opt, data=img_array, cratios=[80])
+                    # 最適化された画像の変換と出力
+                    jp2Optimized = glymur.Jp2k(tmp_filename_opt, data=img_array, cratios=[80])
 
-                # XMLBoxを追加
-                jp2Optimized.append(xmlbox)
+                    # XMLBoxを追加
+                    jp2Optimized.append(xmlbox)
 
-                # 一時的なファイルを最終的な出力パスにリネーム
-                output_path_opt = os.path.join(optimized_folder, os.path.splitext(os.path.basename(file_path))[0] + '.jp2')
-                shutil.move(tmp_filename_opt, output_path_opt)
+                    # 一時的なファイルを最終的な出力パスにリネーム
+                    output_path_opt = os.path.join(optimized_folder, os.path.splitext(os.path.basename(file_path))[0] + '.jp2')
+                    shutil.move(tmp_filename_opt, output_path_opt)
 
-                with count_lock:
-                    optimized_count += 1
-                    verbose_print(f"Optimized conversion for {file_path} complete!")
-                    print(Fore.BLUE + "Optimized conversion" + Fore.CYAN+ str(optimized_count) + Fore.WHITE +"/" + Fore.CYAN + str(img_per_subdir_count)+Style.RESET_ALL)
+                    with count_lock:
+                        optimized_count += 1
+                        verbose_print(f"Optimized conversion for {file_path} complete!")
+                        print(Fore.BLUE + "Optimized conversion" + Fore.CYAN+ str(optimized_count) + Fore.WHITE +"/" + Fore.CYAN + str(img_per_subdir_count)+Style.RESET_ALL)
 
         except Exception as e:
             logger.error(f"Error converting file {file_path}: {e}")

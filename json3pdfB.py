@@ -18,7 +18,7 @@ parser.add_argument('--log-level', '-log', default='DEBUG', choices=['DEBUG', 'V
                     help='Set the logging level (default: DEBUG)')
 parser.add_argument('-debug', action='store_const', const='DEBUG', dest='log_level',
                     help='Set the logging level to DEBUG')
-parser.add_argument('-s', '--size', type=int, default=60, help='フォントのサイズを指定します（デフォルトは60）')
+parser.add_argument('-s', '--size', type=int, default=8, help='フォントのサイズを指定します（デフォルトは8）')
 parser.add_argument('-f', '--font', default='NotoSansJP-Regular', help='使用するフォントの名前を指定します（デフォルトはNotoSansJP-Regular）')
 parser.add_argument('-d', '--dpi', type=int, default=600, help='文書のDPIを指定します（デフォルトは600）')
 args = parser.parse_args()
@@ -79,6 +79,18 @@ font_path = './data/fonts/' + font_name + '.ttf'
 
 # フォントを登録
 pdfmetrics.registerFont(TTFont(font_name, font_path))
+
+# Define page sizes in points
+page_sizes = {
+    "A3": (842, 1191),
+    "A4": (595, 842),
+    "A5": (420, 595),
+    "A6": (298, 420),
+    "B4": (729, 1032),
+    "B5": (516, 729),
+    "B6": (363, 516),
+    "B7": (258, 363)
+}
 
 # 入力フォルダと出力フォルダのパスを設定
 input_folder = './DIjson'
