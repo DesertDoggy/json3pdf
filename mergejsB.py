@@ -7,16 +7,20 @@ from datetime import datetime
 from pypdf import PdfReader, PdfWriter
 
 # コマンドライン引数を解析する
-parser = argparse.ArgumentParser(description='PDFファイルにテキストレイヤーを追加します。')
+parser = argparse.ArgumentParser(description='Add a text layer to a PDF file.')
 parser.add_argument('--log-level', '-log', default='DEBUG', choices=['DEBUG', 'VERBOSE', 'INFO', 'WARNING'],
                     help='Set the logging level (default: DEBUG)')
 parser.add_argument('-debug', action='store_const', const='DEBUG', dest='log_level',
                     help='Set the logging level to DEBUG')
-parser.add_argument('--left', type=int, default=0, help='左に移動する単位数')
-parser.add_argument('--right', type=int, default=0, help='右に移動する単位数')
-parser.add_argument('--up', type=int, default=0, help='上に移動する単位数')
-parser.add_argument('--down', type=int, default=48, help='下に移動する単位数')
-parser.add_argument('--dpi', type=int, default=600, help='文書のDPIを指定します。デフォルトは600dpiです。')
+groupLR = parser.add_mutually_exclusive_group(required=False)
+groupLR.add_argument('--left', '-l', type=int, help='Number of points to move to the left (1 inch = 72 pt, 1 cm = 28.35 pt)')
+groupLR.add_argument('--right', '-r', type=int, help='Number of points to move to the right (1 inch = 72 pt, 1 cm = 28.35 pt)')
+
+groupUD = parser.add_mutually_exclusive_group(required=False)
+groupUD.add_argument('--up', '-u', type=int, help='Number of points to move up (1 inch = 72 pt, 1 cm = 28.35 pt)')
+groupUD.add_argument('--down', '-d', type=int, help='Number of points to move down (1 inch = 72 pt, 1 cm = 28.35 pt)')
+parser.add_argument('--dpi', type=int, default=600, help='Specify the DPI of the document. The default is 600dpi.')
+parser.add_argument('--threshold', '-t', default='Blanket', help='Specify the threshold page size incase dpi is not correct.Default is Blanket(Newspaper size).')
 args = parser.parse_args()
 
 # カスタムログレベルVERBOSEを作成
@@ -66,9 +70,48 @@ log_files = sorted(glob.glob(str(log_folder / 'mergejsB_*.log')))
 while len(log_files) > 5:
     os.remove(log_files.pop(0))
 
-# DPIに基づいた変換行列を設定
 units_per_inch = args.dpi
-translation_matrix = [1, 0, 0, 1, (args.left - args.right) * units_per_inch, (args.up - args.down) * units_per_inch]
+dpi_conversion_factor = 72 / args.dpi
+
+page_sizes = {
+    "A3": (842, 1191),
+    "A4": (595, 842),
+    "A5": (420, 595),
+    "A6": (298, 420),
+    "B4": (729, 1032),
+    "B5": (516, 729),
+    "B6": (363, 516),
+    "B7": (258, 363),
+    "Tabloid": (792, 1224),  # タブロイド判のサイズ（11 x 17インチをポイントに変換）
+    "Blanket": (4320, 6480)  # ブランケット判のサイズ（60 x 90インチをポイントに変換）
+}
+
+# 閾値となるページサイズを設定
+if args.threshold in page_sizes:
+    threshold_page_size = tuple(size * 2 for size in page_sizes[args.threshold])
+else:
+    error_print(f' Page size"{args.threshold}" does not exist in the dictionary.')
+    exit(1)
+
+# 左右の移動
+if args.left and not args.right:
+    x_translation = args.left
+elif args.right and not args.left:
+    x_translation = -args.right
+else:
+    x_translation = -1
+
+# 上下の移動
+if args.up and not args.down:
+    y_translation = args.up
+elif args.down and not args.up:
+    y_translation = -args.down
+else:
+    y_translation = -7
+
+translation_matrix = [1, 0, 0, 1, x_translation, y_translation]
+
+print(f'左右の移動量: {x_translation} 上下の移動量: {y_translation}')
 
 # フォルダのパスを設定
 text_layer_folder = './OCRtextPDF'
@@ -116,8 +159,16 @@ for text_pdf_file in text_pdf_files:
             if existing_page.mediabox != text_page.mediabox:
                 text_page.mediabox = existing_page.mediabox
 
+            # ページサイズが異常に大きい場合、translation_matrixをdpi_conversion_factorで除算する
+            page_width, page_height = existing_page.mediabox[2], existing_page.mediabox[3]
+            if page_width > threshold_page_size[0] or page_height > threshold_page_size[1]:
+                adjusted_translation_matrix = translation_matrix.copy()
+                adjusted_translation_matrix[-2] /= dpi_conversion_factor
+                adjusted_translation_matrix[-1] /= dpi_conversion_factor
+            else:
+                adjusted_translation_matrix = translation_matrix
             # テキストレイヤーの座標を調整する変換行列を定義
-            text_page.add_transformation(translation_matrix)
+            text_page.add_transformation(adjusted_translation_matrix)
 
             existing_page.merge_page(text_page)
             output_pdf.add_page(existing_page)

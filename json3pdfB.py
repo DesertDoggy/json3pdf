@@ -18,7 +18,7 @@ parser.add_argument('--log-level', '-log', default='DEBUG', choices=['DEBUG', 'V
                     help='Set the logging level (default: DEBUG)')
 parser.add_argument('-debug', action='store_const', const='DEBUG', dest='log_level',
                     help='Set the logging level to DEBUG')
-parser.add_argument('-s', '--size', type=int, default=8, help='フォントのサイズを指定します（デフォルトは8）')
+parser.add_argument('-s', '--size', type=int, default=60, help='フォントのサイズを指定します（デフォルトは60）')
 parser.add_argument('-f', '--font', default='NotoSansJP-Regular', help='使用するフォントの名前を指定します（デフォルトはNotoSansJP-Regular）')
 parser.add_argument('-d', '--dpi', type=int, default=600, help='文書のDPIを指定します（デフォルトは600）')
 args = parser.parse_args()
@@ -73,24 +73,15 @@ while len(log_files) > 5:
 # DPI変換のための係数を設定
 DPI_CONVERSION_FACTOR = args.dpi / 72
 
+# ポイントをインチに変換する係数
+INCH_TO_POINT = 72
+
 # フォント名とパス
 font_name = args.font
 font_path = './data/fonts/' + font_name + '.ttf'
 
 # フォントを登録
 pdfmetrics.registerFont(TTFont(font_name, font_path))
-
-# Define page sizes in points
-page_sizes = {
-    "A3": (842, 1191),
-    "A4": (595, 842),
-    "A5": (420, 595),
-    "A6": (298, 420),
-    "B4": (729, 1032),
-    "B5": (516, 729),
-    "B6": (363, 516),
-    "B7": (258, 363)
-}
 
 # 入力フォルダと出力フォルダのパスを設定
 input_folder = './DIjson'
@@ -136,18 +127,18 @@ for json_file in json_files:
 
         # JSONファイルからページ情報を取得し、テキストを書き込む
         for page in ocr_data['analyzeResult']['pages']:
-            page_width = page['width'] * DPI_CONVERSION_FACTOR  # DPI変換を適用
-            page_height = page['height'] * DPI_CONVERSION_FACTOR
+            page_width = page['width'] * INCH_TO_POINT  # DPI変換を適用
+            page_height = page['height'] * INCH_TO_POINT
             c.setPageSize((page_width, page_height))
 
             # フォントを設定（引数から取得したサイズを使用）
-            c.setFont(font_name, args.size * DPI_CONVERSION_FACTOR)  # DPI変換を適用
+            c.setFont(font_name, args.size / DPI_CONVERSION_FACTOR)  # DPI変換を適用
 
             for word_info in page['words']:
                 text = word_info['content']
                 # OCR結果のポリゴンから座標を取得し、PDFの座標系に変換（DPI変換を適用）
-                x = word_info['polygon'][0] * DPI_CONVERSION_FACTOR
-                y = page_height - (word_info['polygon'][1] * DPI_CONVERSION_FACTOR)
+                x = word_info['polygon'][0] * INCH_TO_POINT
+                y = page_height - (word_info['polygon'][1] * INCH_TO_POINT)
                 c.drawString(x, y, text)
 
             # 次のページに移動

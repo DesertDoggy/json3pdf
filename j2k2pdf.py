@@ -97,7 +97,7 @@ imagelog_folder.mkdir(parents=True, exist_ok=True)
 # 対応する画像ファイルの拡張子
 logger.debug('Setting up image file extensions.')  # ログメッセージの追加
 image_extensions = ['.jpeg', '.jpg', '.jpe', '.jif', '.jfif', '.jfi', '.jp2', '.j2k', '.jpf', '.jpx', '.jpm', '.mj2', '.png']
-# Define page sizes in points
+
 page_sizes = {
     "A3": (842, 1191),
     "A4": (595, 842),
@@ -106,7 +106,9 @@ page_sizes = {
     "B4": (729, 1032),
     "B5": (516, 729),
     "B6": (363, 516),
-    "B7": (258, 363)
+    "B7": (258, 363),
+    "Tabloid": (792, 1224),  # タブロイド判のサイズ（11 x 17インチをポイントに変換）
+    "Blanket": (4320, 6480)  # ブランケット判のサイズ（60 x 90インチをポイントに変換）
 }
 
 # ロスレスかどうかを判断する関数

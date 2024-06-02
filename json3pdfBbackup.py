@@ -73,15 +73,9 @@ while len(log_files) > 5:
 # DPI変換のための係数を設定
 DPI_CONVERSION_FACTOR = args.dpi / 72
 
-# ポイントをインチに変換する係数
-INCH_TO_POINT = 72
-
 # フォント名とパス
 font_name = args.font
 font_path = './data/fonts/' + font_name + '.ttf'
-
-# 透明色を定義（赤、緑、青、アルファ）
-transparent_color = Color(0, 0, 0, alpha=0)
 
 # フォントを登録
 pdfmetrics.registerFont(TTFont(font_name, font_path))
@@ -130,21 +124,18 @@ for json_file in json_files:
 
         # JSONファイルからページ情報を取得し、テキストを書き込む
         for page in ocr_data['analyzeResult']['pages']:
-            page_width = page['width'] * INCH_TO_POINT  # DPI変換を適用
-            page_height = page['height'] * INCH_TO_POINT
+            page_width = page['width'] * DPI_CONVERSION_FACTOR  # DPI変換を適用
+            page_height = page['height'] * DPI_CONVERSION_FACTOR
             c.setPageSize((page_width, page_height))
 
             # フォントを設定（引数から取得したサイズを使用）
-            c.setFont(font_name, args.size / DPI_CONVERSION_FACTOR)  # DPI変換を適用
+            c.setFont(font_name, args.size * DPI_CONVERSION_FACTOR)  # DPI変換を適用
 
             for word_info in page['words']:
                 text = word_info['content']
                 # OCR結果のポリゴンから座標を取得し、PDFの座標系に変換（DPI変換を適用）
-                x = word_info['polygon'][0] * INCH_TO_POINT
-                y = page_height - (word_info['polygon'][1] * INCH_TO_POINT)
-                c.drawString(x, y, text)
-                # テキストの色を透明に設定
-                c.setFillColor(transparent_color)
+                x = word_info['polygon'][0] * DPI_CONVERSION_FACTOR
+                y = page_height - (word_info['polygon'][1] * DPI_CONVERSION_FACTOR)
                 c.drawString(x, y, text)
 
             # 次のページに移動
