@@ -97,9 +97,9 @@ while len(log_files) > 5:
     os.remove(log_files.pop(0))
 
 # 入力フォルダと出力フォルダのパス
-input_folder = './OriginalImages/DQ5'
-lossless_folder = './TEMP/lossless/DQ5'  
-optimized_folder = './TEMP/optimized/DQ5'
+input_folder = './OriginalImages'
+lossless_folder = './TEMP/lossless'  
+optimized_folder = './TEMP/optimized'
 if args.temp.lower() == 'system':
     tmp_path = tempfile.gettempdir()
 else:
@@ -164,14 +164,14 @@ else:
     error_print("glymur setting file not found in "+glymur_config_path)
 
 # 画像出力できるか確認
-test_image_path = './data/test/test.png'
-jp2k_test_path = './data/test/test.jp2'
+#test_image_path = './data/test/test.png'
+#jp2k_test_path = './data/test/test.jp2'
 # PILライブラリを使用して画像を読み込む
-image = Image.open(test_image_path)
+#image = Image.open(test_image_path)
 # 画像データをnumpy配列に変換
-image_data = np.array(image)
+#image_data = np.array(image)
 # glymurライブラリを使用してJPEG 2000形式で保存
-jp2 = glymur.Jp2k(jp2k_test_path, data=image_data)
+#jp2 = glymur.Jp2k(jp2k_test_path, data=image_data)
 
 # グローバル変数とロックを初期化
 lossless_count = 0
@@ -186,8 +186,6 @@ lossless_total = 0
 optimized_total = 0
 img_total = 0
 
-# ファイルキューの作成
-file_queue = queue.Queue()
 
 # Glymurのスレッド数を2に設定 (JPEG2000は2 core以上はあまり効果がない)
 glymur.set_option('lib.num_threads', 2)
@@ -198,18 +196,53 @@ num_physical_cores = psutil.cpu_count(logical=False)
 # Pythonのスレッド数（またはプロセス数）を物理コア数の半分に設定
 num_threads = num_physical_cores // 2
 
-# 入力フォルダ内のすべてのファイルを取得
-for file in os.listdir(input_folder):
-    if file.lower().endswith(supported_extensions):
-        file_queue.put(os.path.join(input_folder, file))
-        img_per_subdir_count += 1
-verbose_print(f"Total images in {input_folder}: {img_per_subdir_count}")
 
-# 画像をロスレスのj2kファイルに変換する関数を定義
-def convert_image():
-    global lossless_count, optimized_count, lossless_OK, lossless_NO, lossless_CHK
+#ディレクトリ内のサブディレクトリを扱う関数を定義
+def convert_all_images(input_folder, lossless_folder, optimized_folder):
+    global lossless_count, optimized_count, lossless_OK, lossless_NO, lossless_CHK, img_per_subdir_count, subdir_count, lossless_total, optimized_total, img_total
+    for subdir in os.listdir(input_folder):
+        input_subdir = os.path.join(input_folder, subdir)
+        lossless_subdir = os.path.join(lossless_folder, subdir)
+        optimized_subdir = os.path.join(optimized_folder, subdir)
+        os.makedirs(lossless_subdir, exist_ok=True)
+        os.makedirs(optimized_subdir, exist_ok=True)
+        convert_image_subdir(input_subdir, lossless_subdir, optimized_subdir)
+
+def convert_image_subdir(input_subdir, lossless_subdir, optimized_subdir):
+    global lossless_count, optimized_count, lossless_OK, lossless_NO, lossless_CHK, img_per_subdir_count, subdir_count, lossless_total, optimized_total, img_total
+    lossless_count = optimized_count = img_per_subdir_count = 0
+    # ファイルキューの作成
+    file_queue = queue.Queue()
+    # 入力フォルダ内のすべてのファイルを取得
+    for filename in os.listdir(input_subdir):
+        if filename.endswith(supported_extensions):
+            output_path = os.path.join(lossless_subdir, filename)
+            output_path_opt = os.path.join(optimized_subdir, filename)
+            # 入力ファイルのパスと出力ファイルのパスの両方をキューに追加
+            file_queue.put((os.path.join(input_subdir, filename), output_path, output_path_opt))
+            img_per_subdir_count += 1
+    verbose_print(f"Total images in {input_subdir}: {img_per_subdir_count}")
+
+    threads = []
+    # スレッドの作成と開始
+    for _ in range(num_threads):  # num_threadsの数だけスレッドを作成
+        t = threading.Thread(target=convert_image,args=(file_queue,lossless_subdir,optimized_subdir))
+        t.daemon = True
+        t.start()
+        threads.append(t)
+
+    # すべてのスレッドが終了するのを待つ
+    for t in threads:
+        t.join()
+
+
+# 画像変換関数を定義
+def convert_image(file_queue, lossless_subdir, optimized_subdir):
+    global lossless_count, optimized_count, lossless_OK, lossless_NO, lossless_CHK, img_per_subdir_count, subdir_count, lossless_total, optimized_total, img_total
+
     while not file_queue.empty():
-        file_path = file_queue.get()
+        # 入力ファイルのパスと出力ファイルのパスの両方を取得
+        file_path,output_path, output_path_opt = file_queue.get()
         try:
             with Image.open(file_path) as img:
                 # 元画像の解像度を取得
@@ -292,7 +325,7 @@ def convert_image():
                         is_bitperfect = np.array_equal(img_array, converted_img_array)
 
                     # 一時的なファイルを最終的な出力パスにリネーム
-                    output_path = os.path.join(lossless_folder, os.path.splitext(os.path.basename(file_path))[0] + '.jp2')
+                    output_path = os.path.join(lossless_subdir, os.path.splitext(os.path.basename(file_path))[0] + '.jp2')
                     shutil.move(tmp_filename, output_path)
                     with count_lock:
                         lossless_count += 1
@@ -330,7 +363,7 @@ def convert_image():
                     jp2Optimized.append(xmlbox)
 
                     # 一時的なファイルを最終的な出力パスにリネーム
-                    output_path_opt = os.path.join(optimized_folder, os.path.splitext(os.path.basename(file_path))[0] + '.jp2')
+                    output_path_opt = os.path.join(optimized_subdir, os.path.splitext(os.path.basename(file_path))[0] + '.jp2')
                     shutil.move(tmp_filename_opt, output_path_opt)
 
                     with count_lock:
@@ -344,11 +377,8 @@ def convert_image():
         finally:
             file_queue.task_done()
 
-# スレッドの作成と開始
-for _ in range(num_threads):  # num_threadsの数だけスレッドを作成
-    t = threading.Thread(target=convert_image)
-    t.daemon = True
-    t.start()
 
-# すべてのタスクが終了するのを待つ
-file_queue.join()
+
+convert_all_images(input_folder, lossless_folder, optimized_folder)
+
+info_print(f"Conversion complete!")
