@@ -77,7 +77,10 @@ logging.basicConfig(filename=log_filename, filemode='a', format='%(asctime)s - %
 logger = logging.getLogger('img2j2kM')  # ロガーの作成
 
 # ログレベルの設定
-log_level = getattr(logging, args.log_level.upper())
+if args.log_level.upper() == 'VERBOSE':
+    log_level = VERBOSE
+else:
+    log_level = getattr(logging, args.log_level.upper())
 logger.setLevel(log_level)
 
 # デバッグメッセージを出力すメッセージ
@@ -179,6 +182,9 @@ lossless_OK = 0
 lossless_NO = 0
 lossless_CHK = 0
 count_lock = threading.Lock()
+lossless_total = 0
+optimized_total = 0
+img_total = 0
 
 # ファイルキューの作成
 file_queue = queue.Queue()
@@ -201,7 +207,7 @@ verbose_print(f"Total images in {input_folder}: {img_per_subdir_count}")
 
 # 画像をロスレスのj2kファイルに変換する関数を定義
 def convert_image():
-    global lossless_count, lossless_OK, lossless_NO, lossless_CHK
+    global lossless_count, optimized_count, lossless_OK, lossless_NO, lossless_CHK
     while not file_queue.empty():
         file_path = file_queue.get()
         try:
@@ -255,12 +261,25 @@ def convert_image():
                 # XMLBoxを追加
                 jp2Lossless.append(xmlbox)
 
-                if log_level == logging.DEBUG:
-                    # メタデータを読む関数を定義
-                    jp2Read = glymur.Jp2k(tmp_filename)
+                # メタデータを読む関数を定義
+                jp2Read = glymur.Jp2k(tmp_filename)
+
+                #デバッグ用作成ファイルメタデータ確認＆詳細出力
+                #if log_level == logging.DEBUG:
                     #埋め込んだメタデータ確認
-                    glymur.set_option('print.codestream', False)
-                    debug_print(f"Metadata for {file_path}: {jp2Read.box}")
+                    #glymur.set_option('print.codestream', False)
+                    #debug_print(f"Metadata for converted {file_path}: {jp2Read.box}")
+                    
+                # メタデータのboxを検索
+                for box in jp2Read.box:
+                    # XMLBoxを探す
+                    if isinstance(box, glymur.jp2box.XMLBox):
+                        # XMLを解析
+                        root = box.xml.getroot()
+                        # dpi要素を探す
+                        dpi_elements = root.findall('.//dpi')
+                        for read_dpi in dpi_elements:
+                            verbose_print(f"Confirming"+Fore.YELLOW+" DPI "+Style.RESET_ALL+"for"+file_path +Fore.CYAN+ read_dpi.text+Style.RESET_ALL)
 
                 #チェックの方法に基づいて画像を読み込み
                 if args.check == "fast" and not args.quick:
@@ -296,8 +315,26 @@ def convert_image():
                         print(Fore.YELLOW + "Bitperfect " + Fore.GREEN + " OK " + variable_str(lossless_OK) + Fore.WHITE +"/" +  Fore.RED + "NO " + Fore.CYAN + variable_str(lossless_NO) + Fore.WHITE + "/" + Fore.MAGENTA + "Total " + Fore.CYAN + variable_str(lossless_CHK) + Style.RESET_ALL)
                     else:
                         lossless_NO += 1
-                        error_print(f"Bitperfect comparison for {file_path}: False")
+                        error_print(f"Bitperfect conversion for {file_path}: Failed!")
                         print(Fore.YELLOW + "Bitperfect " + Fore.GREEN + " OK " + variable_str(lossless_OK) + Fore.WHITE +"/" +  Fore.RED + "NO " + Fore.CYAN + variable_str(lossless_NO) + Fore.WHITE + "/" + Fore.MAGENTA + "Total " + Fore.CYAN + variable_str(lossless_CHK) + Style.RESET_ALL)
+                    
+                # 一時的なファイル名を作成（日本語をglymurに渡さないため）
+                tmp_filename_opt = os.path.join(tmp_path, str(uuid.uuid4()) + '_temp_opt.jp2')
+
+                # 最適化された画像の変換と出力
+                jp2Optimized = glymur.Jp2k(tmp_filename_opt, data=img_array, cratios=[80])
+
+                # XMLBoxを追加
+                jp2Optimized.append(xmlbox)
+
+                # 一時的なファイルを最終的な出力パスにリネーム
+                output_path_opt = os.path.join(optimized_folder, os.path.splitext(os.path.basename(file_path))[0] + '.jp2')
+                shutil.move(tmp_filename_opt, output_path_opt)
+
+                with count_lock:
+                    optimized_count += 1
+                    verbose_print(f"Optimized conversion for {file_path} complete!")
+                    print(Fore.BLUE + "Optimized conversion" + Fore.CYAN+ str(optimized_count) + Fore.WHITE +"/" + Fore.CYAN + str(img_per_subdir_count)+Style.RESET_ALL)
 
         except Exception as e:
             logger.error(f"Error converting file {file_path}: {e}")
