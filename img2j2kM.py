@@ -2,6 +2,7 @@ import os
 import sys
 import queue
 import threading
+import psutil
 import argparse
 from pathlib import Path
 import logging
@@ -10,7 +11,6 @@ import traceback
 import glob
 from datetime import datetime
 from PIL import Image
-from PIL import ImageChops
 import shutil
 import numpy as np
 import ctypes
@@ -173,6 +173,15 @@ count_lock = threading.Lock()
 # ファイルキューの作成
 file_queue = queue.Queue()
 
+# Glymurのスレッド数を2に設定 (JPEG2000は2 core以上はあまり効果がない)
+glymur.set_option('lib.num_threads', 2)
+
+# 物理コア数を取得
+num_physical_cores = psutil.cpu_count(logical=False)
+
+# Pythonのスレッド数（またはプロセス数）を物理コア数の半分に設定
+num_threads = num_physical_cores // 2
+
 # 入力フォルダ内のすべてのファイルを取得
 for file in os.listdir(input_folder):
     if file.lower().endswith(supported_extensions):
@@ -249,7 +258,7 @@ def convert_image():
             file_queue.task_done()
 
 # スレッドの作成と開始
-for _ in range(4):  # 4スレッドを作成
+for _ in range(num_threads):  # num_threadsの数だけスレッドを作成
     t = threading.Thread(target=convert_image)
     t.daemon = True
     t.start()
