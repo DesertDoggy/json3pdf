@@ -93,7 +93,7 @@ if not os.path.exists(input_folder):
     print(f'Created {input_folder} folder')
 else:
     print(f'{input_folder} folder already exists')
-output_folder = './OCRtextPDF'
+output_folder = './OCRclearPDF'
 if not os.path.exists(output_folder):
     os.makedirs(output_folder,exist_ok=True)
     print(f'Created {output_folder} folder')
@@ -119,10 +119,10 @@ for json_file in json_files:
         with open(ocr_json_path, 'r', encoding='utf-8') as f:
             ocr_data = json.load(f)
 
-        # 新しいPDFファイル名を設定（'.pdf' を削除してから '_TextOnly.pdf' を追加）
+        # 新しいPDFファイル名を設定（'.pdf' を削除してから '_ClearText.pdf' を追加）
         base_filename = os.path.splitext(json_file)[0]
         base_filename = base_filename.replace('.pdf', '')  # '.pdf' を削除
-        new_pdf_filename = base_filename + '_TextOnly.pdf'
+        new_pdf_filename = base_filename + '_ClearText.pdf'
         new_pdf_path = os.path.join(output_folder, new_pdf_filename)
 
         # ReportLabのキャンバスを作成
