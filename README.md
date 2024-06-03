@@ -88,4 +88,15 @@ At the moment vertical text layout is not supported, (adds as horizontal text. )
 
 ##Options
 ### common options
+--log-level, -log, -debug: sets log level.:  --log-level DEBUG,VERBOSE,INFO,WARNING:default INFO
+### img2j2k
+--dpi: sets dpi for output image metadata.: --dpi integer: positive (--dpi 300)used set dpi if not read from image file. negative (--dpi -300) forces set dpi. 0 (--dpi 0) uses read dpi from file without rounding to typical integer value.: default dpi for unknown read dpi is 600.
+--quick, -q: skips bitperfect lossless conversion check.
+--check: sets bitperfect lossless conversion check type.:--check slow, opens the final output file with pillow and numpy. --check fast, opens the temporary (converted output file before renaming to final file name.) file with glymur and compares with original file.:Default --check slow.
+      This is due to a workaround to convert files including Japanese (and possibly CJK and other language fonts) which is incompatible with glymur (or openjpeg)
+--temp,-t: sets temporary file work folder.: This is experimental. Since the script renames the temporary file as final output it is recommended to keep default or set as same drive as output.
+--lossless,-l: performs only lossless conversion
+--optimize,-o: performs only optimize conversion. lossless check will be skipped.
+
+
 
