@@ -6,3 +6,4 @@
 *.j2k
 *.jpf
 *.json
+*.env

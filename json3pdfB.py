@@ -84,12 +84,12 @@ font_path = './data/fonts/' + font_name + '.ttf'
 pdfmetrics.registerFont(TTFont(font_name, font_path))
 
 # 入力フォルダと出力フォルダのパスを設定
-input_folder = './DIjson'
-if not os.path.exists(input_folder):
-    os.makedirs(input_folder,exist_ok=True)
-    print(f'Created {input_folder} folder')
+json_folder = './DIjson'
+if not os.path.exists(json_folder):
+    os.makedirs(json_folder,exist_ok=True)
+    print(f'Created {json_folder} folder')
 else:
-    print(f'{input_folder} folder already exists')
+    print(f'{json_folder} folder already exists')
 output_folder = './OCRtextPDF'
 if not os.path.exists(output_folder):
     os.makedirs(output_folder,exist_ok=True)
@@ -98,7 +98,7 @@ else:
     print(f'{output_folder} folder already exists')
 
 # 入力フォルダ内の全てのJSONファイルを取得
-json_files = [f for f in os.listdir(input_folder) if f.endswith('.pdf.json')]
+json_files = [f for f in os.listdir(json_folder) if f.endswith('.pdf.json')]
 
 # JSONファイルの総数を取得し、コンソールに表示
 total_json_files = len(json_files)
@@ -109,7 +109,7 @@ pdf_counter = 0
 
 for json_file in json_files:
     # OCR結果のJSONファイル名を設定
-    ocr_json_path = os.path.join(input_folder, json_file)
+    ocr_json_path = os.path.join(json_folder, json_file)
 
     # JSONファイルが存在する場合のみ処理を実行
     if os.path.exists(ocr_json_path):
