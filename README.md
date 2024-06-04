@@ -2,6 +2,9 @@
 ## CAUTION!: these scripts are in currently in Alpha stage. It is also my first script, hence it might have unexpected critical errors, or more like many bugs are expected. It is recommended to keep the original image files, just in case.
 ## Disclaimer: I am not a professional dev. Bug reports will be appreciated, but fixes are not guaranteed and replies can be slow.
 
+- [English](./README.md)
+- [日本語](./README_ja.md)
+
 ## Description
 Just a bunch of scripts for scanning books to PDF & adding clear text from OCR done by Microsoft Azure Document Intelligence.*1
 
@@ -33,14 +36,14 @@ mergejsB/C: pypdf
 1. prepare images to convert to PDF. 
 These scripts are intended for performing OCR on scanned books for archive purposes. If DPI is unable to read from file, it will default to 600 dpi, which is not the traditional default 72 or 96 dpi. Also, when converting to jpeg 2000 might result in loss of dpi information from files due to the jpeg 2000 format. I have implemented code to  write dpi information to the xml, but at the moment you might need to specify dpi value from command line for each script if scan dpi is other than 600.
 2. Place images in subfolder of ./OriginalImages. At the moment script will scan only the immediate subfolder.
-3. PDF pages will be inserted in alphabetical order of file name. For compatability for planned script, it is recommended to rename file and subfolder to the specific format, but at the moment it should work if it's in alphabetical order.
+3. PDF pages will be inserted in alphabetical order of file name. For compatability for planned script, it is recommended to rename file and subfolder to the specific format, but at the moment it should work if it's in alphabetical order.(or not)
         ./OriginalImages/TitleOfBook/TitleOfBook_cover,TitleOfBook_p0000,TitleOfBook_p0001,......,TitleOfBook_z0001,TitleOfBook_z0002...)
         _cover: cover of book, _p0000:inner cover or index, _p0001～:pages, _z0001～: unnumbered charts etc.
 4. Add path of openjp2.dll to system so glymur can access it.*2,*3
 
 ### img2j2k.py (convert image files to PDF compatible Jpeg2000)
 1. Put scanned images in subdirectory of ./OriginalImages. (./OriginalImages/Title/img.png...etc)
-   !!Image file names are case sensitive in the next step(j2k2pdf). It is recommended to rename to required format before converting image files!!
+   !!Image file names are format sensitive in the next step(j2k2pdf). It is recommended to rename to required format before converting image files!!
 2. Run script. Images will be converted to lossless Jpeg2000 for archive purposes, and optimized Jpeg2000 to be used for OCR.
 3. Converted images will be placed in output folder. (./TEMP/lossless,./TEMP/optimized)
    
@@ -50,10 +53,10 @@ These scripts are intended for performing OCR on scanned books for archive purpo
 
 ### j2k2pdf.py (losslessly insert PDF compatible image files int PDF.)
 (put PDF compatible images in input folder. input folder is same as output folder for img2j2k.py. if not exist create.)
-1. Run script. Images will automatically created in output folder. Each subdirectory will be output as a independent PDF file.
+1. Run script. PDF will automatically be created in output folder. Each subdirectory will be output as a independent PDF file.
    Output folder is ./OriginalPDF for lossless archival PDF and ./OptimizedPDF for optimized PDF to use for OCR.
 
-  !!Image file names are case sensitivive. Rename to required format mentioned above before performing this step. This is to combine the scanned images in page order.
+  !!Image file names are format sensitive. Rename to required format mentioned above before performing this step. This is to combine the scanned images in page order.
   Script will automatically read and set dpi as above, but at the moment dpi of jpeg2000 seems tricky and unable to apply, so it is reccomended to set an option if not 600.
   Script will also automatically estimate page size from resolution and dpi if page size is not set with option. At the moment compatible page size formats are A3 to A6,B4 to B7,Tabloid amd Blanket. Custom sizes are planned but not implemented yet.
 
@@ -74,7 +77,7 @@ These scripts are intended for performing OCR on scanned books for archive purpo
 
 1. Run script. This will output a _TextOnly PDF file from the json to output folder (./OCRtextPDF), with approximately the same layout as the original. 
 
-You might need to adjust the font size with options. You can also use other ttf fonts if you place them in .data/fonts and set options. As a default NotoSansJP-Regular is bundled.
+You might need to adjust the font size with options. You can also use other ttf fonts if you place them in .data/fonts and set options. As a default NotoSansJP-Regular is bundled.*4
 At the moment different fonts and sizes for different block is not supported. I might work on it later, but since it is intended to make scanned PDF searchable and adjusting to the main text is enough for such use, the priority is low.
 
 ### mergejsB.py (merge black text PDF file with optimized PDF file for adjustment)
@@ -96,6 +99,7 @@ At the moment vertical text layout is not supported, (adds as horizontal text. )
 *1. Microsoft,Azure,Document Intelligence　are trademarks of the Microsoft group of companies.
 *2 openjpeg is licensed under the BSD license.
 *3 dll is included in package (./data/dll). You can also download the latest version from the official site or repository.
+*4 Open Font License
 
 ##Options
 ### common options
