@@ -29,12 +29,12 @@ for pdf_file in pdf_files:
     # Wait for the analysis to complete
     document_intelligence_result = poller.result()
 
-    # Save the JSON file to the json_folder
+    # Convert the result to a string
+    result_str = str(document_intelligence_result)
+
+    # Save the string to a JSON file
     json_file_path = os.path.join(json_folder, f"{pdf_file}.json")
     with open(json_file_path, "w", encoding="utf-8") as json_file:
-        for page in document_intelligence_result.pages:
-            for line in page.lines:
-                json_file.write(line.content + "\n")
-                print(line.content)
-
-
+        json.dump(result_str, json_file, ensure_ascii=False, indent=4)
+    
+    print(f"JSON file saved to {json_file_path}")
