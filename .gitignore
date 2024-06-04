@@ -7,3 +7,4 @@
 *.jpf
 *.json
 *.env
+/etc
