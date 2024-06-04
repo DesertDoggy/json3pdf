@@ -55,10 +55,18 @@ These scripts are intended for performing OCR on scanned books for archive purpo
   Script will automatically read and set dpi as above, but at the moment dpi of jpeg2000 seems tricky and unable to apply, so it is reccomended to set an option if not 600.
   Script will also automatically estimate page size from resolution and dpi if page size is not set with option. At the moment compatible page size formats are A3 to A6,B4 to B7,Tabloid amd Blanket. Custom sizes are planned but not implemented yet.
 
-### OCR
+### pdf3json (OCR)
+1. Use the diAPI.env.template.txt and create a credentials file (.env) to use the Docunent Intelligence*1 API for OCR.
+   Only Document Intelligence*1 Studio Read is supported. It might work with other modes, but there is no plan to implement it.
+   Document Intelligence*1 Max file size limit is 500MB, but large files seem to fail frequently. If you run into this problem, try spliting the PDF file into multiple files. This will sometimes solve the problem.
+
+
+### OCR alternative
 1. Upload optimized PDF to Microsoft Document Intelligence *1 Studio Read.
 2. Run analysis and download created json file.
 3. Place json file in ./DIjson folder. DO NOT change the name of the json file. Not even deleting the .pdf of .pdf.json. At the moment it is required for detecting it as OCR file of PDF. Also keep both the lossless and optimized PDF file names the same.
+   Only Document Intelligence*1 Studio Read is supported. It might work with other modes, but there is no plan to implement it.
+   Document Intelligence*1 Max file size limit is 500MB, but large files seem to fail frequently. If you run into this problem, try spliting the PDF file into multiple files. This will sometimes solve the problem.
 
 ### json3pdfB.py (create black text PDF file to use for adjustment for final file)
 
