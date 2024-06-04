@@ -10,7 +10,7 @@ from pypdf import PdfReader, PdfWriter
 parser = argparse.ArgumentParser(description='Add a text layer to a PDF file.')
 parser.add_argument('--log-level', '-log', default='DEBUG', choices=['DEBUG', 'VERBOSE', 'INFO', 'WARNING'],
                     help='Set the logging level (default: DEBUG)')
-parser.add_argument('-debug', action='store_const', const='DEBUG', dest='log_level',
+parser.add_argument('-debug', action='store_const', const='INFO', dest='log_level',
                     help='Set the logging level to DEBUG')
 groupLR = parser.add_mutually_exclusive_group(required=False)
 groupLR.add_argument('--left', '-l', type=int, help='Number of points to move to the left (1 inch = 72 pt, 1 cm = 28.35 pt)')

@@ -14,7 +14,7 @@ import json
 
 # コマンドライン引数を解析する
 parser = argparse.ArgumentParser(description='PDFファイルにテキストを書き込む')
-parser.add_argument('--log-level', '-log', default='DEBUG', choices=['DEBUG', 'VERBOSE', 'INFO', 'WARNING'],
+parser.add_argument('--log-level', '-log', default='INFO', choices=['DEBUG', 'VERBOSE', 'INFO', 'WARNING'],
                     help='Set the logging level (default: DEBUG)')
 parser.add_argument('-debug', action='store_const', const='DEBUG', dest='log_level',
                     help='Set the logging level to DEBUG')

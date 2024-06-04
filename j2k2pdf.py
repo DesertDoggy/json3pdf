@@ -15,7 +15,7 @@ from colorama import Fore, Style
 parser = argparse.ArgumentParser()
 parser.add_argument('-s', '--simple-check', nargs='?', const=1, type=int, default=1,
                     help='Perform a simple check after creating each PDF (default: on)')
-parser.add_argument('--log-level', '-log', default='DEBUG', choices=['DEBUG', 'VERBOSE', 'INFO', 'WARNING'],
+parser.add_argument('--log-level', '-log', default='INFO', choices=['DEBUG', 'VERBOSE', 'INFO', 'WARNING'],
                     help='Set the logging level (default: DEBUG)')
 parser.add_argument('-debug', action='store_const', const='DEBUG', dest='log_level',
                     help='Set the logging level to DEBUG')
