@@ -22,6 +22,7 @@ openjpeg (openjp2.dll). Add file location to system path. *2,*3
 needed pip install (per script)
 img2j2k: PIL (pillow), numpy, glymur, lxml, colorama
 j2k2pdf: img2pdf, PIL (pillow), PyPDF2, colorama
+pdf3json: dotenv,azure.core.credentials,azure.ai.documentintelligence
 json3pdfB/C: reportlab
 mergejsB/C: pypdf
 
