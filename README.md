@@ -1,4 +1,6 @@
-# json3pdf         CAUTION! Disclaimer: these scripts are in currently in Alpha stage. It is also my first script, hence it might have unexpected critical errors, or more like many bugs are expected. It is recommended to keep the original image files, just in case.
+# json3pdf
+## CAUTION!: these scripts are in currently in Alpha stage. It is also my first script, hence it might have unexpected critical errors, or more like many bugs are expected. It is recommended to keep the original image files, just in case.
+## Disclaimer: I am not a professional dev. Bug reports will be appreciated, but fixes are not guaranteed and replies can be slow.
 
 ## Description
 Just a bunch of scripts for scanning books to PDF & adding clear text from OCR done by Microsoft Azure Document Intelligence.*1
