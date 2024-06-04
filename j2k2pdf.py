@@ -279,11 +279,13 @@ def get_images(subdir, image_extensions):
         images.extend(sorted(subdir.glob('*{}'.format(extension))))
     return images
 
+#サブディレクトリのメインページ画像数を取得する関数を定義
 def get_total_p(subdir, image_extensions,total_p=0):
     for extension in image_extensions:
         total_p += len([img for img in subdir.glob('*_p*{}'.format(extension))])
     return total_p
 
+# PDFファイル名を取得する関数を定義
 def get_pdf_filename(subdir, total_subdirs, output_folder, optpdf_folder):
     if subdir in total_subdirs:
         pdf_filename = output_folder / "{}.pdf".format(subdir.name)
@@ -291,6 +293,7 @@ def get_pdf_filename(subdir, total_subdirs, output_folder, optpdf_folder):
         pdf_filename = optpdf_folder / "{}.pdf".format(subdir.name)
     return pdf_filename
 
+# PDFディレクトリ名を取得する関数を定義
 def get_pdf_directory_name(img_path, lossless_folder, output_folder, optimized_folder, optpdf_folder):
     if img_path.parent.parent.name == lossless_folder.name:
         return output_folder.name
@@ -298,14 +301,15 @@ def get_pdf_directory_name(img_path, lossless_folder, output_folder, optimized_f
         return optpdf_folder.name
     else:
         return None
-    
+
+# 画像のDPI情報を取得する関数を定義    
 def get_dpi_info(img, total_p):
     dpi = img.info.get('dpi', (600, 600))
     estimated_dpi = imagelog_image_info(img,total_p)
     width_px, height_px = img.size
     width_pt = width_px / estimated_dpi * 72  # 幅をポイントで計算
     height_pt = height_px / estimated_dpi * 72  # 高さをポイントで計算
-    return dpi, estimated_dpi, width_pt, height_pt
+    return dpi, estimated_dpi, width_pt, height_pt, width_px, height_px
 
 # lossless_folderとoptimized_folder内の各サブディレクトリをループ処理
 for index, subdir in enumerate(total_subdirs + total_optimized_subdirs, start=1):
@@ -352,50 +356,38 @@ for index, subdir in enumerate(total_subdirs + total_optimized_subdirs, start=1)
                     logger.debug('Set PDF directory name: %s', pdf_directory_name)  # ログメッセージの追加
 
                     # DPI、推定DPI、幅、高さを取得
-                    dpi, estimated_dpi, width_pt, height_pt = get_dpi_info(img, total_p)
+                    dpi, estimated_dpi, width_pt, height_pt,width_px,height_px = get_dpi_info(img, total_p)
                     logger.debug('Got DPI, estimated DPI, width and height in points: %s, %s, %s, %s', dpi, estimated_dpi, width_pt, height_pt)  # ログメッセージの追加
 
-                    try:
-                        # Convert points to inches for console output
-                        width_in = width_pt / 72
-                        height_in = height_pt / 72
-                        logger.debug('Converted width and height to inches: %s, %s', width_in, height_in)  # ログメッセージの追加
-                    except Exception as e:
-                        logger.error("Error in converting points to inches: {}".format(e))
-                        
-                    try:
-                        # Find the closest page size
-                        closest_page_size_format, closest_page_size_pt = min(page_sizes.items(), key=lambda size: abs(width_pt - size[1][0]) + abs(height_pt - size[1][1]))
-                        logger.debug('Found closest page size: %s, %s', closest_page_size_format, closest_page_size_pt)  # ログメッセージの追加
-                        verbose_print("Estimated page size for {}: {} ({} x {} inches)".format(image_path.name, closest_page_size_format, width_in, height_in))
-                    except Exception as e:
-                        logger.error("Error in finding closest page size: {}".format(e))
 
-                    try:
-                        # Pass only the page dimensions (width and height) to img2pdf.get_layout_fun
-                        layout_fun = img2pdf.get_layout_fun(closest_page_size_pt)
-                        logger.debug('Got layout function: %s', layout_fun)  # ログメッセージの追加
+                    # Convert points to inches for console output
+                    width_in = width_pt / 72
+                    height_in = height_pt / 72
+                    logger.debug('Converted width and height to inches: %s, %s', width_in, height_in)  # ログメッセージの追加
 
-                        if layout_fun is None:
-                            error_print("Failed to get layout function.")
-                            sys.exit(1)
-                    except Exception as e:
-                        logger.error("Error in getting layout function: {}".format(e))
 
-                    try:
-                        # Get the actual page size from the layout function
-                        imgwidthpx = width_px  # 画像の幅（ピクセル）
-                        imgheightpx = height_px  # 画像の高さ（ピクセル）
-                        logger.debug('Got actual page size: %s, %s', imgwidthpx, imgheightpx)  # ログメッセージの追加
-                    except Exception as e:
-                        logger.error("Error in getting actual page size: {}".format(e))
+                    # Find the closest page size
+                    closest_page_size_format, closest_page_size_pt = min(page_sizes.items(), key=lambda size: abs(width_pt - size[1][0]) + abs(height_pt - size[1][1]))
+                    logger.debug('Found closest page size: %s, %s', closest_page_size_format, closest_page_size_pt)  # ログメッセージの追加
+                    verbose_print("Estimated page size for {}: {} ({} x {} inches)".format(image_path.name, closest_page_size_format, width_in, height_in))
 
-                    try:
-                        ndpi = (estimated_dpi)  # DPI
-                        logger.debug('Set NDPI: %s', ndpi)  # ログメッセージの追加
-                    except Exception as e:
-                        logger.error("Error in setting NDPI: {}".format(e))
+                    # Pass only the page dimensions (width and height) to img2pdf.get_layout_fun
+                    layout_fun = img2pdf.get_layout_fun(closest_page_size_pt)
+                    logger.debug('Got layout function: %s', layout_fun)  # ログメッセージの追加
 
+                    if layout_fun is None:
+                        error_print("Failed to get layout function.")
+                        sys.exit(1)
+
+                    # Get the actual page size from the layout function
+                    imgwidthpx = width_px  # 画像の幅（ピクセル）
+                    imgheightpx = height_px  # 画像の高さ（ピクセル）
+                    logger.debug('Got actual page size: %s, %s', imgwidthpx, imgheightpx)  # ログメッセージの追加
+
+                    ndpi = (estimated_dpi)  # DPI
+                    logger.debug('Set NDPI: %s', ndpi)  # ログメッセージの追加
+
+                    ###Page size check unable to fix yet
                     try:
                         pdf_page_size = layout_fun(imgwidthpx,imgheightpx, ndpi)
                         logger.debug('Got PDF page size: %s', pdf_page_size)  # ログメッセージの追加
@@ -413,44 +405,40 @@ for index, subdir in enumerate(total_subdirs + total_optimized_subdirs, start=1)
                             verbose_print(Fore.YELLOW + "Page size for {}: does not match estimated size ({} x {} inches)".format(image_path.name, width_in, height_in) + Style.RESET_ALL)
                     except Exception as e:
                         logger.error("Error in checking page size match: {}".format(e))
+                    ###Up to here
 
                 logger.debug('Appended image path to image_files: %s', str(image_path))  # ログメッセージの追加
                 image_files.append(str(image_path))
 
-            try:
-                # img2pdfのconvert関数にページサイズを渡す
-                with open(pdf_filename, "wb") as f:
-                    logger.debug('Converting images to PDF: %s', [str(image_path) for image_path in image_files])  # ログメッセージの追加
-                    f.write(img2pdf.convert([str(image_path) for image_path in image_files], layout_fun=layout_fun, dpi=estimated_dpi))
-            except Exception as e:
-                logger.error("Error in converting images to PDF: {}".format(e))
+            # img2pdfのconvert関数にページサイズを渡す
+            with open(pdf_filename, "wb") as f:
+                logger.debug('Converting images to PDF: %s', [str(image_path) for image_path in image_files])  # ログメッセージの追加
+                f.write(img2pdf.convert([str(image_path) for image_path in image_files], layout_fun=layout_fun, dpi=estimated_dpi))
 
-            try:
-                # 簡易チェックの実行
-                if args.simple_check:
-                    with open(pdf_filename, 'rb') as f:
-                        pdf = PdfReader(f)
-                        logger.debug('Read PDF file: %s', pdf_filename)  # ログメッセージの追加
+            # 簡易チェックの実行
+            if args.simple_check:
+                with open(pdf_filename, 'rb') as f:
+                    pdf = PdfReader(f)
+                    logger.debug('Read PDF file: %s', pdf_filename)  # ログメッセージの追加
+                    if subdir in total_subdirs:
+                        total_lossless_pdfs += 1
+                    else:
+                        total_optimized_pdfs += 1
+                    if len(pdf.pages) == total_images_count:
+                        logger.debug('Simple check passed for: %s', pdf_filename)  # ログメッセージの追加
+                        info_print("Simple check passed for {}".format(pdf_filename))
                         if subdir in total_subdirs:
-                            total_lossless_pdfs += 1
+                            successful_lossless_pdfs += 1
                         else:
-                            total_optimized_pdfs += 1
-                        if len(pdf.pages) == total_images_count:
-                            logger.debug('Simple check passed for: %s', pdf_filename)  # ログメッセージの追加
-                            info_print("Simple check passed for {}".format(pdf_filename))
-                            if subdir in total_subdirs:
-                                successful_lossless_pdfs += 1
-                            else:
-                                successful_optimized_pdfs += 1
+                            successful_optimized_pdfs += 1
+                    else:
+                        logger.debug('Simple check failed for: %s', pdf_filename)  # ログメッセージの追加
+                        info_print("Simple check failed for {}".format(pdf_filename))
+                        if subdir in total_subdirs:
+                            failed_lossless_pdfs += 1
                         else:
-                            logger.debug('Simple check failed for: %s', pdf_filename)  # ログメッセージの追加
-                            info_print("Simple check failed for {}".format(pdf_filename))
-                            if subdir in total_subdirs:
-                                failed_lossless_pdfs += 1
-                            else:
-                                failed_optimized_pdfs += 1
-            except Exception as e:
-                logger.error("Error in simple check: {}".format(e))
+                            failed_optimized_pdfs += 1
+
 
 # 全てのPDFが作成された後の結果の表示
 if args.simple_check == 1:
