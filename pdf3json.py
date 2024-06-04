@@ -27,14 +27,17 @@ for pdf_file in pdf_files:
         poller = document_intelligence_client.begin_analyze_document("prebuilt-read", {"base64Source": base64_encoded_pdf})
             
     # Wait for the analysis to complete
-    document_intelligence_result = poller.result()
+    analyze_result = poller.result()
 
-    # Convert the result to a string
-    result_str = str(document_intelligence_result)
+    # Convert the AnalyzeResult object to a dictionary
+    result_dict = analyze_result.as_dict()
 
-    # Save the string to a JSON file
+    # Add other information to the dictionary
+    result_dict["status"] = poller.status()
+
+    # Save the dictionary to a JSON file
     json_file_path = os.path.join(json_folder, f"{pdf_file}.json")
     with open(json_file_path, "w", encoding="utf-8") as json_file:
-        json.dump(result_str, json_file, ensure_ascii=False, indent=4)
-    
+        json.dump(result_dict, json_file, ensure_ascii=False, indent=4)
+        
     print(f"JSON file saved to {json_file_path}")

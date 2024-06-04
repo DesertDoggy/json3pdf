@@ -116,6 +116,12 @@ for json_file in json_files:
         with open(ocr_json_path, 'r', encoding='utf-8') as f:
             ocr_data = json.load(f)
 
+        # Check if 'analyzeResult' key exists: json downloaded from web has ''key, json created from API does not.
+        if 'analyzeResult' in ocr_data:
+            analyze_result = ocr_data['analyzeResult']
+        else:
+            analyze_result = ocr_data  # Treat the whole JSON as the content of 'analyzeResult'
+
         # 新しいPDFファイル名を設定（'.pdf' を削除してから '_TextOnly.pdf' を追加）
         base_filename = os.path.splitext(json_file)[0]
         base_filename = base_filename.replace('.pdf', '')  # '.pdf' を削除
@@ -126,7 +132,7 @@ for json_file in json_files:
         c = canvas.Canvas(new_pdf_path, pagesize=letter)
 
         # JSONファイルからページ情報を取得し、テキストを書き込む
-        for page in ocr_data['analyzeResult']['pages']:
+        for page in analyze_result['pages']:
             page_width = page['width'] * INCH_TO_POINT  # DPI変換を適用
             page_height = page['height'] * INCH_TO_POINT
             c.setPageSize((page_width, page_height))
