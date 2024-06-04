@@ -19,6 +19,8 @@ parser.add_argument('--log-level', '-log', default='DEBUG', choices=['DEBUG', 'V
                     help='Set the logging level (default: DEBUG)')
 parser.add_argument('-debug', action='store_const', const='DEBUG', dest='log_level',
                     help='Set the logging level to DEBUG')
+parser.add_argument('--sub', action='store_true',
+                    help='Keep the subdirectory structure and generate a separate PDF for each image')
 args = parser.parse_args()
 
 # カスタムログレベルVERBOSEを作成
@@ -270,91 +272,88 @@ total_optimized_subdirs = [subdir for subdir in optimized_folder.iterdir() if su
 logger.debug('Counting subdirectories in optimized_folder.')  # ログメッセージの追加
 total_optimized_subdirs_count = len(total_optimized_subdirs)
 
+#サブディレクトリの画像を取得する関数を定義
+def get_images(subdir, image_extensions):
+    images = []
+    for extension in image_extensions:
+        images.extend(sorted(subdir.glob('*{}'.format(extension))))
+    return images
+
+def get_total_p(subdir, image_extensions,total_p=0):
+    for extension in image_extensions:
+        total_p += len([img for img in subdir.glob('*_p*{}'.format(extension))])
+    return total_p
+
+def get_pdf_filename(subdir, total_subdirs, output_folder, optpdf_folder):
+    if subdir in total_subdirs:
+        pdf_filename = output_folder / "{}.pdf".format(subdir.name)
+    else:
+        pdf_filename = optpdf_folder / "{}.pdf".format(subdir.name)
+    return pdf_filename
+
+def get_pdf_directory_name(img_path, lossless_folder, output_folder, optimized_folder, optpdf_folder):
+    if img_path.parent.parent.name == lossless_folder.name:
+        return output_folder.name
+    elif img_path.parent.parent.name == optimized_folder.name:
+        return optpdf_folder.name
+    else:
+        return None
+    
+def get_dpi_info(img, total_p):
+    dpi = img.info.get('dpi', (600, 600))
+    estimated_dpi = imagelog_image_info(img,total_p)
+    width_px, height_px = img.size
+    width_pt = width_px / estimated_dpi * 72  # 幅をポイントで計算
+    height_pt = height_px / estimated_dpi * 72  # 高さをポイントで計算
+    return dpi, estimated_dpi, width_pt, height_pt
+
 # lossless_folderとoptimized_folder内の各サブディレクトリをループ処理
 for index, subdir in enumerate(total_subdirs + total_optimized_subdirs, start=1):
     if subdir.is_dir():
         logger.debug('Processing subdir %s of %s: %s', index, total_subdirs_count + total_optimized_subdirs_count, subdir.name)  # ログメッセージの追加
+        total_p = 0  # total_pを初期化
 
-        try:
-            # サブディレクトリ内の対応する画像ファイルを取得
-            images = []
-            total_p = 0  # total_pを初期化
-            for extension in image_extensions:
-                images.extend(sorted(subdir.glob('*{}'.format(extension))))
-            logger.debug('Got images from subdirectory: %s', images)  # ログメッセージの追加
-        except Exception as e:
-            logger.error("Error in getting images from subdirectory: {}".format(e))
+        # サブディレクトリ内の画像を取得
+        images = get_images(subdir, image_extensions)
 
-        try:
-            total_images_count = len(images)
-            logger.debug('Got total images count: %s', total_images_count)  # ログメッセージの追加
-        except Exception as e:
-            logger.error("Error in getting total images count: {}".format(e))
+        # サブディレクトリ内の画像の総数を取得
+        total_images_count = len(images)
 
-        try:
-            # サブディレクトリ内の_pxxxxの総数を取得
-            total_p += len([img for img in subdir.glob('*_p*{}'.format(extension))])
-            logger.debug('Got total _p images count: %s', total_p)  # ログメッセージの追加
-        except Exception as e:
-            logger.error("Error in getting total _p images count: {}".format(e))
+        #_pの数を取得
+        total_p = get_total_p(subdir, image_extensions)
 
-        try:
-            # PDFファイル名をサブディレクトリ名に設定
-            if subdir in total_subdirs:
-                pdf_filename = output_folder / "{}.pdf".format(subdir.name)
-            else:
-                pdf_filename = optpdf_folder / "{}.pdf".format(subdir.name)
-            logger.debug('Set PDF filename: %s', pdf_filename)  # ログメッセージの追加
-        except Exception as e:
-            logger.error("Error in setting PDF filename: {}".format(e))
+        # PDFファイル名を取得
+        pdf_filename = get_pdf_filename(subdir, total_subdirs, output_folder, optpdf_folder)
 
         # 画像ファイルがある場合のみPDFに結合
         if images:
             image_files = []
 
-            try:
-                layout_fun = None  # ページサイズの計算用関数
-                logger.debug('Set layout function as None.')  # ログメッセージの追加
-            except Exception as e:
-                logger.error("Error in setting layout function as None: {}".format(e))
+            layout_fun = None  # ページサイズの計算用関数
 
             for image_index, image_path in enumerate(images, start=1):
                 logger.debug('Converting image %s of %s in subdir %s', image_index, total_images_count, subdir.name)  # ログメッセージの追加
 
                 with Image.open(image_path) as img:
 
-                    try:
-                        # 画像ファイルのパス
-                        img_path = Path(img.filename)
-                        # サブディレクトリ名を取得
-                        subdirectory_name = img_path.parent.name
-                        logger.debug('Got image path and subdirectory name: %s, %s', img_path, subdirectory_name)  # ログメッセージの追加
-                    except Exception as e:
-                        logger.error("Error in getting image path and subdirectory name: {}".format(e))
+                    # 画像ファイルのパス
+                    img_path = Path(img.filename)
+                    # サブディレクトリ名を取得
+                    subdirectory_name = img_path.parent.name
+                    logger.debug('Got image path and subdirectory name: %s, %s', img_path, subdirectory_name)  # ログメッセージの追加
+ 
+                    # 画像ファイルがどのフォルダにあるかによってPDFディレクトリ名を設定
+                    if img_path.parent.parent.name == lossless_folder.name:
+                        pdf_directory_name = output_folder.name
+                    elif img_path.parent.parent.name == optimized_folder.name:
+                        pdf_directory_name = optpdf_folder.name
+                    else:
+                        pdf_directory_name = None
+                    logger.debug('Set PDF directory name: %s', pdf_directory_name)  # ログメッセージの追加
 
-                    try:
-                        # 画像ファイルがどのフォルダにあるかによってPDFディレクトリ名を設定
-                        if img_path.parent.parent.name == lossless_folder.name:
-                            pdf_directory_name = output_folder.name
-                        elif img_path.parent.parent.name == optimized_folder.name:
-                            pdf_directory_name = optpdf_folder.name
-                        else:
-                            pdf_directory_name = None
-                        logger.debug('Set PDF directory name: %s', pdf_directory_name)  # ログメッセージの追加
-                    except Exception as e:
-                        logger.error("Error in setting PDF directory name: {}".format(e))
-
-                    try:
-                        # DPI情報を取得、またはデフォルト値を設定
-                        dpi = img.info.get('dpi', (600, 600))
-                        estimated_dpi = imagelog_image_info(img,total_p)
-                        verbose_print("Estimated DPI: {}".format(estimated_dpi))
-                        width_px, height_px = img.size
-                        width_pt = width_px / estimated_dpi * 72  # 幅をポイントで計算
-                        height_pt = height_px / estimated_dpi * 72  # 高さをポイントで計算
-                        logger.debug('Got DPI, estimated DPI, width and height in points: %s, %s, %s, %s', dpi, estimated_dpi, width_pt, height_pt)  # ログメッセージの追加
-                    except Exception as e:
-                        logger.error("Error in getting DPI and estimated DPI: {}".format(e))
+                    # DPI、推定DPI、幅、高さを取得
+                    dpi, estimated_dpi, width_pt, height_pt = get_dpi_info(img, total_p)
+                    logger.debug('Got DPI, estimated DPI, width and height in points: %s, %s, %s, %s', dpi, estimated_dpi, width_pt, height_pt)  # ログメッセージの追加
 
                     try:
                         # Convert points to inches for console output
