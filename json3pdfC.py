@@ -148,7 +148,6 @@ for json_file in json_files:
                 # OCR結果のポリゴンから座標を取得し、PDFの座標系に変換（DPI変換を適用）
                 x = word_info['polygon'][0] * INCH_TO_POINT
                 y = page_height - (word_info['polygon'][1] * INCH_TO_POINT)
-                c.drawString(x, y, text)
                 # テキストの色を透明に設定
                 c.setFillColor(transparent_color)
                 c.drawString(x, y, text)
