@@ -19,8 +19,11 @@ import glymur
 import uuid
 import io
 from lxml import etree as ET
+import powerlog
+from powerlog import logger,verbose_print, info_print, error_print, variable_str, debug_print
 
 # コマンドライン引数を解析する
+parser = powerlog.create_parser()
 parser = argparse.ArgumentParser(description='Convert images to JP2 format and create optimized images for OCR.')
 parser.add_argument('--log-level', '-log', default='INFO', choices=['DEBUG', 'VERBOSE', 'INFO', 'WARNING'],
                     help='Set the logging level (default: DEBUG)')
@@ -36,65 +39,10 @@ group_encode_method.add_argument("--lossless", "-l", action="store_true", help="
 group_encode_method.add_argument("--optimize", "-o", action="store_true", help="Perform only optimized conversion.")
 args = parser.parse_args()
 
-# カスタムログレベルVERBOSEを作成
-VERBOSE = 15
-logging.addLevelName(VERBOSE, "VERBOSE")
+powerlog.set_log_level(args)
 
-def verbose(self, message, *args, **kws):
-    if self.isEnabledFor(VERBOSE):
-        self._log(VERBOSE, message, args, **kws) 
-
-logging.Logger.verbose = verbose
-
-#verbose and info logging instead of print
-def verbose_print(message):
-    print(message)
-    logger.verbose(message)
-
-def info_print(message):
-    print(message)
-    logger.info(message)
-
-def error_print(message):
-    print(Fore.RED + message + Style.RESET_ALL)
-    logger.error(message)
-
-# コンソールのカラーフォーマット
-def variable_str(obj):
-    return Fore.CYAN + Style.BRIGHT + str(obj) + Style.RESET_ALL
-
-# ログ設定
-log_folder = Path('./logs')
-log_folder.mkdir(parents=True, exist_ok=True)
-
-# 現在の日時を取得
-now = datetime.now()
-
-# ログファイル名に日時を含める
-log_filename = log_folder / f'img2j2kM_{now.strftime("%Y%m%d_%H%M%S")}.log'
-
-logging.basicConfig(filename=log_filename, filemode='a', format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', encoding='utf-8')
-logger = logging.getLogger('img2j2kM')  # ロガーの作成
-
-# ログレベルの設定
-if args.log_level.upper() == 'VERBOSE':
-    log_level = VERBOSE
-else:
-    log_level = getattr(logging, args.log_level.upper())
-logger.setLevel(log_level)
-
-# デバッグメッセージを出力すメッセージ
-def debug_print(message):
-    if log_level == logging.DEBUG:
-        print(message)
-        logger.debug(message)
-
-# ログファイルのパスを取得
-log_files = sorted(glob.glob(str(log_folder / 'img2j2kM_*.log')))
-
-# ログファイルが5個以上ある場合、古いものから削除
-while len(log_files) > 5:
-    os.remove(log_files.pop(0))
+verbose_print("This is a verbose print test.")
+debug_print("This is a debug print test.")
 
 # 入力フォルダと出力フォルダのパス
 input_folder = './OriginalImages'
