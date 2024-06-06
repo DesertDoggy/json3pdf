@@ -79,7 +79,9 @@ def merge_ocr_results(base_name, divjson_folder, json_folder):
         "modelId": "",
         "stringIndexType": "",
         "content": [],
-        "pages": []
+        "pages": [],
+        "paragraphs": [],  
+        "styles": [] 
     }
 
     part_files = sorted([f for f in os.listdir(divjson_folder) if f.startswith(base_name) and f.endswith('.json')])
@@ -124,6 +126,11 @@ def merge_ocr_results(base_name, divjson_folder, json_folder):
                             linespan["offset"] = line_offset
                             line_offset += linespan["length"] + 1
                     merged_results["pages"].append(page)
+                # Add paragraphs and styles
+                for paragraph in data["paragraphs"]:
+                    merged_results["paragraphs"].append(paragraph)
+                for style in data["styles"]:
+                    merged_results["styles"].append(style)
 
         merged_results["content"] = "\n".join(merged_results["content"])
 
