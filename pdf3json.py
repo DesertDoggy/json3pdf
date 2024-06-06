@@ -186,8 +186,17 @@ for pdf_file in pdf_files:
             pdf = PdfReader(file)
             total_pages = len(pdf.pages)
         # Divide PDF into specified number of pages if specified, if total_pages is less than specified, process the whole PDF
-        if args.divide and total_pages > args.divide:
-            pdf_parts = list(divide_pdf(pdf_file_path, args.divide))
+        # total_pages <= 3: for test change to 300
+        if total_pages <= 300:
+            process_pdf(pdf_file_path, document_intelligence_client, json_folder)
+        else:
+            # If total_pages is more than 300*n, divide into (n+1) parts
+            # divide_value = args.divide if args.divide else 3: for test change to 300
+            divide_value = args.divide if args.divide else 300
+            if total_pages > divide_value:
+                #divide_value = total_pages // 3+1: for test change to 300
+                divide_value = total_pages // 300 + 1
+            pdf_parts = list(divide_pdf(pdf_file_path, divide_value))
             for i, pdf_part in enumerate(pdf_parts, start=1):  # start parameter set to 1
                 output_pdf_path = os.path.join(divpdf_folder, f"{base_name}_part{i}.pdf")
                 with open(output_pdf_path, "wb") as output_pdf:
@@ -214,8 +223,5 @@ for pdf_file in pdf_files:
                         warning_print(f"Deleted {part_file} in {divjson_folder}")
                     except Exception as e:
                         error_print(f"Failed to delete {part_file} in {divjson_folder}. Reason: {e}")
-
-        else:
-            process_pdf(pdf_file_path, document_intelligence_client, json_folder)
     except Exception as e:
         powerlog.debug_print(f"Error processing {pdf_file}: {e}")
