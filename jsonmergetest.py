@@ -97,7 +97,7 @@ def merge_ocr_results(base_name, divjson_folder, json_folder):
         previous_page_offset_length = 0
         paragraph_offset = 0
         failed_parts = []
-        last_style_offset_lenghth = 0
+        last_style_offset_length = 0
         for filename in part_files:
             with open(os.path.join(divjson_folder, filename), 'r', encoding='utf-8') as f:
                 data = json.load(f)

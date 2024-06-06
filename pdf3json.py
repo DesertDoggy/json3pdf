@@ -73,13 +73,18 @@ def process_pdf(file_path, client, output_folder):
         
     print(f"JSON file saved to {json_file_path}")
 
+# Function to merge OCR results from divided PDFs
 def merge_ocr_results(base_name, divjson_folder, json_folder):
     merged_results = {
         "apiVersion": "",
         "modelId": "",
         "stringIndexType": "",
         "content": [],
-        "pages": []
+        "pages": [],
+        "paragraphs": [],  
+        "styles": [], 
+        "contentFormat":[],
+        "status": []
     }
 
     part_files = sorted([f for f in os.listdir(divjson_folder) if f.startswith(base_name) and f.endswith('.json')])
@@ -88,9 +93,18 @@ def merge_ocr_results(base_name, divjson_folder, json_folder):
         os.rename(os.path.join(divjson_folder, part_files[0]), os.path.join(json_folder, base_name + '.pdf.json'))
     else:
         page_offset = 0
+        word_offset = 0
+        line_offset = 0
+        previous_page_offset_length = 0
+        paragraph_offset = 0
+        failed_parts = []
+        last_style_offset_length = 0
         for filename in part_files:
             with open(os.path.join(divjson_folder, filename), 'r', encoding='utf-8') as f:
                 data = json.load(f)
+                # Check if the OCR process failed for _part
+                if data["status"] != "succeeded":
+                    failed_parts.append(filename)
                 if not merged_results["apiVersion"]:
                     merged_results["apiVersion"] = data["apiVersion"]
                 if not merged_results["modelId"]:
@@ -100,11 +114,54 @@ def merge_ocr_results(base_name, divjson_folder, json_folder):
                 merged_results["content"].append(data["content"])
                 for page in data["pages"]:
                     page["pageNumber"] = len(merged_results["pages"]) + 1
+                    if page["spans"]:
+                        if page["pageNumber"] > 1 and merged_results["pages"]:
+                            previous_page = merged_results["pages"][-1]
+                            if previous_page["spans"]:
+                                previous_page_offset_length = previous_page["spans"][-1]["offset"] + previous_page["spans"][-1]["length"]
+                        else:
+                          page["spans"][0]["offset"] = 0
                     for page_span in page["spans"]:
-                        page_span["offset"] += page_offset
+                        page_span["offset"] = page_offset
+                        page_offset += page_span["length"] + 1
+                    for word in page["words"]:
+                        word_offset = previous_page_offset_length+1
+                        word_span = word["span"]
+                        word_span["offset"] = word_offset
+                        word_offset += word_span["length"] + 1
+                    for line in page["lines"]:
+                        line_offset = previous_page_offset_length + 1
+                        for linespan in line["spans"]:
+                            linespan["offset"] = line_offset
+                            line_offset += linespan["length"] + 1
                     merged_results["pages"].append(page)
-                if data["pages"]:
-                    page_offset += data["pages"][-1]["spans"][-1]["offset"] + data["pages"][-1]["spans"][-1]["length"] + 1
+                # Add paragraphs and styles
+                for paragraph in data["paragraphs"]:
+                    for paragraph_span in paragraph["spans"]:
+                        paragraph_span["offset"] = paragraph_offset
+                        paragraph_offset += paragraph_span["length"] + 1
+                    merged_results["paragraphs"].append(paragraph)
+                for style in data["styles"]:
+                    # Update the offset for each span in the style, starting from the second part
+                    if part_files.index(filename) > 0:
+                        for span in style["spans"]:
+                            span["offset"] += last_style_offset_length + 1
+
+                    # Check if a style with the same confidence already exists
+                    existing_style = next((s for s in merged_results["styles"] if s["confidence"] == style["confidence"]), None)
+                    if existing_style is not None:
+                        # If it exists, append the spans
+                        existing_style["spans"].extend(style["spans"])
+                    else:
+                        # If it doesn't exist, append the style
+                        merged_results["styles"].append(style)
+
+                # Update last_style_offset_length with the last span's offset and length in the last style
+                if merged_results["pages"]:
+                    last_style_page = merged_results["pages"][-1]
+                    if last_style_page["spans"]:
+                        last_style_span = last_style_page["spans"][-1]
+                        last_style_offset_length = last_style_span["offset"] + last_style_span["length"]
 
         merged_results["content"] = "\n".join(merged_results["content"])
 
