@@ -108,6 +108,9 @@ def merge_ocr_results(base_name, divjson_folder, json_folder):
                                 page_offset = previous_page["spans"][-1]["offset"] + previous_page["spans"][-1]["length"] + 1
                         else:
                           page["spans"][0]["offset"] = 0
+                    for span in page["spans"]:
+                        span["offset"] = page_offset
+                        page_offset += span["length"] + 1
                     for word in page["words"]:
                         wordspan = word["span"]
                         wordspan["offset"] = page_offset
