@@ -97,6 +97,7 @@ def merge_ocr_results(base_name, divjson_folder, json_folder):
         previous_page_offset_length = 0
         paragraph_offset = 0
         failed_parts = []
+        last_style_offset_lenghth = 0
         for filename in part_files:
             with open(os.path.join(divjson_folder, filename), 'r', encoding='utf-8') as f:
                 data = json.load(f)
@@ -140,14 +141,26 @@ def merge_ocr_results(base_name, divjson_folder, json_folder):
                         paragraph_offset += paragraph_span["length"] + 1
                     merged_results["paragraphs"].append(paragraph)
                 for style in data["styles"]:
-                    merged_results["styles"].append(style)
-                if not merged_results["contentFormat"]:
-                    merged_results["contentFormat"] = data["contentFormat"]
-                if failed_parts:
-                    merged_results["status"] = ", ".join(failed_parts) + " failed"
-                    print(f"Error: {merged_results['status']}")
-                else:
-                    merged_results["status"] = "succeeded"
+                    # Update the offset for each span in the style, starting from the second part
+                    if part_files.index(filename) > 0:
+                        for span in style["spans"]:
+                            span["offset"] += last_style_offset_length + 1
+
+                    # Check if a style with the same confidence already exists
+                    existing_style = next((s for s in merged_results["styles"] if s["confidence"] == style["confidence"]), None)
+                    if existing_style is not None:
+                        # If it exists, append the spans
+                        existing_style["spans"].extend(style["spans"])
+                    else:
+                        # If it doesn't exist, append the style
+                        merged_results["styles"].append(style)
+
+                # Update last_style_offset_length with the last span's offset and length in the last style
+                if merged_results["pages"]:
+                    last_style_page = merged_results["pages"][-1]
+                    if last_style_page["spans"]:
+                        last_style_span = last_style_page["spans"][-1]
+                        last_style_offset_length = last_style_span["offset"] + last_style_span["length"]
 
         merged_results["content"] = "\n".join(merged_results["content"])
 
