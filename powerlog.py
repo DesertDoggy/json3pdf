@@ -12,7 +12,7 @@ from colorama import Fore, Style
 parser = argparse.ArgumentParser(description='set log level')
 parser.add_argument('--log-level', '-log', default='INFO', choices=['DEBUG', 'VERBOSE', 'INFO', 'WARNING'],
                     help='Set the logging level (default: INFO)')
-parser.add_argument('-debug', action='store_const', const='DEBUG', dest='log_level',
+parser.add_argument('--debug', '-debug', action='store_const', const='DEBUG', dest='log_level',
                     help='Set the logging level to DEBUG')
 
 # カスタムログレベルVERBOSEを作成
