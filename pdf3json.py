@@ -12,6 +12,7 @@ import shutil
 # コマンドライン引数を解析する
 parser = powerlog.create_parser()
 parser.add_argument('-d', '--divide', type=int, help='divide the PDF into specified number of pages')
+parser.add_argument('--no-delete', action='store_true',help='Do not delete files')
 args = parser.parse_args()
 
 powerlog.set_log_level(args)
@@ -198,7 +199,7 @@ for pdf_file in pdf_files:
             verbose_print("Merged OCR results saved to " + variable_str(os.path.join(json_folder, base_name + '.pdf.json')))
 
             # If not in debug mode, delete part files
-            if not args.debug:
+            if not args.no_delete:
                 part_files = [f for f in os.listdir(divpdf_folder) if f.startswith(base_name + "_part")]
                 for part_file in part_files:
                     try:
