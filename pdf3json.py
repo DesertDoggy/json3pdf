@@ -4,7 +4,7 @@ from azure.core.credentials import AzureKeyCredential
 from azure.ai.documentintelligence import DocumentIntelligenceClient
 import json
 import powerlog
-from powerlog import logger,verbose_print, info_print, error_print, variable_str, debug_print
+from powerlog import logger,verbose_print, info_print,warning_print, error_print, variable_str, debug_print
 from PyPDF2 import PdfReader, PdfWriter
 import base64
 import shutil
@@ -56,9 +56,11 @@ def process_pdf(file_path, client, output_folder):
     with open(file_path, "rb") as f:
         base64_encoded_pdf = base64.b64encode(f.read()).decode()
         poller = client.begin_analyze_document("prebuilt-read", {"base64Source": base64_encoded_pdf})
+    verbose_print(f"Sent {file_path} to Docunent Intelligence for OCR. Waiting for results...")
 
     # Wait for the analysis to complete
     analyze_result = poller.result()
+    verbose_print(f"OCR completed for {file_path}")
 
     # Convert the AnalyzeResult object to a dictionary
     result_dict = analyze_result.as_dict()
@@ -71,7 +73,7 @@ def process_pdf(file_path, client, output_folder):
     with open(json_file_path, "w", encoding="utf-8") as json_file:
         json.dump(result_dict, json_file, ensure_ascii=False, indent=4)
         
-    print(f"JSON file saved to {json_file_path}")
+    info_print(f"OCR result saved to {json_file_path}")
 
 # Function to merge OCR results from divided PDFs
 def merge_ocr_results(base_name, divjson_folder, json_folder):
@@ -193,6 +195,7 @@ for pdf_file in pdf_files:
             merged_results = merge_ocr_results(base_name, divjson_folder, json_folder)
             with open(os.path.join(json_folder, base_name + '.pdf.json'), 'w', encoding='utf-8') as f:
                 json.dump(merged_results, f, ensure_ascii=False, indent=4)
+            verbose_print("Merged OCR results saved to " + variable_str(os.path.join(json_folder, base_name + '.pdf.json')))
 
             # If not in debug mode, delete part files
             #if not args.debug:
@@ -200,12 +203,14 @@ for pdf_file in pdf_files:
             for part_file in part_files:
                 try:
                     os.remove(os.path.join(divpdf_folder, part_file))
+                    warning_print(f"Deleted {part_file} in {divpdf_folder}")
                 except Exception as e:
                     error_print(f"Failed to delete {part_file} in {divpdf_folder}. Reason: {e}")
             part_files = [f for f in os.listdir(divjson_folder) if f.startswith(base_name + "_part")]
             for part_file in part_files:
                 try:
                     os.remove(os.path.join(divjson_folder, part_file))
+                    warning_print(f"Deleted {part_file} in {divjson_folder}")
                 except Exception as e:
                     error_print(f"Failed to delete {part_file} in {divjson_folder}. Reason: {e}")
 

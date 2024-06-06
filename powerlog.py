@@ -43,6 +43,10 @@ def info_print(message):
     print(message)
     logger.info(message)
 
+def warning_print(message):
+    print(Fore.YELLOW + message + Style.RESET_ALL)
+    logger.warning(message)
+
 def error_print(message):
     print(Fore.RED + message + Style.RESET_ALL)
     logger.error(message)
