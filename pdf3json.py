@@ -194,6 +194,21 @@ for pdf_file in pdf_files:
             with open(os.path.join(json_folder, base_name + '.pdf.json'), 'w', encoding='utf-8') as f:
                 json.dump(merged_results, f, ensure_ascii=False, indent=4)
 
+            # If not in debug mode, delete part files
+            #if not args.debug:
+            part_files = [f for f in os.listdir(divpdf_folder) if f.startswith(base_name + "_part")]
+            for part_file in part_files:
+                try:
+                    os.remove(os.path.join(divpdf_folder, part_file))
+                except Exception as e:
+                    error_print(f"Failed to delete {part_file} in {divpdf_folder}. Reason: {e}")
+            part_files = [f for f in os.listdir(divjson_folder) if f.startswith(base_name + "_part")]
+            for part_file in part_files:
+                try:
+                    os.remove(os.path.join(divjson_folder, part_file))
+                except Exception as e:
+                    error_print(f"Failed to delete {part_file} in {divjson_folder}. Reason: {e}")
+
         else:
             process_pdf(pdf_file_path, document_intelligence_client, json_folder)
     except Exception as e:
