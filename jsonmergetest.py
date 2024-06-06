@@ -81,7 +81,9 @@ def merge_ocr_results(base_name, divjson_folder, json_folder):
         "content": [],
         "pages": [],
         "paragraphs": [],  
-        "styles": [] 
+        "styles": [], 
+        "contentFormat":[],
+        "status": []
     }
 
     part_files = sorted([f for f in os.listdir(divjson_folder) if f.startswith(base_name) and f.endswith('.json')])
@@ -93,9 +95,14 @@ def merge_ocr_results(base_name, divjson_folder, json_folder):
         word_offset = 0
         line_offset = 0
         previous_page_offset_length = 0
+        paragraph_offset = 0
+        failed_parts = []
         for filename in part_files:
             with open(os.path.join(divjson_folder, filename), 'r', encoding='utf-8') as f:
                 data = json.load(f)
+                # Check if the OCR process failed for _part
+                if data["status"] != "succeeded":
+                    failed_parts.append(filename)
                 if not merged_results["apiVersion"]:
                     merged_results["apiVersion"] = data["apiVersion"]
                 if not merged_results["modelId"]:
@@ -112,14 +119,14 @@ def merge_ocr_results(base_name, divjson_folder, json_folder):
                                 previous_page_offset_length = previous_page["spans"][-1]["offset"] + previous_page["spans"][-1]["length"]
                         else:
                           page["spans"][0]["offset"] = 0
-                    for span in page["spans"]:
-                        span["offset"] = page_offset
-                        page_offset += span["length"] + 1
+                    for page_span in page["spans"]:
+                        page_span["offset"] = page_offset
+                        page_offset += page_span["length"] + 1
                     for word in page["words"]:
                         word_offset = previous_page_offset_length+1
-                        wordspan = word["span"]
-                        wordspan["offset"] = word_offset
-                        word_offset += wordspan["length"] + 1
+                        word_span = word["span"]
+                        word_span["offset"] = word_offset
+                        word_offset += word_span["length"] + 1
                     for line in page["lines"]:
                         line_offset = previous_page_offset_length + 1
                         for linespan in line["spans"]:
@@ -128,9 +135,19 @@ def merge_ocr_results(base_name, divjson_folder, json_folder):
                     merged_results["pages"].append(page)
                 # Add paragraphs and styles
                 for paragraph in data["paragraphs"]:
+                    for paragraph_span in paragraph["spans"]:
+                        paragraph_span["offset"] = paragraph_offset
+                        paragraph_offset += paragraph_span["length"] + 1
                     merged_results["paragraphs"].append(paragraph)
                 for style in data["styles"]:
                     merged_results["styles"].append(style)
+                if not merged_results["contentFormat"]:
+                    merged_results["contentFormat"] = data["contentFormat"]
+                if failed_parts:
+                    merged_results["status"] = ", ".join(failed_parts) + " failed"
+                    print(f"Error: {merged_results['status']}")
+                else:
+                    merged_results["status"] = "succeeded"
 
         merged_results["content"] = "\n".join(merged_results["content"])
 
