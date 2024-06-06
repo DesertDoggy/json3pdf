@@ -89,6 +89,8 @@ def merge_ocr_results(base_name, divjson_folder, json_folder):
     else:
         page_offset = 0
         word_offset = 0
+        line_offset = 0
+        previous_page_offset_length = 0
         for filename in part_files:
             with open(os.path.join(divjson_folder, filename), 'r', encoding='utf-8') as f:
                 data = json.load(f)
@@ -105,19 +107,23 @@ def merge_ocr_results(base_name, divjson_folder, json_folder):
                         if page["pageNumber"] > 1 and merged_results["pages"]:
                             previous_page = merged_results["pages"][-1]
                             if previous_page["spans"]:
-                                page_offset = previous_page["spans"][-1]["offset"] + previous_page["spans"][-1]["length"] + 1
+                                previous_page_offset_length = previous_page["spans"][-1]["offset"] + previous_page["spans"][-1]["length"]
                         else:
                           page["spans"][0]["offset"] = 0
                     for span in page["spans"]:
                         span["offset"] = page_offset
                         page_offset += span["length"] + 1
                     for word in page["words"]:
+                        word_offset = previous_page_offset_length+1
                         wordspan = word["span"]
-                        wordspan["offset"] = page_offset
-                        page_offset += wordspan["length"] + 1
+                        wordspan["offset"] = word_offset
+                        word_offset += wordspan["length"] + 1
+                    for line in page["lines"]:
+                        line_offset = previous_page_offset_length + 1
+                        for linespan in line["spans"]:
+                            linespan["offset"] = line_offset
+                            line_offset += linespan["length"] + 1
                     merged_results["pages"].append(page)
-                if data["pages"]:
-                    page_offset += data["pages"][-1]["spans"][-1]["offset"] + data["pages"][-1]["spans"][-1]["length"] + 1
 
         merged_results["content"] = "\n".join(merged_results["content"])
 
