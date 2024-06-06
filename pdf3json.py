@@ -187,12 +187,12 @@ for pdf_file in pdf_files:
             total_pages = len(pdf.pages)
         # Divide PDF into specified number of pages if specified, if total_pages is less than specified, process the whole PDF
         # total_pages <= 3: for test change to 300
+        divide_value = args.divide if args.divide else 300
         if total_pages <= 300:
             process_pdf(pdf_file_path, document_intelligence_client, json_folder)
         else:
             # If total_pages is more than 300*n, divide into (n+1) parts
             # divide_value = args.divide if args.divide else 3: for test change to 300
-            divide_value = args.divide if args.divide else 300
             if total_pages > divide_value:
                 #divide_value = total_pages // 3+1: for test change to 300
                 divide_value = total_pages // 300 + 1
