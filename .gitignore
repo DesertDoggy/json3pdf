@@ -8,3 +8,4 @@
 *.json
 *.env
 /etc
+/__pycache__
