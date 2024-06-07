@@ -11,7 +11,10 @@ import shutil
 
 # コマンドライン引数を解析する
 parser = powerlog.create_parser()
-parser.add_argument('-d', '--divide', type=int, help='divide the PDF into specified number of pages')
+group = parser.add_mutually_exclusive_group()
+group.add_argument('-d', '--divide', type=int, default=3, help='divide the PDF into specified number of pages. Default:300')
+group.add_argument('--no-divide', action='store_true', help='Overrides auto divide of 300 pages and will try to process whole PDF')
+#divide default 3 for Test↑
 parser.add_argument('--no-delete', action='store_true',help='Do not delete files')
 args = parser.parse_args()
 
@@ -216,7 +219,7 @@ for pdf_file in pdf_files:
             total_pages = len(pdf.pages)
         # Divide PDF into specified number of pages if specified, if total_pages is less than specified, process the whole PDF
         divide_value = args.divide if args.divide else 3
-        if total_pages <= 3:
+        if total_pages <= 3 or args.no_divide:
             process_pdf(pdf_file_path, document_intelligence_client, json_folder)
         else:
             # If total_pages is more than 300*n, divide into (n+1) parts
