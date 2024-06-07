@@ -12,11 +12,11 @@ import shutil
 # コマンドライン引数を解析する
 parser = powerlog.create_parser()
 group = parser.add_mutually_exclusive_group()
-group.add_argument('-d', '--divide', type=int, default=3, help='divide the PDF into specified number of pages. Default:300')
+group.add_argument('-d', '--divide', type=int, default=300, help='divide the PDF into specified number of pages. Default:300')
 group.add_argument('--no-divide', action='store_true', help='Overrides auto divide of 300 pages and will try to process whole PDF')
 #divide default 3 for Test↑
 parser.add_argument('--attempts', type=int, default=3,
-                    help='the maximum number of attempts')
+                    help='the maximum number of attempts. Default: 3')
 parser.add_argument('--no-delete', action='store_true',help='Do not delete files')
 args = parser.parse_args()
 
