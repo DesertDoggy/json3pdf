@@ -95,15 +95,61 @@ for json_file in json_files:
             page_height = page['height'] * INCH_TO_POINT
             c.setPageSize((page_width, page_height))
 
-            # フォントを設定（引数から取得したサイズを使用）
-            c.setFont(font_name, args.size / DPI_CONVERSION_FACTOR)  # DPI変換を適用
+            # パラグラフごとに処理
+            for paragraph in analyze_result['paragraphs']:
+                # バウンディングボックスの座標を取得
+                bounding_box = paragraph['boundingRegions'][0]['polygon']
+                # バウンディングボックスの高さと幅を計算
+                bounding_box_height = abs(bounding_box[5] - bounding_box[1]) * INCH_TO_POINT
+                bounding_box_width = abs(bounding_box[2] - bounding_box[0]) * INCH_TO_POINT
 
-            for word_info in page['words']:
-                text = word_info['content']
-                # OCR結果のポリゴンから座標を取得し、PDFの座標系に変換（DPI変換を適用）
-                x = word_info['polygon'][0] * INCH_TO_POINT
-                y = page_height - (word_info['polygon'][1] * INCH_TO_POINT)
-                c.drawString(x, y, text)
+                # パラグラフ内の単語と行の情報を取得
+                words_in_paragraph = []
+                lines_in_paragraph = []
+                temp_words = ""
+                temp_lines = ""
+
+                for word in page['words']:
+                    temp_words += word['content']
+                    if temp_words == paragraph['content']:
+                        words_in_paragraph.append(word)
+                        break
+                    elif paragraph['content'].startswith(temp_words):
+                        words_in_paragraph.append(word)
+                    else:
+                        temp_words = word['content']  # Reset temp_words if not in paragraph content
+                        words_in_paragraph = [word]  # Reset words_in_paragraph
+
+                for line in page['lines']:
+                    temp_lines += line['content']
+                    if temp_lines == paragraph['content']:
+                        lines_in_paragraph.append(line)
+                        break
+                    elif paragraph['content'].startswith(temp_lines):
+                        lines_in_paragraph.append(line)
+                    else:
+                        temp_lines = line['content']  # Reset temp_lines if not in paragraph content
+                        lines_in_paragraph = [line]  # Reset lines_in_paragraph
+
+                # パラグラフ内の行数と文字数を計算
+                num_lines = len(lines_in_paragraph)
+                num_chars = sum(len(word['content']) for word in words_in_paragraph)
+
+                # 文字の縦横の長さを計算
+                char_height = bounding_box_height / num_lines
+                char_width = bounding_box_width / num_chars
+
+                # フォントサイズを設定（文字の縦横の長さの平均を基に）
+                font_size = (char_height + char_width) / 2 / DPI_CONVERSION_FACTOR
+                c.setFont(font_name, font_size)
+
+                # パラグラフ内の各単語を描画
+                for word_info in words_in_paragraph:
+                    text = word_info['content']
+                    # OCR結果のポリゴンから座標を取得し、PDFの座標系に変換（DPI変換を適用）
+                    x = word_info['polygon'][0] * INCH_TO_POINT
+                    y = page_height - (word_info['polygon'][1] * INCH_TO_POINT)
+                    c.drawString(x, y, text)
 
             # 次のページに移動
             c.showPage()
@@ -116,8 +162,8 @@ for json_file in json_files:
 
         # PDFファイルが作成されたことを表示（何個目/総数の形で表示）
         info_print(f'PDF file {new_pdf_filename} has been created. ({pdf_counter}/{total_json_files})')
-else:
-    # JSONファイルが存在しないことを表示
-    info_print(f'No JSON files found, so no PDF file was created.')
+    else:
+        # JSONファイルが存在しないことを表示
+        info_print(f'No JSON files found, so no PDF file was created.')
 
-info_print('All PDF file processing is complete.')
+    info_print('All PDF file processing is complete.')
