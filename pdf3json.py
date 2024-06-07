@@ -15,6 +15,8 @@ group = parser.add_mutually_exclusive_group()
 group.add_argument('-d', '--divide', type=int, default=3, help='divide the PDF into specified number of pages. Default:300')
 group.add_argument('--no-divide', action='store_true', help='Overrides auto divide of 300 pages and will try to process whole PDF')
 #divide default 3 for Test↑
+parser.add_argument('--attempts', type=int, default=3,
+                    help='the maximum number of attempts')
 parser.add_argument('--no-delete', action='store_true',help='Do not delete files')
 args = parser.parse_args()
 
@@ -208,6 +210,7 @@ def divide_and_process_pdf(pdf_file_path, divide_value, base_name, document_inte
             except Exception as e:
                 error_print(f"Failed to delete {part_file} in {divpdf_folder}. Reason: {e}")
 
+
 # Process each PDF file
 for pdf_file in pdf_files:
     pdf_file_path = os.path.join(optpdf_folder, pdf_file)
@@ -218,13 +221,59 @@ for pdf_file in pdf_files:
             pdf = PdfReader(file)
             total_pages = len(pdf.pages)
         # Divide PDF into specified number of pages if specified, if total_pages is less than specified, process the whole PDF
-        divide_value = args.divide if args.divide else 3
-        if total_pages <= 3 or args.no_divide:
-            process_pdf(pdf_file_path, document_intelligence_client, json_folder)
+        divide_pages = args.divide
+        # If total_pages is less than divide_pages or --no-divide is specified, process the whole PDF
+        if total_pages <= divide_pages or args.no_divide:
+            attempt = 0
+            max_attempts = args.attempts
+            #If processing full size PDF fails, divide into smaller parts and process
+            while attempt < max_attempts:
+                # Try to process the full size PDF
+                if attempt == 0:
+                    try:
+                        process_pdf(pdf_file_path, document_intelligence_client, json_folder)
+                        break
+                    except Exception as e:
+                        error_print(f"Error processing full size {pdf_file}: {e}")
+                        error_print(f"Attempting to divide {pdf_file} into smaller parts")
+                        attempt += 1
+                        # If total_pages is more than 300, divide into 2 parts
+                        if total_pages > args.divide:
+                            if total_pages % args.divide == 0:
+                                divide_value = total_pages // args.divide
+                            else:
+                                divide_value = total_pages // args.divide + 1
+                        else:
+                            divide_value = 2
+                # If processing full size PDF fails, divide into smaller parts and process
+                if attempt > 0:
+                    try:
+                        divide_and_process_pdf(pdf_file_path, divide_value, base_name, document_intelligence_client, divpdf_folder, divjson_folder, json_folder)
+                        break
+                    except Exception as e:
+                        error_print(f"Error processing {pdf_file} in parts: {e}")
+                        error_print(f"Attempting to divide {pdf_file} into smaller parts")
+                        attempt += 1
+                        divide_value += 1                        
+
         else:
             # If total_pages is more than 300*n, divide into (n+1) parts
-            if total_pages > divide_value:
-                divide_value = total_pages // 3 + 1
-            divide_and_process_pdf(pdf_file_path, divide_value, base_name, document_intelligence_client, divpdf_folder, divjson_folder, json_folder)
+            if total_pages > divide_pages:
+                if total_pages % divide_pages == 0:
+                    divide_value = total_pages // divide_pages
+                else:
+                    divide_value = total_pages // divide_pages + 1
+            attempt = 0
+            max_attempts = args.attempts
+            #If proccesing fails divide into smaller parts and process
+            while attempt < max_attempts:
+                try:
+                    divide_and_process_pdf(pdf_file_path, divide_value, base_name, document_intelligence_client, divpdf_folder, divjson_folder, json_folder)
+                    break
+                except Exception as e:
+                    error_print(f"Error processing {pdf_file} in parts: {e}")
+                    error_print(f"Attempting to divide {pdf_file} into smaller parts")
+                    attempt += 1
+                    divide_value += 1
     except Exception as e:
         powerlog.debug_print(f"Error processing {pdf_file}: {e}")
