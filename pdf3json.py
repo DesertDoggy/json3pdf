@@ -176,6 +176,35 @@ def merge_ocr_results(base_name, divjson_folder, json_folder):
 
     return merged_results
 
+def divide_and_process_pdf(pdf_file_path, divide_value, base_name, document_intelligence_client, divpdf_folder, divjson_folder, json_folder):
+    pdf_parts = list(divide_pdf(pdf_file_path, divide_value))
+    for i, pdf_part in enumerate(pdf_parts, start=1):  # start parameter set to 1
+        output_pdf_path = os.path.join(divpdf_folder, f"{base_name}_part{i}.pdf")
+        with open(output_pdf_path, "wb") as output_pdf:
+            pdf_part.write(output_pdf)
+        process_pdf(output_pdf_path, document_intelligence_client, divjson_folder)
+    merged_results = merge_ocr_results(base_name, divjson_folder, json_folder)
+    with open(os.path.join(json_folder, base_name + '.pdf.json'), 'w', encoding='utf-8') as f:
+        json.dump(merged_results, f, ensure_ascii=False, indent=4)
+    verbose_print("Merged OCR results saved to " + variable_str(os.path.join(json_folder, base_name + '.pdf.json')))
+
+    # If not in debug mode, delete part files
+    if not args.no_delete:
+        part_files = [f for f in os.listdir(divpdf_folder) if f.startswith(base_name + "_part")]
+        for part_file in part_files:
+            try:
+                os.remove(os.path.join(divpdf_folder, part_file))
+                warning_print(f"Deleted {part_file} in {divpdf_folder}")
+            except Exception as e:
+                error_print(f"Failed to delete {part_file} in {divpdf_folder}. Reason: {e}")
+        part_files = [f for f in os.listdir(divjson_folder) if f.startswith(base_name + "_part")]
+        for part_file in part_files:
+            try:
+                os.remove(os.path.join(divjson_folder, part_file))
+                warning_print(f"Deleted {part_file} in {divjson_folder}")
+            except Exception as e:
+                error_print(f"Failed to delete {part_file} in {divpdf_folder}. Reason: {e}")
+
 # Process each PDF file
 for pdf_file in pdf_files:
     pdf_file_path = os.path.join(optpdf_folder, pdf_file)
@@ -186,42 +215,13 @@ for pdf_file in pdf_files:
             pdf = PdfReader(file)
             total_pages = len(pdf.pages)
         # Divide PDF into specified number of pages if specified, if total_pages is less than specified, process the whole PDF
-        # total_pages <= 3: for test change to 300
-        divide_value = args.divide if args.divide else 300
-        if total_pages <= 300:
+        divide_value = args.divide if args.divide else 3
+        if total_pages <= 3:
             process_pdf(pdf_file_path, document_intelligence_client, json_folder)
         else:
             # If total_pages is more than 300*n, divide into (n+1) parts
-            # divide_value = args.divide if args.divide else 3: for test change to 300
             if total_pages > divide_value:
-                #divide_value = total_pages // 3+1: for test change to 300
-                divide_value = total_pages // 300 + 1
-            pdf_parts = list(divide_pdf(pdf_file_path, divide_value))
-            for i, pdf_part in enumerate(pdf_parts, start=1):  # start parameter set to 1
-                output_pdf_path = os.path.join(divpdf_folder, f"{base_name}_part{i}.pdf")
-                with open(output_pdf_path, "wb") as output_pdf:
-                    pdf_part.write(output_pdf)
-                process_pdf(output_pdf_path, document_intelligence_client, divjson_folder)
-            merged_results = merge_ocr_results(base_name, divjson_folder, json_folder)
-            with open(os.path.join(json_folder, base_name + '.pdf.json'), 'w', encoding='utf-8') as f:
-                json.dump(merged_results, f, ensure_ascii=False, indent=4)
-            verbose_print("Merged OCR results saved to " + variable_str(os.path.join(json_folder, base_name + '.pdf.json')))
-
-            # If not in debug mode, delete part files
-            if not args.no_delete:
-                part_files = [f for f in os.listdir(divpdf_folder) if f.startswith(base_name + "_part")]
-                for part_file in part_files:
-                    try:
-                        os.remove(os.path.join(divpdf_folder, part_file))
-                        warning_print(f"Deleted {part_file} in {divpdf_folder}")
-                    except Exception as e:
-                        error_print(f"Failed to delete {part_file} in {divpdf_folder}. Reason: {e}")
-                part_files = [f for f in os.listdir(divjson_folder) if f.startswith(base_name + "_part")]
-                for part_file in part_files:
-                    try:
-                        os.remove(os.path.join(divjson_folder, part_file))
-                        warning_print(f"Deleted {part_file} in {divjson_folder}")
-                    except Exception as e:
-                        error_print(f"Failed to delete {part_file} in {divjson_folder}. Reason: {e}")
+                divide_value = total_pages // 3 + 1
+            divide_and_process_pdf(pdf_file_path, divide_value, base_name, document_intelligence_client, divpdf_folder, divjson_folder, json_folder)
     except Exception as e:
         powerlog.debug_print(f"Error processing {pdf_file}: {e}")
