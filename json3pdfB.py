@@ -16,6 +16,7 @@ from powerlog import logger,verbose_print, info_print, error_print, variable_str
 from pypdf import PdfReader
 import math
 import re
+from shapely.geometry import Polygon
 
 # 文字が日本語かどうかを判断する関数
 def is_japanese(text):
@@ -51,9 +52,17 @@ parser.add_argument('-f', '--font', default='NotoSansJP-Regular', help='使用�
 parser.add_argument('-d', '--dpi', type=int, default=600, help='文書のDPIを指定します（デフォルトは600）')
 parser.add_argument('--page','-p', choices=list(page_sizes.keys()), help='The page size of the PDF.')
 parser.add_argument('--layout', choices=['word', 'line', 'paragraph'], default='word', help='Choose the level of text to draw: word, line, or paragraph.')
+parser.add_argument('--area', type=float, default=80,
+                    help='areathreshold for counting lines in a paragraph. default is 80')
 args = parser.parse_args()
 
 powerlog.set_log_level(args)
+
+# areaの値をパーセンテージから小数に変換
+args.area /= 100.0
+
+# OSに適した改行文字を取得
+newline = os.linesep
 
 # DPI変換のための係数を設定
 DPI_CONVERSION_FACTOR = args.dpi / 72
@@ -158,14 +167,42 @@ for json_file in json_files:
                 items = page['words']
             elif args.layout == 'line':
                 items = page['lines']
+            elif args.layout == 'paragraph':
+                    items = [p for p in analyze_result['paragraphs'] if p['boundingRegions'][0]['pageNumber'] == page_number]
+                    lines = page['lines']
 
             prev_font_size = None
             for item in items:
-                text = item['content']
-                polygon = item['polygon']
+                if args.layout == 'paragraph':
+                    text = item['content']
+                    polygon = item['boundingRegions'][0]['polygon']
+                    line_count = 0
+                    # paragraphのpolygonを座標のペアのリストに変換し、Polygonオブジェクトに変換
+                    item_polygon_coords = [(polygon[i], polygon[i + 1]) for i in range(0, len(polygon), 2)]
+                    item_polygon = Polygon(item_polygon_coords)
+                    prev_line_bottom = None
+                    for line in lines:
+                        # line['polygon']を座標のペアのリストに変換し、Polygonオブジェクトに変換
+                        line_polygon_coords = [(line['polygon'][i], line['polygon'][i + 1]) for i in range(0, len(line['polygon']), 2)]
+                        line_polygon = Polygon(line_polygon_coords)
+                        # line_polygonがparagraph_polygonに収まっているかどうかを確認
+                        intersection = line_polygon.intersection(item_polygon).area
+                        if intersection / line_polygon.area >= args.area:
+                            line_count += 1
+                            # 新しい行が前の行よりも下にある場合に改行を追加
+                            line_bottom = min(line_polygon_coords, key=lambda coord: coord[1])[1]
+                            if prev_line_bottom is not None and line_bottom < prev_line_bottom:
+                                text += newline
+                            prev_line_bottom = line_bottom
+                else:
+                    text = item['content']
+                    polygon = item['polygon']
+                    # itemのpolygonを座標のペアのリストに変換
+                    item_polygon_coords = [(polygon[i], polygon[i + 1]) for i in range(0, len(polygon), 2)]
+                    item_polygon = Polygon(item_polygon_coords)
+
                 x1, y1, x2, y2, x3, y3, x4, y4 = [v * INCH_TO_POINT for v in polygon]
                 rotation = item.get('rotation', 0)
-
                 # 文字の向きを決定
                 if math.isclose(x1, x4) and math.isclose(y2, y3):  # 垂直
                     x, y = x1, page_height - y1
@@ -183,9 +220,10 @@ for json_file in json_files:
                 # フォントサイズを計算（高さに係数を適用）
                 font_size = height * font_size_factor
                 if args.layout == 'line':
-                    font_size *= 0.9 # 行のフォントサイズのデフォルト係数、テスト環境で決定した数値
+                    font_size *= 0.9  # 行のフォントサイズのデフォルト係数、テスト環境で決定した数値
                     font_size *= (1 - 0.1 * (len(text) / 100))  # フォントサイズを微調整
-                    y += font_size * 0.1  # 配置の間隔を微調整
+                elif args.layout == 'paragraph':
+                    font_size /= line_count  # 段落のフォントサイズを行数で調整
 
                 # 前の単語と比較してフォントサイズが閾値以上変化した場合にのみフォントサイズを変更
                 if not args.individual and prev_font_size is not None and font_size_change_threshold is not None and abs(font_size - prev_font_size) / prev_font_size > font_size_change_threshold:
