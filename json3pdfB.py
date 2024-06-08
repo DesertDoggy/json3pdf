@@ -6,13 +6,29 @@ import glob
 from datetime import datetime
 import sys
 from reportlab.pdfgen import canvas
-from reportlab.lib.pagesizes import letter
+from reportlab.lib.pagesizes import A3, A4, A5, A6, B4, B5, B6, B7, letter 
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.lib.colors import Color
 import json
 import powerlog
 from powerlog import logger,verbose_print, info_print, error_print, variable_str, debug_print
+from pypdf import PdfReader
+import math
+
+# ページサイズの辞書を作成
+page_sizes = {
+    "A3": (842, 1191),
+    "A4": (595, 842),
+    "A5": (420, 595),
+    "A6": (298, 420),
+    "B4": (729, 1032),
+    "B5": (516, 729),
+    "B6": (363, 516),
+    "B7": (258, 363),
+    "Tabloid": (792, 1224),  # タブロイド判のサイズ（11 x 17インチをポイントに変換）
+    "Blanket": (4320, 6480)  # ブランケット判のサイズ（60 x 90インチをポイントに変換）
+}
 
 # コマンドライン引数を解析する
 parser = powerlog.create_parser()
@@ -24,6 +40,7 @@ parser.add_argument('-debug', action='store_const', const='DEBUG', dest='log_lev
 parser.add_argument('-s', '--size', type=int, default=60, help='フォントのサイズを指定します（デフォルトは60）')
 parser.add_argument('-f', '--font', default='NotoSansJP-Regular', help='使用するフォントの名前を指定します（デフォルトはNotoSansJP-Regular）')
 parser.add_argument('-d', '--dpi', type=int, default=600, help='文書のDPIを指定します（デフォルトは600）')
+parser.add_argument('--page','-p', choices=list(page_sizes.keys()), help='The page size of the PDF.')
 args = parser.parse_args()
 
 powerlog.set_log_level(args)
@@ -55,6 +72,8 @@ if not os.path.exists(output_folder):
 else:
     print(f'{output_folder} folder already exists')
 
+optpdf_folder = Path('./OptimizedPDF')
+
 # 入力フォルダ内の全てのJSONファイルを取得
 json_files = [f for f in os.listdir(json_folder) if f.endswith('.pdf.json')]
 
@@ -74,6 +93,29 @@ for json_file in json_files:
         with open(ocr_json_path, 'r', encoding='utf-8') as f:
             ocr_data = json.load(f)
 
+        # OCR元のPDFファイル名を設定
+        ocr_pdf_path = optpdf_folder / json_file.replace('.json', '')
+
+        # PDFファイルが存在する場合のみページサイズを読み取る
+
+        if args.page is not None:
+            page_size = page_sizes[args.size]
+        else:
+            if ocr_pdf_path.exists():
+                with open(ocr_pdf_path, 'rb') as f:
+                    pdf = PdfReader(f)
+                    page = pdf.pages[0]
+                    width_pt = page.mediabox[2]
+                    height_pt = page.mediabox[3]
+                    # ページサイズを辞書から探す
+                    for size, (w, h) in page_sizes.items():
+                        if abs(width_pt - w) < 1 and abs(height_pt - h) < 1:
+                            page_size = size
+                            break
+            # ページサイズが見つからない場合はA5に設定
+            else:
+                page_size = 'A5'
+
         # Check if 'analyzeResult' key exists: json downloaded from web has ''key, json created from API does not.
         if 'analyzeResult' in ocr_data:
             analyze_result = ocr_data['analyzeResult']
@@ -87,7 +129,7 @@ for json_file in json_files:
         new_pdf_path = os.path.join(output_folder, new_pdf_filename)
 
         # ReportLabのキャンバスを作成
-        c = canvas.Canvas(new_pdf_path, pagesize=letter)
+        c = canvas.Canvas(new_pdf_path, pagesize=page_size)
 
         # JSONファイルからページ情報を取得し、テキストを書き込む
         for page in analyze_result['pages']:
