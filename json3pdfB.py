@@ -137,15 +137,27 @@ for json_file in json_files:
             page_height = page['height'] * INCH_TO_POINT
             c.setPageSize((page_width, page_height))
 
-            # フォントを設定（引数から取得したサイズを使用）
-            c.setFont(font_name, args.size)
-
             for word_info in page['words']:
                 text = word_info['content']
                 # OCR結果のポリゴンから座標を取得し、PDFの座標系に変換（DPI変換を適用）
                 x = word_info['polygon'][0] * INCH_TO_POINT
                 y = page_height - (word_info['polygon'][1] * INCH_TO_POINT)
-                c.drawString(x, y, text)
+                
+                # ポリゴンから文字の幅と高さを取得
+                width = (word_info['polygon'][2] - word_info['polygon'][0]) * INCH_TO_POINT
+                height = (word_info['polygon'][3] - word_info['polygon'][1]) * INCH_TO_POINT
+
+                # フォントを設定（引数から取得したサイズを使用、なければポリゴンから取得）
+                font_size = args.size if args.size else height
+                c.setFont(font_name, font_size)
+
+                # 幅に合わせてスケール変換
+                scale = width / c.stringWidth(text, font_name, font_size)
+                c.saveState()  # 現在の状態を保存
+                c.translate(x, y)  # 描画原点を移動
+                c.scale(scale, 1)  # 水平方向にスケール変換
+                c.drawString(0, 0, text)  # 描画原点から文字を描画
+                c.restoreState()  # 描画状態を復元
 
             # 次のページに移動
             c.showPage()
