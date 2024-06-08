@@ -42,7 +42,7 @@ parser.add_argument('--log-level', '-log', default='INFO', choices=['DEBUG', 'VE
                     help='Set the logging level (default: INFO)')
 parser.add_argument('-debug', action='store_const', const='DEBUG', dest='log_level',
                     help='Set the logging level to DEBUG')
-parser.add_argument('-s', '--size', type=int, help='フォントのサイズを指定します（デフォルトは60）')
+parser.add_argument('-s', '--size', type=int, help='フォントのサイズの調整（デフォルトは100）単位は%')
 parser.add_argument('-f', '--font', default='NotoSansJP-Regular', help='使用するフォントの名前を指定します（デフォルトはNotoSansJP-Regular）')
 parser.add_argument('-d', '--dpi', type=int, default=600, help='文書のDPIを指定します（デフォルトは600）')
 parser.add_argument('--page','-p', choices=list(page_sizes.keys()), help='The page size of the PDF.')
@@ -63,6 +63,9 @@ font_path = './data/fonts/' + font_name + '.ttf'
 
 # フォントを登録
 pdfmetrics.registerFont(TTFont(font_name, font_path))
+
+# フォントサイズの係数を取得（デフォルトは1.0）
+font_size_factor = 1.0 if args.size is None else args.size / 100.0
 
 # 入力フォルダと出力フォルダのパスを設定
 json_folder = './DIjson'
@@ -143,59 +146,63 @@ for json_file in json_files:
             page_width = page['width'] * INCH_TO_POINT
             page_height = page['height'] * INCH_TO_POINT
             c.setPageSize((page_width, page_height))
-
             # 各単語を処理
-            if args.layout == 'word' or args.layout == 'line':
-                # 単語が現在の行に属しているか確認
-                for item in (page['words'] if args.layout == 'word' else page['lines']):
-                    text = item['content']
-                    polygon = item['polygon']
-                    x1, y1, x2, y2, x3, y3, x4, y4 = [v * INCH_TO_POINT for v in polygon]
-                    rotation = item.get('rotation', 0)
+            if args.layout == 'word':
+                items = page['words']
+            elif args.layout == 'line':
+                items = page['lines']
 
-                    # 文字の向きを決定
-                    if math.isclose(x1, x4) and math.isclose(y2, y3):  # 垂直
-                        x, y = x1, page_height - y1
-                        width = abs(y3 - y1)
-                        height = abs(x2 - x1)
-                    elif math.isclose(y1, y2) and math.isclose(x3, x4):  # 水平
-                        x, y = x1, page_height - y1
-                        width = abs(x2 - x1)
-                        height = abs(y3 - y1)
-                    else:  # 斜め
-                        x, y = x1, page_height - y1
-                        width = math.sqrt((x2 - x1)**2 + (y2 - y1)**2)
-                        height = math.sqrt((x4 - x1)**2 + (y4 - y1)**2)
+            for item in items:
+                text = item['content']
+                polygon = item['polygon']
+                x1, y1, x2, y2, x3, y3, x4, y4 = [v * INCH_TO_POINT for v in polygon]
+                rotation = item.get('rotation', 0)
 
-                    font_size = args.size if args.size else height
-                    c.setFont(font_name, font_size)
-                    string_width = c.stringWidth(text, font_name, font_size)
-                    scale = width / string_width
-                    c.saveState()  # 現在の状態を保存
-                    c.translate(x, y)  # 描画原点を移動
-                    c.rotate(rotation)  # 文字の向きに合わせて回転
-                    if is_japanese(text):  # 文字が日本語の場合
-                        c.scale(1, scale)  # 垂直方向にスケール変換
-                    else:  # 文字が英語の場合
-                        c.scale(scale, 1)  # 水平方向にスケール変換
-                    c.drawString(0, 0, text)  # 描画原点から文字を描画
-                    c.restoreState()
+                # 文字の向きを決定
+                if math.isclose(x1, x4) and math.isclose(y2, y3):  # 垂直
+                    x, y = x1, page_height - y1
+                    width = abs(y3 - y1)
+                    height = abs(x2 - x1)
+                elif math.isclose(y1, y2) and math.isclose(x3, x4):  # 水平
+                    x, y = x1, page_height - y1
+                    width = abs(x2 - x1)
+                    height = abs(y3 - y1)
+                else:  # 斜め
+                    x, y = x1, page_height - y1
+                    width = math.sqrt((x2 - x1)**2 + (y2 - y1)**2)
+                    height = math.sqrt((x4 - x1)**2 + (y4 - y1)**2)
 
-            elif args.layout == 'paragraph':
-                text = paragraph['content']
-                x = paragraph['polygon'][0] * INCH_TO_POINT
-                y = page_height - (paragraph['polygon'][1] * INCH_TO_POINT)
-                width = (paragraph['polygon'][2] - paragraph['polygon'][0]) * INCH_TO_POINT
-                height = (paragraph['polygon'][7] - paragraph['polygon'][1]) * INCH_TO_POINT
-                font_size = args.size if args.size else height
+                # フォントサイズを計算（高さに係数を適用）
+                font_size = height * font_size_factor
+                if args.layout == 'line':
+                    font_size *= (1 - 0.1 * (len(text) / 100))  # フォントサイズを微調整
+                    y += font_size * 0.1  # 配置の間隔を微調整
+                if args.layout == 'line':
+                    font_size *= (1 - 0.1 * (len(text) / 100))  # フォントサイズを微調整
+                    y += font_size * 0.1  # 配置の間隔を微調整
+
                 c.setFont(font_name, font_size)
-                scale = width / c.stringWidth(text, font_name, font_size)
+                string_width = c.stringWidth(text, font_name, font_size)
+                scale = width / string_width
+
+                # フォントの上昇と下降を取得
+                font = pdfmetrics.getFont(font_name)
+                ascent = font.face.ascent * (font_size / 1000.0)
+                descent = font.face.descent * (font_size / 1000.0)
+
+                # yの位置を調整
+                y += descent
+
                 c.saveState()  # 現在の状態を保存
                 c.translate(x, y)  # 描画原点を移動
-                c.scale(scale, 1)  # 水平方向にスケール変換
+                c.rotate(rotation)  # 文字の向きに合わせて回転
+                if is_japanese(text):  # 文字が日本語の場合
+                    c.scale(1, scale)  # 垂直方向にスケール変換
+                else:  # 文字が英語の場合
+                    c.scale(scale, 1)  # 水平方向にスケール変換
                 c.drawString(0, 0, text)  # 描画原点から文字を描画
                 c.restoreState()
-            
+
             # 次のページに移動
             c.showPage()
 
