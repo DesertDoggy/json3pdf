@@ -107,6 +107,8 @@ def merge_ocr_results(base_name, divjson_folder, json_folder):
         paragraph_offset = 0
         failed_parts = []
         last_style_offset_length = 0
+        paragraph_page_offset = 0
+        last_page_number = 0
         for filename in part_files:
             with open(os.path.join(divjson_folder, filename), 'r', encoding='utf-8') as f:
                 data = json.load(f)
@@ -145,10 +147,16 @@ def merge_ocr_results(base_name, divjson_folder, json_folder):
                     merged_results["pages"].append(page)
                 # Add paragraphs and styles
                 for paragraph in data["paragraphs"]:
+                    last_page_number = 0
+                    for bounding_region in paragraph["boundingRegions"]:
+                        if last_page_number < bounding_region["pageNumber"]:
+                            last_page_number = bounding_region["pageNumber"]
+                            bounding_region["pageNumber"] = paragraph_page_offset + last_page_number
                     for paragraph_span in paragraph["spans"]:
                         paragraph_span["offset"] = paragraph_offset
                         paragraph_offset += paragraph_span["length"] + 1
                     merged_results["paragraphs"].append(paragraph)
+                paragraph_page_offset += last_page_number
                 for style in data["styles"]:
                     # Update the offset for each span in the style, starting from the second part
                     if part_files.index(filename) > 0:
