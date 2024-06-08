@@ -17,6 +17,7 @@ from pypdf import PdfReader
 import math
 import re
 from shapely.geometry import Polygon
+from difflib import SequenceMatcher
 
 # 文字が日本語かどうかを判断する関数
 def is_japanese(text):
@@ -54,6 +55,8 @@ parser.add_argument('--page','-p', choices=list(page_sizes.keys()), help='The pa
 parser.add_argument('--layout', choices=['word', 'line', 'paragraph'], default='word', help='Choose the level of text to draw: word, line, or paragraph.')
 parser.add_argument('--area', type=float, default=80,
                     help='areathreshold for counting lines in a paragraph. default is 80')
+parser.add_argument('--similarity-threshold', '-st', type=float, default=0.1, 
+                    help='Set the similarity threshold for adding lines to a paragraph. Default is 0.1')
 args = parser.parse_args()
 
 powerlog.set_log_level(args)
@@ -63,6 +66,13 @@ args.area /= 100.0
 
 # OSに適した改行文字を取得
 newline = os.linesep
+
+# 文字列の類似度を計算する関数pyt
+def similarity(a, b):
+    return SequenceMatcher(None, a, b).ratio()
+
+# similarity thresholdの値をパーセンテージから小数に変換
+args.similarity_threshold /= 100.0
 
 # DPI変換のための係数を設定
 DPI_CONVERSION_FACTOR = args.dpi / 72
@@ -108,6 +118,13 @@ info_print(f'Total JSON files: {total_json_files}')
 
 # PDFファイルのカウンターを初期化
 pdf_counter = 0
+
+def test_similarity():
+    assert similarity("hello", "hello") == 1.0
+    assert similarity("hello", "hEllo") < 1.0
+    assert similarity("hello", "world") < 1.0
+
+test_similarity()
 
 for json_file in json_files:
     # OCR結果のJSONファイル名を設定
@@ -168,32 +185,53 @@ for json_file in json_files:
             elif args.layout == 'line':
                 items = page['lines']
             elif args.layout == 'paragraph':
-                    items = [p for p in analyze_result['paragraphs'] if p['boundingRegions'][0]['pageNumber'] == page_number]
-                    lines = page['lines']
+                items = [p for p in analyze_result['paragraphs'] if p['boundingRegions'][0]['pageNumber'] == page_number]
+                lines = page['lines']
+                # Create a copy of lines list to manipulate it
+                lines_copy = lines.copy()
 
             prev_font_size = None
             for item in items:
                 if args.layout == 'paragraph':
-                    text = item['content']
+                    paragraph_text = item['content']
+                    debug_print(f'paragraph_text: {paragraph_text}') 
+                    text = ''
                     polygon = item['boundingRegions'][0]['polygon']
                     line_count = 0
-                    # paragraphのpolygonを座標のペアのリストに変換し、Polygonオブジェクトに変換
                     item_polygon_coords = [(polygon[i], polygon[i + 1]) for i in range(0, len(polygon), 2)]
                     item_polygon = Polygon(item_polygon_coords)
                     prev_line_bottom = None
-                    for line in lines:
-                        # line['polygon']を座標のペアのリストに変換し、Polygonオブジェクトに変換
+
+                    for line in lines_copy:
+                        debug_print(f'checking line: {line}')
                         line_polygon_coords = [(line['polygon'][i], line['polygon'][i + 1]) for i in range(0, len(line['polygon']), 2)]
                         line_polygon = Polygon(line_polygon_coords)
-                        # line_polygonがparagraph_polygonに収まっているかどうかを確認
-                        intersection = line_polygon.intersection(item_polygon).area
-                        if intersection / line_polygon.area >= args.area:
+                        line_bottom = min(line_polygon_coords, key=lambda coord: coord[1])[1]
+                        if prev_line_bottom is not None and line_bottom < prev_line_bottom:
+                            text += newline
+
+                        # Only add line content to text if it matches the similarity threshold or more with a part of the paragraph text
+                        if similarity(line['content'], paragraph_text) >= args.similarity_threshold:
+                            text += line['content']
+                            debug_print(f'Added line content: {line["content"]}') 
+                            # Remove the line from lines_copy list after adding its content to text
+                            lines_copy.remove(line)
                             line_count += 1
-                            # 新しい行が前の行よりも下にある場合に改行を追加
-                            line_bottom = min(line_polygon_coords, key=lambda coord: coord[1])[1]
-                            if prev_line_bottom is not None and line_bottom < prev_line_bottom:
-                                text += newline
-                            prev_line_bottom = line_bottom
+                            debug_print(f'line_count: {line_count}')
+
+                            # Remove the same content from paragraph_text
+                            paragraph_text = paragraph_text.replace(line['content'], '', 1)
+                            debug_print(f'Remaining paragraph_text: {paragraph_text}')
+
+                            # If paragraph_text is empty, break the loop to move to the next item
+                            if not paragraph_text:
+                                debug_print('No more content in paragraph_text. Moving to the next item.')
+                                break
+                        else:
+                            error_print(f'Line content does not match the similarity threshold: {line["content"]}')
+                            error_print(f'similarity threshold: {args.similarity_threshold}')
+
+                        prev_line_bottom = line_bottom
                 else:
                     text = item['content']
                     polygon = item['polygon']
@@ -207,10 +245,10 @@ for json_file in json_files:
                 if math.isclose(x1, x4) and math.isclose(y2, y3):  # 垂直
                     x, y = x1, page_height - y1
                     width = abs(y3 - y1)
-                    height = abs(x2 - x1)
+                    height = abs(x3 - x1)
                 elif math.isclose(y1, y2) and math.isclose(x3, x4):  # 水平
                     x, y = x1, page_height - y1
-                    width = abs(x2 - x1)
+                    width = abs(x3 - x1)
                     height = abs(y3 - y1)
                 else:  # 斜め
                     x, y = x1, page_height - y1
@@ -223,7 +261,11 @@ for json_file in json_files:
                     font_size *= 0.9  # 行のフォントサイズのデフォルト係数、テスト環境で決定した数値
                     font_size *= (1 - 0.1 * (len(text) / 100))  # フォントサイズを微調整
                 elif args.layout == 'paragraph':
-                    font_size /= line_count  # 段落のフォントサイズを行数で調整
+                    if line_count > 0:
+                        font_size /= line_count
+                    else:
+                        error_print("No lines were counted. Cannot calculate font size.")                    
+                        font_size += 0  # 段落のフォントサイズを行数で調整
 
                 # 前の単語と比較してフォントサイズが閾値以上変化した場合にのみフォントサイズを変更
                 if not args.individual and prev_font_size is not None and font_size_change_threshold is not None and abs(font_size - prev_font_size) / prev_font_size > font_size_change_threshold:
@@ -231,9 +273,14 @@ for json_file in json_files:
 
                 prev_font_size = font_size
 
-                c.setFont(font_name, font_size)
-                string_width = c.stringWidth(text, font_name, font_size)
-                scale = width / string_width
+                if args.layout == 'word' or args.layout == 'line':
+                    c.setFont(font_name, font_size)
+                    string_width = c.stringWidth(text, font_name, font_size)
+                    scale = width / string_width
+                else:
+                    c.setFont(font_name, font_size)
+                    string_width = c.stringWidth(text, font_name, font_size)
+                    scale = 1
 
                 # フォントの上昇と下降を取得
                 font = pdfmetrics.getFont(font_name)
@@ -269,3 +316,4 @@ else:
     info_print(f'No JSON files found, so no PDF file was created.')
 
 info_print('All PDF file processing is complete.')
+
