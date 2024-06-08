@@ -147,12 +147,12 @@ for json_file in json_files:
             for paragraph_index in sorted(unprocessed_paragraphs.keys()):
                 paragraph = unprocessed_paragraphs[paragraph_index]
                 paragraph_text = ""  # パラグラフのテキストを初期化
-                word_positions = []  # 各単語の位置情報を保存するリストを初期化
 
                 # 各行を処理
                 for line_index in sorted(unprocessed_lines.keys()):
                     line = unprocessed_lines[line_index]
                     line_text = ""  # 行のテキストを初期化
+                    words_to_delete = []  # 削除する単語のリストを初期化
 
                     # 各単語を処理
                     for word_index in sorted(unprocessed_words.keys()):
@@ -162,33 +162,34 @@ for json_file in json_files:
                         if word['content'] in line['content']:
                             text = word['content']
                             line_text += text + " "  # 行のテキストに単語を追加
-
-                            # 単語の位置情報を保存
                             x = word['polygon'][0] * INCH_TO_POINT
                             y = page_height - (word['polygon'][1] * INCH_TO_POINT)
                             width = (word['polygon'][2] - word['polygon'][0]) * INCH_TO_POINT
                             height = (word['polygon'][3] - word['polygon'][1]) * INCH_TO_POINT
-                            word_positions.append((x, y, width, height))
+                            font_size = args.size if args.size else height
+                            c.setFont(font_name, font_size)
+                            scale = width / c.stringWidth(text, font_name, font_size)
+                            c.saveState()  # 現在の状態を保存
+                            c.translate(x, y)  # 描画原点を移動
+                            c.scale(scale, 1)  # 水平方向にスケール変換
+                            c.drawString(0, 0, text)  # 描画原点から文字を描画
+                            c.restoreState()
 
-                            # 処理が終わった単語を辞書から削除
-                            del unprocessed_words[word_index]
+                            # 処理が終わった単語を削除するリストに追加
+                            words_to_delete.append(word_index)
 
                     # 行のテキストをパラグラフのテキストに追加
                     paragraph_text += line_text + "\n"  # 改行を追加
+
+                    # 処理が終わった単語を辞書から削除
+                    for word_index in words_to_delete:
+                        del unprocessed_words[word_index]
 
                     # 処理が終わった行を辞書から削除
                     del unprocessed_lines[line_index]
 
                 # パラグラフのテキストを描画
-                for (x, y, width, height), text in zip(word_positions, paragraph_text.split()):
-                    font_size = args.size if args.size else height
-                    c.setFont(font_name, font_size)
-                    scale = width / c.stringWidth(text, font_name, font_size)
-                    c.saveState()  # 現在の状態を保存
-                    c.translate(x, y)  # 描画原点を移動
-                    c.scale(scale, 1)  # 水平方向にスケール変換
-                    c.drawString(0, 0, text)  # 描画原点から文字を描画
-                    c.restoreState()
+                c.drawString(0, 0, paragraph_text)
 
                 # 処理が終わったパラグラフを辞書から削除
                 del unprocessed_paragraphs[paragraph_index]
