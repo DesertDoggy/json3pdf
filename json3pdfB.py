@@ -145,13 +145,13 @@ for json_file in json_files:
             c.setPageSize((page_width, page_height))
 
             # 各単語を処理
-            if args.layout == 'word':
+            if args.layout == 'word' or args.layout == 'line':
                 # 単語が現在の行に属しているか確認
-                for word in page ['words']:
-                    text = word['content']
-                    polygon = word['polygon']
+                for item in (page['words'] if args.layout == 'word' else page['lines']):
+                    text = item['content']
+                    polygon = item['polygon']
                     x1, y1, x2, y2, x3, y3, x4, y4 = [v * INCH_TO_POINT for v in polygon]
-                    rotation = word.get('rotation', 0)
+                    rotation = item.get('rotation', 0)
 
                     # 文字の向きを決定
                     if math.isclose(x1, x4) and math.isclose(y2, y3):  # 垂直
@@ -178,22 +178,6 @@ for json_file in json_files:
                         c.scale(1, scale)  # 垂直方向にスケール変換
                     else:  # 文字が英語の場合
                         c.scale(scale, 1)  # 水平方向にスケール変換
-                    c.drawString(0, 0, text)  # 描画原点から文字を描画
-                    c.restoreState()
-
-            elif args.layout == 'line':
-                for line in page['lines']:
-                    text = line['content']
-                    x = line['polygon'][0] * INCH_TO_POINT
-                    y = page_height - (line['polygon'][1] * INCH_TO_POINT)
-                    width = (line['polygon'][2] - line['polygon'][0]) * INCH_TO_POINT
-                    height = (line['polygon'][7] - line['polygon'][1]) * INCH_TO_POINT
-                    font_size = args.size if args.size else height
-                    c.setFont(font_name, font_size)
-                    scale = width / c.stringWidth(text, font_name, font_size)
-                    c.saveState()  # 現在の状態を保存
-                    c.translate(x, y)  # 描画原点を移動
-                    c.scale(scale, 1)  # 水平方向にスケール変換
                     c.drawString(0, 0, text)  # 描画原点から文字を描画
                     c.restoreState()
 
