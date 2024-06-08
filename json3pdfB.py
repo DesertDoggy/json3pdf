@@ -43,6 +43,10 @@ parser.add_argument('--log-level', '-log', default='INFO', choices=['DEBUG', 'VE
 parser.add_argument('-debug', action='store_const', const='DEBUG', dest='log_level',
                     help='Set the logging level to DEBUG')
 parser.add_argument('-s', '--size', type=int, help='フォントのサイズの調整（デフォルトは100）単位は%')
+# 排他的なオプショングループを作成
+font_threshold = parser.add_mutually_exclusive_group()
+font_threshold.add_argument('--font-threshold','-t',default=None, type=int, help='連続した単語や行のフォントサイズ変更の閾値を指定します。単位は%')
+font_threshold.add_argument('--individual', action='store_true', help='各単語のフォントサイズを個別に設定します')
 parser.add_argument('-f', '--font', default='NotoSansJP-Regular', help='使用するフォントの名前を指定します（デフォルトはNotoSansJP-Regular）')
 parser.add_argument('-d', '--dpi', type=int, default=600, help='文書のDPIを指定します（デフォルトは600）')
 parser.add_argument('--page','-p', choices=list(page_sizes.keys()), help='The page size of the PDF.')
@@ -66,6 +70,9 @@ pdfmetrics.registerFont(TTFont(font_name, font_path))
 
 # フォントサイズの係数を取得（デフォルトは1.0）
 font_size_factor = 1.0 if args.size is None else args.size / 100.0
+
+# フォントサイズ変化の閾値を取得（デフォルトはNone）
+font_size_change_threshold = None if args.font_threshold is None else args.font_threshold / 100.0
 
 # 入力フォルダと出力フォルダのパスを設定
 json_folder = './DIjson'
@@ -152,6 +159,7 @@ for json_file in json_files:
             elif args.layout == 'line':
                 items = page['lines']
 
+            prev_font_size = None
             for item in items:
                 text = item['content']
                 polygon = item['polygon']
@@ -175,11 +183,15 @@ for json_file in json_files:
                 # フォントサイズを計算（高さに係数を適用）
                 font_size = height * font_size_factor
                 if args.layout == 'line':
+                    font_size *= 0.9 # 行のフォントサイズのデフォルト係数、テスト環境で決定した数値
                     font_size *= (1 - 0.1 * (len(text) / 100))  # フォントサイズを微調整
                     y += font_size * 0.1  # 配置の間隔を微調整
-                if args.layout == 'line':
-                    font_size *= (1 - 0.1 * (len(text) / 100))  # フォントサイズを微調整
-                    y += font_size * 0.1  # 配置の間隔を微調整
+
+                # 前の単語と比較してフォントサイズが閾値以上変化した場合にのみフォントサイズを変更
+                if not args.individual and prev_font_size is not None and font_size_change_threshold is not None and abs(font_size - prev_font_size) / prev_font_size > font_size_change_threshold:
+                    font_size = prev_font_size
+
+                prev_font_size = font_size
 
                 c.setFont(font_name, font_size)
                 string_width = c.stringWidth(text, font_name, font_size)
