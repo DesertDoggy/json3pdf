@@ -37,10 +37,11 @@ parser.add_argument('--log-level', '-log', default='INFO', choices=['DEBUG', 'VE
                     help='Set the logging level (default: INFO)')
 parser.add_argument('-debug', action='store_const', const='DEBUG', dest='log_level',
                     help='Set the logging level to DEBUG')
-parser.add_argument('-s', '--size', type=int, default=8, help='フォントのサイズを指定します（デフォルトは60）')
+parser.add_argument('-s', '--size', type=int, help='フォントのサイズを指定します（デフォルトは60）')
 parser.add_argument('-f', '--font', default='NotoSansJP-Regular', help='使用するフォントの名前を指定します（デフォルトはNotoSansJP-Regular）')
 parser.add_argument('-d', '--dpi', type=int, default=600, help='文書のDPIを指定します（デフォルトは600）')
 parser.add_argument('--page','-p', choices=list(page_sizes.keys()), help='The page size of the PDF.')
+parser.add_argument('--layout', choices=['word', 'line', 'paragraph'], default='word', help='Choose the level of text to draw: word, line, or paragraph.')
 args = parser.parse_args()
 
 powerlog.set_log_level(args)
@@ -155,41 +156,71 @@ for json_file in json_files:
                     words_to_delete = []  # 削除する単語のリストを初期化
 
                     # 各単語を処理
-                    for word_index in sorted(unprocessed_words.keys()):
-                        word = unprocessed_words[word_index]
+                    if args.layout == 'word':
+                        for word_index in sorted(unprocessed_words.keys()):
+                            word = unprocessed_words[word_index]
 
-                        # 単語が現在の行に属しているか確認
-                        if word['content'] in line['content']:
-                            text = word['content']
-                            line_text += text + " "  # 行のテキストに単語を追加
-                            x = word['polygon'][0] * INCH_TO_POINT
-                            y = page_height - (word['polygon'][1] * INCH_TO_POINT)
-                            width = (word['polygon'][2] - word['polygon'][0]) * INCH_TO_POINT
-                            height = (word['polygon'][3] - word['polygon'][1]) * INCH_TO_POINT
-                            font_size = args.size if args.size else height
-                            c.setFont(font_name, font_size)
-                            scale = width / c.stringWidth(text, font_name, font_size)
-                            c.saveState()  # 現在の状態を保存
-                            c.translate(x, y)  # 描画原点を移動
-                            c.scale(scale, 1)  # 水平方向にスケール変換
-                            c.drawString(0, 0, text)  # 描画原点から文字を描画
-                            c.restoreState()
+                            # 単語が現在の行に属しているか確認
+                            if word['content'] in line['content']:
+                                text = word['content']
+                                line_text += text + " "  # 行のテキストに単語を追加
+                                x = word['polygon'][0] * INCH_TO_POINT
+                                y = page_height - (word['polygon'][1] * INCH_TO_POINT)
+                                width = (word['polygon'][2] - word['polygon'][0]) * INCH_TO_POINT
+                                height = (word['polygon'][5] - word['polygon'][1]) * INCH_TO_POINT
+                                font_size = args.size if args.size else height
+                                c.setFont(font_name, font_size)
+                                string_width = c.stringWidth(text, font_name, font_size)
 
-                            # 処理が終わった単語を削除するリストに追加
-                            words_to_delete.append(word_index)
+                                scale = width / string_width
+                                c.saveState()  # 現在の状態を保存
+                                c.translate(x, y)  # 描画原点を移動
+                                c.scale(scale, 1)  # 水平方向にスケール変換
+                                c.drawString(0, 0, text)  # 描画原点から文字を描画
+                                c.restoreState()
 
-                    # 行のテキストをパラグラフのテキストに追加
-                    paragraph_text += line_text + "\n"  # 改行を追加
+                                # 処理が終わった単語を削除するリストに追加
+                                words_to_delete.append(word_index)
 
-                    # 処理が終わった単語を辞書から削除
-                    for word_index in words_to_delete:
-                        del unprocessed_words[word_index]
+                        # 行のテキストをパラグラフのテキストに追加
+                        paragraph_text += line_text + "\n"  # 改行を追加
 
-                    # 処理が終わった行を辞書から削除
-                    del unprocessed_lines[line_index]
+                        # 処理が終わった単語を辞書から削除
+                        for word_index in words_to_delete:
+                            del unprocessed_words[word_index]
 
-                # パラグラフのテキストを描画
-                c.drawString(0, 0, paragraph_text)
+                        # 処理が終わった行を辞書から削除
+                        del unprocessed_lines[line_index]
+
+                    elif args.layout == 'line':
+                        text = line['content']
+                        x = line['polygon'][0] * INCH_TO_POINT
+                        y = page_height - (line['polygon'][1] * INCH_TO_POINT)
+                        width = (line['polygon'][2] - line['polygon'][0]) * INCH_TO_POINT
+                        height = (line['polygon'][5] - line['polygon'][1]) * INCH_TO_POINT
+                        font_size = args.size if args.size else height
+                        c.setFont(font_name, font_size)
+                        scale = width / c.stringWidth(text, font_name, font_size)
+                        c.saveState()  # 現在の状態を保存
+                        c.translate(x, y)  # 描画原点を移動
+                        c.scale(scale, 1)  # 水平方向にスケール変換
+                        c.drawString(0, 0, text)  # 描画原点から文字を描画
+                        c.restoreState()
+
+                    elif args.layout == 'paragraph':
+                        text = paragraph['content']
+                        x = paragraph['polygon'][0] * INCH_TO_POINT
+                        y = page_height - (paragraph['polygon'][1] * INCH_TO_POINT)
+                        width = (paragraph['polygon'][2] - paragraph['polygon'][0]) * INCH_TO_POINT
+                        height = (paragraph['polygon'][5] - paragraph['polygon'][1]) * INCH_TO_POINT
+                        font_size = args.size if args.size else height
+                        c.setFont(font_name, font_size)
+                        scale = width / c.stringWidth(text, font_name, font_size)
+                        c.saveState()  # 現在の状態を保存
+                        c.translate(x, y)  # 描画原点を移動
+                        c.scale(scale, 1)  # 水平方向にスケール変換
+                        c.drawString(0, 0, text)  # 描画原点から文字を描画
+                        c.restoreState()
 
                 # 処理が終わったパラグラフを辞書から削除
                 del unprocessed_paragraphs[paragraph_index]
