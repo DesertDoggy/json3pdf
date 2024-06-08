@@ -52,7 +52,7 @@ font_threshold.add_argument('--individual', action='store_true', help='各単語
 parser.add_argument('-f', '--font', default='NotoSansJP-Regular', help='使用するフォントの名前を指定します（デフォルトはNotoSansJP-Regular）')
 parser.add_argument('-d', '--dpi', type=int, default=600, help='文書のDPIを指定します（デフォルトは600）')
 parser.add_argument('--page','-p', choices=list(page_sizes.keys()), help='The page size of the PDF.')
-parser.add_argument('--layout', choices=['word', 'line', 'paragraph'], default='word', help='Choose the level of text to draw: word, line, or paragraph.')
+parser.add_argument('--layout', choices=['word', 'line', 'paragraph'], default='line', help='Choose the level of text to draw: word, line, or paragraph.')
 parser.add_argument('--area', type=float, default=80,
                     help='areathreshold for counting lines in a paragraph. default is 80')
 parser.add_argument('--similarity-threshold', '-st', type=float, default=0.1, 
