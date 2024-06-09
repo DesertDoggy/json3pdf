@@ -24,6 +24,7 @@ groupUD.add_argument('--up', '-u', type=int, help='Number of points to move up (
 groupUD.add_argument('--down', '-d', type=int, help='Number of points to move down (1 inch = 72 pt, 1 cm = 28.35 pt)')
 parser.add_argument('--dpi', type=int, default=600, help='Specify the DPI of the document. The default is 600dpi.')
 parser.add_argument('--threshold', '-t', default='Blanket', help='Specify the threshold page size incase dpi is not correct.Default is Blanket(Newspaper size).')
+parser.add_argument('--clear', '-c', action='store_true', help='Merge clear text PDF to Original PDF.')
 args = parser.parse_args()
 
 powerlog.set_log_level(args)
@@ -73,33 +74,62 @@ translation_matrix = [1, 0, 0, 1, x_translation, y_translation]
 print(f'左右の移動量: {x_translation} 上下の移動量: {y_translation}')
 
 # フォルダのパスを設定
-text_layer_folder = './OCRtextPDF'
-if not os.path.exists(text_layer_folder):
-    os.makedirs(text_layer_folder,exist_ok=True)
-    print(f'{text_layer_folder}フォルダを生成しました create {text_layer_folder} folder')
+if not args.clear:
+    text_layer_folder = './OCRtextPDF'
+    if not os.path.exists(text_layer_folder):
+        os.makedirs(text_layer_folder,exist_ok=True)
+        print(f'{text_layer_folder}フォルダを生成しました create {text_layer_folder} folder')
+    else:
+        print(f'{text_layer_folder}フォルダは既に存在します {text_layer_folder} folder already exists')
+    existing_pdf_folder = './OptimizedPDF'
+    if not os.path.exists(existing_pdf_folder):
+        os.makedirs(existing_pdf_folder,exist_ok=True)
+        print(f'{existing_pdf_folder}フォルダを生成しました create {existing_pdf_folder} folder')
+    else:
+        print(f'{existing_pdf_folder}フォルダは既に存在します {existing_pdf_folder} folder already exists')
+    output_folder = './DraftPDF'
+    if not os.path.exists(output_folder):
+        os.makedirs(output_folder,exist_ok=True)
+        print(f'{output_folder}フォルダを生成しました create {output_folder} folder')
+    else:
+        print(f'{output_folder}フォルダは既に存在します {output_folder} folder already exists')
 else:
-    print(f'{text_layer_folder}フォルダは既に存在します {text_layer_folder} folder already exists')
-existing_pdf_folder = './OptimizedPDF'
-if not os.path.exists(existing_pdf_folder):
-    os.makedirs(existing_pdf_folder,exist_ok=True)
-    print(f'{existing_pdf_folder}フォルダを生成しました create {existing_pdf_folder} folder')
-else:
-    print(f'{existing_pdf_folder}フォルダは既に存在します {existing_pdf_folder} folder already exists')
-output_folder = './DraftPDF'
-if not os.path.exists(output_folder):
-    os.makedirs(output_folder,exist_ok=True)
-    print(f'{output_folder}フォルダを生成しました create {output_folder} folder')
-else:
-    print(f'{output_folder}フォルダは既に存在します {output_folder} folder already exists')
+    text_layer_folder = './OCRclearPDF'
+    if not os.path.exists(text_layer_folder):
+        os.makedirs(text_layer_folder,exist_ok=True)
+        print(f'{text_layer_folder}フォルダを生成しました create {text_layer_folder} folder')
+    else:
+        print(f'{text_layer_folder}フォルダは既に存在します {text_layer_folder} folder already exists')
+    existing_pdf_folder = './OriginalPDF'
+    if not os.path.exists(existing_pdf_folder):
+        os.makedirs(existing_pdf_folder,exist_ok=True)
+        print(f'{existing_pdf_folder}フォルダを生成しました create {existing_pdf_folder} folder')
+    else:
+        print(f'{existing_pdf_folder}フォルダは既に存在します {existing_pdf_folder} folder already exists')
+    output_folder = './OCRfinalPDF'
+    if not os.path.exists(output_folder):
+        os.makedirs(output_folder,exist_ok=True)
+        print(f'{output_folder}フォルダを生成しました create {output_folder} folder')
+    else:
+        print(f'{output_folder}フォルダは既に存在します {output_folder} folder already exists')
 
 # テキストレイヤーPDFのファイル名を取得
-text_pdf_files = [f for f in os.listdir(text_layer_folder) if f.endswith('_TextOnly.pdf')]
+if not args.clear:
+    text_pdf_files = [f for f in os.listdir(text_layer_folder) if f.endswith('_TextOnly.pdf')]
+else:
+    text_pdf_files = [f for f in os.listdir(text_layer_folder) if f.endswith('_ClearText.pdf')]
 
 # 各テキストレイヤーPDFに対して処理を実行
 for text_pdf_file in text_pdf_files:
-    base_name = text_pdf_file.replace('_TextOnly.pdf', '')
+    if not args.clear:
+        base_name = text_pdf_file.replace('_TextOnly.pdf', '')
+    else:
+        base_name = text_pdf_file.replace('_ClearText.pdf', '')
     existing_pdf_file = base_name + '.pdf'
-    output_pdf_file = base_name + '_merged.pdf'
+    if not args.clear:
+        output_pdf_file = base_name + '_Draft.pdf'
+    else:
+        output_pdf_file = base_name + '_OCR.pdf'
 
     text_pdf_path = os.path.join(text_layer_folder, text_pdf_file)
     existing_pdf_path = os.path.join(existing_pdf_folder, existing_pdf_file)
