@@ -353,14 +353,17 @@ for json_file in json_files:
                 rotation = item.get('rotation', 0)
                 # 文字の向きを決定
                 if math.isclose(x1, x4) and math.isclose(y2, y3):  # 垂直
+                    script_direction = 'vertical'
                     x, y = x1, page_height - y1
                     width = abs(y3 - y1)
                     height = abs(x3 - x1)
                 elif math.isclose(y1, y2) and math.isclose(x3, x4):  # 水平
+                    script_direction = 'horizontal'
                     x, y = x1, page_height - y1
                     width = abs(x3 - x1)
                     height = abs(y3 - y1)
                 else:  # 斜め
+                    script_direction = 'diagonal'
                     x, y = x1, page_height - y1
                     width = math.sqrt((x2 - x1)**2 + (y2 - y1)**2)
                     height = math.sqrt((x4 - x1)**2 + (y4 - y1)**2)
@@ -403,11 +406,13 @@ for json_file in json_files:
                 c.saveState()  # 現在の状態を保存
                 c.translate(x, y)  # 描画原点を移動
                 c.rotate(rotation)  # 文字の向きに合わせて回転
-                if is_japanese(text):  # 文字が日本語の場合
-                    c.scale(1, scale)  # 垂直方向にスケール変換
-                else:  # 文字が英語の場合
-                    c.scale(scale, 1)  # 水平方向にスケール変換
-                # テキストの色を透明に設定
+                if script_direction == 'vertical':
+                    if is_japanese(text):  # 文字が日本語の場合
+                        c.scale(1, scale)  # 垂直方向にスケール変換
+                    else:  # 文字が英語の場合
+                        c.scale(scale, 1)  # 水平方向にスケール変換
+                else:
+                    c.scale(scale, 1)
                 c.setFillColor(transparent_color)
                 c.drawString(0, 0, text)  # 描画原点から文字を描画
                 c.restoreState()

@@ -10,6 +10,7 @@ from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import A3, A4, A5, A6, B4, B5, B6, B7, letter 
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.platypus import Paragraph
 from reportlab.lib.colors import Color
 import json
 import powerlog
@@ -54,8 +55,9 @@ parser.add_argument('-s', '--size', type=int, help='フォントのサイズの�
 font_threshold = parser.add_mutually_exclusive_group()
 font_threshold.add_argument('--font-threshold','-t',default=None, type=int, help='連続した単語や行のフォントサイズ変更の閾値を指定します。単位は%')
 font_threshold.add_argument('--individual', action='store_true', help='各単語のフォントサイズを個別に設定します')
-parser.add_argument('-f', '--font', default='NotoSansJP-Regular', help='使用するフォントの名前を指定します（デフォルトはNotoSansJP-Regular）')
-parser.add_argument('-d', '--dpi', type=int, default=600, help='文書のDPIを指定します（デフォルトは600）')
+parser.add_argument('--hfont','-hf', default='NotoSansJP-Regular.ttf', help='Sets horizontal font (default is NotoSansJP-Regular.ttf)')
+parser.add_argument('--vfont','-vf', default='NotoSansJP-Regular.ttf', help='Sets vertical font (default is NotoSansJP-Regular.ttf)')
+parser.add_argument('--dpi','-d', type=int, default=600, help='文書のDPIを指定します（デフォルトは600）')
 parser.add_argument('--page','-p', choices=list(page_sizes.keys()), help='The page size of the PDF.')
 parser.add_argument('--layout', choices=['word', 'line', 'paragraph'], default='line', help='Choose the level of text to draw: word, line, or paragraph(at the monent paragraph is unusable).')
 parser.add_argument('--area','-ar', type=float, default=80,
@@ -64,6 +66,7 @@ parser.add_argument('--similarity', '-st', type=float, default=0.1,
                     help='Set the similarity threshold for adding lines to a paragraph. Default is 0.1')
 parser.add_argument('--adjust', '-ad', action='store_true', help='adjust the layout of lines and paragraphs. Experimental!!!Default is False')
 parser.add_argument('--coordinate', '-ct', type=float, default=80,help='Set the coordinate threshold for coordinate adjustment for lines and paragraph. Default is 80')
+parser.add_argument('--HV-threshold', '-hv', type=float, default=0.1, help='Set the threshold for horizontal and vertical text. Default is 0.1')
 args = parser.parse_args()
 
 powerlog.set_log_level(args)
@@ -107,18 +110,39 @@ unit_to_point_conversion_factors = {
 level_dict = {'word': 5, 'line': 4, 'paragraph': 3}
 level = level_dict[args.layout]
 
-# フォント名とパス
-font_name = args.font
-font_path = './data/fonts/' + font_name + '.ttf'
+# フォントのパスを取得する関数
+def get_font_path(get_font_name, font_type):
+    font_path = './data/fonts/' + get_font_name
+    if not os.path.splitext(get_font_name)[1]:  # 拡張子がない場合
+        # デフォルトの拡張子を追加
+        font_path += '.ttf'
+    return font_path
 
-# フォントを登録
-pdfmetrics.registerFont(TTFont(font_name, font_path))
+# 横書き用のフォントを登録
+h_font_name = args.hfont
+h_font_path = get_font_path(h_font_name, 'h')
+info_print(f'Horizontal font: {h_font_name}')
+pdfmetrics.registerFont(TTFont(h_font_name, h_font_path))
+
+# 縦書き用のフォントを登録
+v_font_name = args.vfont
+v_font_path = get_font_path(v_font_name, 'v')
+info_print(f'Vertical font: {v_font_name}')
+pdfmetrics.registerFont(TTFont(v_font_name, v_font_path))
 
 # フォントサイズの係数を取得（デフォルトは1.0）
 font_size_factor = 1.0 if args.size is None else args.size / 100.0
 
 # フォントサイズ変化の閾値を取得（デフォルトはNone）
 font_size_change_threshold = None if args.font_threshold is None else args.font_threshold / 100.0
+
+# 水平方向と垂直方向のテキストの閾値を取得
+hv_threshold = args.HV_threshold
+info_print(f'Horizontal and vertical text threshold: {hv_threshold}')
+
+# 座標間の距離を計算
+def calculate_distance(x1, y1, x2, y2):
+    return math.sqrt((x2 - x1)**2 + (y2 - y1)**2)
 
 # 入力フォルダと出力フォルダのパスを設定
 json_folder = './DIjson'
@@ -347,23 +371,47 @@ for json_file in json_files:
                                 break
 
                 x1, y1, x2, y2, x3, y3, x4, y4 = [v * unit_to_point_conversion_factor for v in polygon]
-                rotation = item.get('rotation', 0)
-                # 文字の向きを決定
-                if math.isclose(x1, x4) and math.isclose(y2, y3):  # 垂直
-                    x, y = x1, page_height - y1
-                    width = abs(y3 - y1)
-                    height = abs(x3 - x1)
-                elif math.isclose(y1, y2) and math.isclose(x3, x4):  # 水平
-                    x, y = x1, page_height - y1
-                    width = abs(x3 - x1)
-                    height = abs(y3 - y1)
-                else:  # 斜め
-                    x, y = x1, page_height - y1
-                    width = math.sqrt((x2 - x1)**2 + (y2 - y1)**2)
-                    height = math.sqrt((x4 - x1)**2 + (y4 - y1)**2)
+                # 座標間の距離を計算
+                distances = [
+                    (calculate_distance(x1, y1, x2, y2), ((x1, y1), (x2, y2))),
+                    (calculate_distance(x2, y2, x3, y3), ((x2, y2), (x3, y3))),
+                    (calculate_distance(x3, y3, x4, y4), ((x3, y3), (x4, y4))),
+                    (calculate_distance(x4, y4, x1, y1), ((x4, y4), (x1, y1))),
+                    (calculate_distance(x1, y1, x3, y3), ((x1, y1), (x3, y3))),
+                    (calculate_distance(x2, y2, x4, y4), ((x2, y2), (x4, y4)))
+                ]
+
+                # 長さ順に並べ替え
+                distances.sort(key=lambda x: x[0])
+
+                # 最後の2つが対角線、次の2つが長辺、最初の2つが短辺
+                diagonals = distances[-2:]
+                long_sides = distances[2:4]
+                short_sides = distances[:2]
+                # 長辺と短辺の長さを取得
+                long_side_length = (long_sides[0][0]+long_sides[1][0])/2
+                short_side_length = (short_sides[0][0]+short_sides[1][0])/2
+
+                # 長辺と短辺が近似的に等しいかどうかをチェック
+                if args.layout == 'word' or args.layout == 'line':
+                    if abs(long_side_length - short_side_length) / long_side_length < 0.6:
+                        rotation = 0
+                if args.layout == 'paragraph':
+                    if abs(long_side_length - short_side_length)/long_side_length < hv_threshold:
+                        rotation = 0
+                else:
+                    if abs(y3 - y1) < abs(x3 - x1):
+                        rotation = math.degrees(math.atan2(y1 - y2, x2 - x1))
+                    else:
+                        rotation = math.degrees(math.atan2(y2 - y3, x3 - x2))
+                    if -180 <= rotation <= -135 or -45 <= rotation <= 45 or 135 <= rotation <= 180:
+                        script_direction = 'horizontal'
+                    else:
+                        script_direction = 'vertical'
+                        rotation += 180
 
                 # フォントサイズを計算（高さに係数を適用）
-                font_size = height * font_size_factor
+                font_size = short_side_length * font_size_factor
                 if args.layout == 'line':
                     font_size *= 0.9  # 行のフォントサイズのデフォルト係数、テスト環境で決定した数値
                     font_size *= (1 - 0.1 * (len(text) / 100))  # フォントサイズを微調整
@@ -377,13 +425,16 @@ for json_file in json_files:
                 # 前の単語と比較してフォントサイズが閾値以上変化した場合にのみフォントサイズを変更
                 if not args.individual and prev_font_size is not None and font_size_change_threshold is not None and abs(font_size - prev_font_size) / prev_font_size > font_size_change_threshold:
                     font_size = prev_font_size
-
+                if script_direction == 'horizontal':
+                    font_name = h_font_name
+                else:
+                    font_name = v_font_name
                 prev_font_size = font_size
 
                 if args.layout == 'word' or args.layout == 'line':
                     c.setFont(font_name, font_size)
                     string_width = c.stringWidth(text, font_name, font_size)
-                    scale = width / string_width
+                    scale = long_side_length / string_width
                 else:
                     c.setFont(font_name, font_size)
                     string_width = c.stringWidth(text, font_name, font_size)
@@ -394,17 +445,25 @@ for json_file in json_files:
                 ascent = font.face.ascent * (font_size / 1000.0)
                 descent = font.face.descent * (font_size / 1000.0)
 
-                # yの位置を調整
-                y += descent
+                # 描画原点を設定
+                x = x1
+                y = page_height - y1 - ascent        
 
                 c.saveState()  # 現在の状態を保存
                 c.translate(x, y)  # 描画原点を移動
-                c.rotate(rotation)  # 文字の向きに合わせて回転
-                if is_japanese(text):  # 文字が日本語の場合
-                    c.scale(1, scale)  # 垂直方向にスケール変換
-                else:  # 文字が英語の場合
-                    c.scale(scale, 1)  # 水平方向にスケール変換
-                c.drawString(0, 0, text)  # 描画原点から文字を描画
+                if script_direction == 'vertical':
+                    if is_japanese(text):  # 文字が日本語の場合
+                        c.scale(1,1 )  # 垂直方向にスケール変換
+                        c.rotate(rotation+180)
+                        c.drawString(0, 0, text)  # 描画原点から文字を描画
+                    else:  # 文字が英語の場合
+                        c.scale(1, 1)  # 水平方向にスケール変換
+                        c.rotate(rotation+270)
+                        c.drawString(0, -font_size, text)  # 描画原点から文字を描画（位置を調整）
+                else:
+                    c.scale(scale, 1)
+                    c.rotate(rotation)                    
+                    c.drawString(0, 0, text)  # 描画原点から文字を描画
                 c.restoreState()
 
             # 次のページに移動
@@ -423,4 +482,4 @@ for json_file in json_files:
         info_print(f'No JSON files found, so no PDF file was created.')
 
 info_print('All PDF file processing is complete.')
-
+info_print(f'font_threshold:{font_size_change_threshold}, individual:{args.individual}, layout:{args.layout}, HV-threshold:{hv_threshold}')
