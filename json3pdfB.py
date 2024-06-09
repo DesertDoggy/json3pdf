@@ -25,6 +25,9 @@ from PIL import Image
 import pandas as pd
 from colorama import Fore, Style
 
+# 透明色を定義（赤、緑、青、アルファ）
+transparent_color = Color(0, 0, 0, alpha=0)
+
 # 文字が日本語かどうかを判断する関数
 def is_japanese(text):
     return bool(re.search(r'[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\uff66-\uff9f]', text))
@@ -67,6 +70,7 @@ parser.add_argument('--similarity', '-st', type=float, default=0.1,
 parser.add_argument('--adjust', '-ad', action='store_true', help='adjust the layout of lines and paragraphs. Experimental!!!Default is False')
 parser.add_argument('--coordinate', '-ct', type=float, default=80,help='Set the coordinate threshold for coordinate adjustment for lines and paragraph. Default is 80')
 parser.add_argument('--HV-threshold', '-hv', type=float, default=0.1, help='Set the threshold for horizontal and vertical text. Default is 0.1')
+parser.add_argument('--clear','-c', action='store_true', help='output clear text PDF')
 args = parser.parse_args()
 
 powerlog.set_log_level(args)
@@ -151,12 +155,21 @@ if not os.path.exists(json_folder):
     print(f'Created {json_folder} folder')
 else:
     print(f'{json_folder} folder already exists')
-output_folder = './OCRtextPDF'
-if not os.path.exists(output_folder):
-    os.makedirs(output_folder,exist_ok=True)
-    print(f'Created {output_folder} folder')
+
+if not args.clear:
+    output_folder = './OCRtextPDF'
+    if not os.path.exists(output_folder):
+        os.makedirs(output_folder,exist_ok=True)
+        print(f'Created {output_folder} folder')
+    else:
+        print(f'{output_folder} folder already exists')
 else:
-    print(f'{output_folder} folder already exists')
+    output_folder = './OCRclearPDF'
+    if not os.path.exists(output_folder):
+        os.makedirs(output_folder,exist_ok=True)
+        print(f'Created {output_folder} folder')
+    else:
+        print(f'{output_folder} folder already exists')
 
 optpdf_folder = Path('./OptimizedPDF')
 optimized_folder = Path('./TEMP/optimized')
@@ -228,7 +241,10 @@ for json_file in json_files:
         # 新しいPDFファイル名を設定（'.pdf' を削除してから '_TextOnly.pdf' を追加）
         base_filename = os.path.splitext(json_file)[0]
         base_filename = base_filename.replace('.pdf', '')  # '.pdf' を削除
-        new_pdf_filename = base_filename + '_TextOnly.pdf'
+        if args.clear:
+            new_pdf_filename = base_filename + '_ClearText.pdf'
+        else:
+            new_pdf_filename = base_filename + '_TextOnly.pdf'
         new_pdf_path = os.path.join(output_folder, new_pdf_filename)
 
         # ReportLabのキャンバスを作成
@@ -455,15 +471,15 @@ for json_file in json_files:
                     if is_japanese(text):  # 文字が日本語の場合
                         c.scale(1,1 )  # 垂直方向にスケール変換
                         c.rotate(rotation+180)
-                        c.drawString(0, 0, text)  # 描画原点から文字を描画
                     else:  # 文字が英語の場合
                         c.scale(1, 1)  # 水平方向にスケール変換
                         c.rotate(rotation+270)
-                        c.drawString(0, -font_size, text)  # 描画原点から文字を描画（位置を調整）
                 else:
                     c.scale(scale, 1)
-                    c.rotate(rotation)                    
-                    c.drawString(0, 0, text)  # 描画原点から文字を描画
+                    c.rotate(rotation)
+                if args.clear:
+                    c.setFillColor(transparent_color)                    
+                c.drawString(0, 0, text)  # 描画原点から文字を描画
                 c.restoreState()
 
             # 次のページに移動
