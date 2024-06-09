@@ -1,4 +1,5 @@
 import os
+import io
 import argparse
 from pathlib import Path
 import logging
@@ -12,12 +13,16 @@ from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.lib.colors import Color
 import json
 import powerlog
-from powerlog import logger,verbose_print, info_print, error_print, variable_str, debug_print
+from powerlog import logger,verbose_print, info_print, error_print, variable_str, debug_print,warning_print
 from pypdf import PdfReader
 import math
 import re
 from shapely.geometry import Polygon
 from difflib import SequenceMatcher
+import pytesseract
+from PIL import Image
+import pandas as pd
+from colorama import Fore, Style
 
 # 文字が日本語かどうかを判断する関数
 def is_japanese(text):
@@ -53,16 +58,31 @@ parser.add_argument('-f', '--font', default='NotoSansJP-Regular', help='使用�
 parser.add_argument('-d', '--dpi', type=int, default=600, help='文書のDPIを指定します（デフォルトは600）')
 parser.add_argument('--page','-p', choices=list(page_sizes.keys()), help='The page size of the PDF.')
 parser.add_argument('--layout', choices=['word', 'line', 'paragraph'], default='line', help='Choose the level of text to draw: word, line, or paragraph.')
-parser.add_argument('--area', type=float, default=80,
-                    help='areathreshold for counting lines in a paragraph. default is 80')
-parser.add_argument('--similarity-threshold', '-st', type=float, default=0.1, 
+parser.add_argument('--area','-ar', type=float, default=80,
+                    help='area threshold for counting lines in a paragraph. default is 80')
+parser.add_argument('--similarity', '-st', type=float, default=0.1, 
                     help='Set the similarity threshold for adding lines to a paragraph. Default is 0.1')
+parser.add_argument('--adjust', '-ad', action='store_true', help='adjust the layout of lines and paragraphs. Experimental!!!Default is False')
+parser.add_argument('--coordinate', '-ct', type=float, default=80,help='Set the coordinate threshold for coordinate adjustment for lines and paragraph. Default is 80')
 args = parser.parse_args()
 
 powerlog.set_log_level(args)
 
-# areaの値をパーセンテージから小数に変換
+# area/coordinate/similarity thresholdの値をパーセンテージから小数に変換
 args.area /= 100.0
+args.coordinate /= 100.0
+args.similarity /= 100.0
+
+# tesseractが使えるか確認
+try:
+    # pytesseractのget_tesseract_version関数を使用してTesseractのバージョンを取得
+    pytesseract.get_tesseract_version()
+    verbose_print(Fore.GREEN+'Tesseract is available.'+Style.RESET_ALL)
+except pytesseract.TesseractNotFoundError:
+    # Tesseractが見つからない場合、--adjustオプションを無効化
+    if args.adjust:
+        print("Warning: Tesseract not found. The --adjust option will be disabled.")
+        args.adjust = False
 
 # OSに適した改行文字を取得
 newline = os.linesep
@@ -71,14 +91,21 @@ newline = os.linesep
 def similarity(a, b):
     return SequenceMatcher(None, a, b).ratio()
 
-# similarity thresholdの値をパーセンテージから小数に変換
-args.similarity_threshold /= 100.0
-
 # DPI変換のための係数を設定
 DPI_CONVERSION_FACTOR = args.dpi / 72
 
 # ポイントをインチに変換する係数
 INCH_TO_POINT = 72
+
+# 単位系からポイントへの変換係数を定義
+unit_to_point_conversion_factors = {
+    'inch': 72,  # 1インチ = 72ポイント
+    # 必要に応じて他の単位系を追加
+}
+
+# レイアウトオプションをtesseractレベルに変換
+level_dict = {'word': 5, 'line': 4, 'paragraph': 3}
+level = level_dict[args.layout]
 
 # フォント名とパス
 font_name = args.font
@@ -108,6 +135,7 @@ else:
     print(f'{output_folder} folder already exists')
 
 optpdf_folder = Path('./OptimizedPDF')
+optimized_folder = Path('./TEMP/optimized')
 
 # 入力フォルダ内の全てのJSONファイルを取得
 json_files = [f for f in os.listdir(json_folder) if f.endswith('.pdf.json')]
@@ -118,13 +146,6 @@ info_print(f'Total JSON files: {total_json_files}')
 
 # PDFファイルのカウンターを初期化
 pdf_counter = 0
-
-def test_similarity():
-    assert similarity("hello", "hello") == 1.0
-    assert similarity("hello", "hEllo") < 1.0
-    assert similarity("hello", "world") < 1.0
-
-test_similarity()
 
 for json_file in json_files:
     # OCR結果のJSONファイル名を設定
@@ -158,6 +179,22 @@ for json_file in json_files:
             else:
                 page_size = 'A5'
 
+        #元画像のフォルダ
+        image_folder = optimized_folder / json_file.replace('.pdf.json', '')
+
+        # フォルダが存在することを確認
+        if not image_folder.exists():
+            args.adjust = False
+            warning_print(f"Warning: Folder {image_folder} does not exist.--adjust option will be disabled.")
+
+        # image_folder内の画像ファイルをアルファベット順にソート
+        image_files = sorted(image_folder.glob('*.jp2'))
+
+        # 画像ファイルが存在することを確認
+        if not image_files:
+            args.adjust = False
+            print(f"Error: No image files found in {image_folder}.--adjust option will be disabled.")
+
         # Check if 'analyzeResult' key exists: json downloaded from web has ''key, json created from API does not.
         if 'analyzeResult' in ocr_data:
             analyze_result = ocr_data['analyzeResult']
@@ -173,12 +210,34 @@ for json_file in json_files:
         # ReportLabのキャンバスを作成
         c = canvas.Canvas(new_pdf_path, pagesize=page_size)
 
+        info_print(f'Creating PDF file {new_pdf_filename}...')
+        info_print(f'Layout: {args.layout}')
+
         # 各ページを処理
-        for page in analyze_result['pages']:
+        for i, page in enumerate(analyze_result['pages']):
             page_number = page['pageNumber']
-            page_width = page['width'] * INCH_TO_POINT
-            page_height = page['height'] * INCH_TO_POINT
+            # Document Intelligenceの単位系を取得
+            di_unit = page['unit']
+            # 単位系からポイントへの変換係数を取得
+            unit_to_point_conversion_factor = unit_to_point_conversion_factors.get(di_unit, 1)  # デフォルトは1
+            # ページサイズを取得
+            page_width = page['width'] * unit_to_point_conversion_factor
+            page_height = page['height'] * unit_to_point_conversion_factor
             c.setPageSize((page_width, page_height))
+
+            verbose_print(f'Processing page {page_number}...')
+
+            # iがimage_filesの長さを超えないようにする
+            if args.adjust and i<len(image_files):
+                tesseract_ocr = pytesseract.image_to_data(Image.open(image_files[i]))
+                image = Image.open(image_files[i])
+                verbose_print(f'performing_osd for page {page_number} and {i} with tesseract: {tesseract_ocr}')
+                # 画像のサイズ（ピクセル単位）を取得
+                image_width, image_height = image.size
+                debug_print(f'image size: {image.size}')
+            elif args.adjust:
+                error_print(f"Image file not found for page {page_number}.in {image_folder}")
+
             # 各単語を処理
             if args.layout == 'word':
                 items = page['words']
@@ -190,6 +249,36 @@ for json_file in json_files:
                 # Create a copy of lines list to manipulate it
                 lines_copy = lines.copy()
 
+            if args.adjust and i<len(image_files):
+                tesseract_bboxes = []
+
+                # pandasを使用してデータを解析
+                read_tess_data = pd.read_csv(io.StringIO(tesseract_ocr), sep='\t', quotechar='"', on_bad_lines='skip', engine='python')
+
+                # 'bbox'情報が含まれる行を抽出
+                bbox_data = read_tess_data[read_tess_data['level'] == level]
+
+                # 各行のbbox情報を取得
+                for index, row in bbox_data.iterrows():
+                    bbox = [row['left'], row['top'], row['width'], row['height']]
+                    tesseract_bboxes.append(bbox)
+                debug_print(f'tesseract_bboxes: {tesseract_bboxes}')
+
+
+                # bboxリストをcoordsリストに変換
+                bbox_coords = []
+                # tesseractのピクセル単位の座標系をDocument Intelligenceの座標系(以前に取取得)に変換
+                tess_to_di_conversion_factor = unit_to_point_conversion_factor / (args.dpi*max(image_width, image_height))
+                for tesseract_bbox in tesseract_bboxes:
+                    x, y, width, height = tesseract_bbox
+                    x /= image_width
+                    y /= image_height
+                    width /= image_width
+                    height /= image_height
+                    bbox_to_polygon_coords = [(x, y), (x + width, y), (x + width, y + height), (x, y + height), (x, y)]
+                    bbox_coords.append(bbox_to_polygon_coords)
+
+            #メイン処理
             prev_font_size = None
             for item in items:
                 if args.layout == 'paragraph':
@@ -211,7 +300,7 @@ for json_file in json_files:
                             text += newline
 
                         # Only add line content to text if it matches the similarity threshold or more with a part of the paragraph text
-                        if similarity(line['content'], paragraph_text) >= args.similarity_threshold:
+                        if similarity(line['content'], paragraph_text) >= args.similarity:
                             text += line['content']
                             debug_print(f'Added line content: {line["content"]}') 
                             # Remove the line from lines_copy list after adding its content to text
@@ -229,7 +318,7 @@ for json_file in json_files:
                                 break
                         else:
                             error_print(f'Line content does not match the similarity threshold: {line["content"]}')
-                            error_print(f'similarity threshold: {args.similarity_threshold}')
+                            error_print(f'similarity threshold: {args.similarity}')
 
                         prev_line_bottom = line_bottom
                 else:
@@ -238,8 +327,26 @@ for json_file in json_files:
                     # itemのpolygonを座標のペアのリストに変換
                     item_polygon_coords = [(polygon[i], polygon[i + 1]) for i in range(0, len(polygon), 2)]
                     item_polygon = Polygon(item_polygon_coords)
+                    debug_print(f'item_polygon: {item_polygon_coords}')
+                    
+                    if args.adjust and i<len(image_files):
+                        # tesseract_の座標とitemのpolygonを比較
+                        for tesseract_polygon_coord in bbox_coords:
+                            tesseract_polygon = Polygon(tesseract_polygon_coord)
+                            debug_print(f'tesseract_polygon coord: {tesseract_polygon_coord}')
 
-                x1, y1, x2, y2, x3, y3, x4, y4 = [v * INCH_TO_POINT for v in polygon]
+                        # tesseractの座標とitemのpolygonが重なっている割合を計算
+                            ocr_intersection = item_polygon.intersection(tesseract_polygon).area
+                            ocr_overlap = ocr_intersection / item_polygon.area
+                            debug_print(f'ocr_overlap: {ocr_overlap}for item {text}')
+
+                            # 重なっている割合が閾値を超えている場合、tesseractの座標を使用
+                            if ocr_overlap > args.coordinate:  
+                                item_polygon = tesseract_polygon
+                                verbose_print(f'Using osd polygon for item {text}')
+                                break
+
+                x1, y1, x2, y2, x3, y3, x4, y4 = [v * unit_to_point_conversion_factor for v in polygon]
                 rotation = item.get('rotation', 0)
                 # 文字の向きを決定
                 if math.isclose(x1, x4) and math.isclose(y2, y3):  # 垂直
@@ -311,9 +418,9 @@ for json_file in json_files:
 
         # PDFファイルが作成されたことを表示（何個目/総数の形で表示）
         info_print(f'PDF file {new_pdf_filename} has been created. ({pdf_counter}/{total_json_files})')
-else:
-    # JSONファイルが存在しないことを表示
-    info_print(f'No JSON files found, so no PDF file was created.')
+    else:
+        # JSONファイルが存在しないことを表示
+        info_print(f'No JSON files found, so no PDF file was created.')
 
 info_print('All PDF file processing is complete.')
 
