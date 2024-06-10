@@ -15,7 +15,7 @@ parser = powerlog.create_parser()
 dividing = parser.add_mutually_exclusive_group()
 dividing.add_argument('-p', '--pages', type=int, help='divide the PDF into specified number of pages. Default:300')
 dividing.add_argument('--no-divide', action='store_true', help='Overrides auto divide of 300 pages and will try to process whole PDF')
-dividing.add_argument('--divide','-d', type=int, help='divide the PDF into specified number of parts. Default:300')
+dividing.add_argument('--divide','-d', type=int, help='divide the PDF into specified number of parts. Default:1')
 default_max_pages = 300
 
 #divide default 3 for Test↑
@@ -49,6 +49,7 @@ pdf_files = [f for f in os.listdir(optpdf_folder) if f.endswith('.pdf')]
 # Function to divide PDF into specified number of pages
 def divide_pdf_by_pages(file_path, div_pages):
     error_print(f"Dividing {file_path} into {div_pages} page blocks")
+    debug_print(f"Divide value: {divide_value} Divide pages: {div_pages}")
     reader = PdfReader(file_path)
     total_pages = len(reader.pages)
     if total_pages < div_pages:
@@ -63,6 +64,7 @@ def divide_pdf_by_pages(file_path, div_pages):
 # Function to divide PDF into specified number of parts
 def divide_pdf(file_path, divide_value):
     error_print(f"Dividing {file_path} into {divide_value} parts")
+    debug_print(f"Divide value: {divide_value} Divide pages: {div_pages}")
     reader = PdfReader(file_path)
     total_pages = len(reader.pages)
     pages_per_part = math.ceil(total_pages / divide_value)
@@ -75,28 +77,32 @@ def divide_pdf(file_path, divide_value):
 
 # Function to process PDF and send to Document Intelligence API and receive OCR results and save to JSON file
 def process_pdf(file_path, client, output_folder):
-    # ここでfile_pathを使用してPDFを送信します
-    with open(file_path, "rb") as f:
-        base64_encoded_pdf = base64.b64encode(f.read()).decode()
-        poller = client.begin_analyze_document("prebuilt-read", {"base64Source": base64_encoded_pdf})
-    verbose_print(f"Sent {file_path} to Docunent Intelligence for OCR. Waiting for results...")
+    try:
+        # Send PDF to Document Intelligence for OCR
+        with open(file_path, "rb") as f:
+            base64_encoded_pdf = base64.b64encode(f.read()).decode()
+            poller = client.begin_analyze_document("prebuilt-read", {"base64Source": base64_encoded_pdf})
+        verbose_print(f"Sent {file_path} to Document Intelligence for OCR. Waiting for results...")
 
-    # Wait for the analysis to complete
-    analyze_result = poller.result()
-    verbose_print(f"OCR completed for {file_path}")
+        # Wait for OCR results
+        analyze_result = poller.result()
+        verbose_print(f"OCR completed for {file_path}")
 
-    # Convert the AnalyzeResult object to a dictionary
-    result_dict = analyze_result.as_dict()
+        # Create dictionary from OCR results and add status
+        result_dict = analyze_result.as_dict()
+        result_dict["status"] = poller.status()
 
-    # Add other information to the dictionary
-    result_dict["status"] = poller.status()
-
-    # Save the dictionary to a JSON file
-    json_file_path = os.path.join(output_folder, f"{os.path.basename(file_path)}.json")
-    with open(json_file_path, "w", encoding="utf-8") as json_file:
-        json.dump(result_dict, json_file, ensure_ascii=False, indent=4)
+        # Save OCR results to JSON file
+        json_file_path = os.path.join(output_folder, f"{os.path.basename(file_path)}.json")
+        if os.path.exists(json_file_path):
+            warning_print(f"Warning: {json_file_path} already exists and will be overwritten.")
+            os.remove(json_file_path)
+        with open(json_file_path, "w", encoding="utf-8") as json_file:
+            json.dump(result_dict, json_file, ensure_ascii=False, indent=4)
         
-    info_print(f"OCR result saved to {json_file_path}")
+        info_print(f"OCR result saved to {json_file_path}")
+    except Exception as e:
+        print(f"Failed to process {file_path}: {e}")
 
 # Function to merge OCR results from divided PDFs
 def merge_ocr_results(base_name, divjson_folder, json_folder):
@@ -198,27 +204,27 @@ def merge_ocr_results(base_name, divjson_folder, json_folder):
 
         merged_results["content"] = "\n".join(merged_results["content"])
 
-        if not os.path.exists(json_folder):
-            os.makedirs(json_folder)
-
-        with open(os.path.join(json_folder, base_name + '.pdf.json'), 'w', encoding='utf-8') as f:
-            json.dump(merged_results, f, ensure_ascii=False, indent=4)
-
     return merged_results
 
-def divide_and_process_pdf(pdf_file_path, ,div_pages, divide_value, base_name, document_intelligence_client, divpdf_folder, divjson_folder, json_folder):
+def divide_and_process_pdf(pdf_file_path, divide_value, div_pages,base_name, document_intelligence_client, divpdf_folder, divjson_folder, json_folder):
     if args.divide:
         pdf_parts = list(divide_pdf(pdf_file_path, divide_value))
+        debug_print(f"Divide value: {divide_value}, Divide pages: {div_pages} function is divide_pdf")
     elif args.pages:
         pdf_parts = list(divide_pdf_by_pages(pdf_file_path, div_pages))
+        debug_print(f"Divide value: {divide_value}, Divide pages: {div_pages} function is divide_pdf_by_pages")
     else:
         pdf_parts = list(divide_pdf(pdf_file_path, divide_value))
+        debug_print(f"Divide value: {divide_value}, Divide pages: {div_pages} function is divide_pdf")
     for i, pdf_part in enumerate(pdf_parts, start=1):  # start parameter set to 1
         output_pdf_path = os.path.join(divpdf_folder, f"{base_name}_part{i}.pdf")
         with open(output_pdf_path, "wb") as output_pdf:
             pdf_part.write(output_pdf)
         process_pdf(output_pdf_path, document_intelligence_client, divjson_folder)
     merged_results = merge_ocr_results(base_name, divjson_folder, json_folder)
+    if os.path.exists(os.path.join(json_folder, base_name + '.pdf.json')):
+        warning_print(f"{base_name}.pdf.json already exists and will be overwritten.")
+        os.remove(os.path.join(json_folder, base_name + '.pdf.json'))
     with open(os.path.join(json_folder, base_name + '.pdf.json'), 'w', encoding='utf-8') as f:
         json.dump(merged_results, f, ensure_ascii=False, indent=4)
     verbose_print("Merged OCR results saved to " + variable_str(os.path.join(json_folder, base_name + '.pdf.json')))
@@ -245,9 +251,13 @@ def divide_and_process_pdf(pdf_file_path, ,div_pages, divide_value, base_name, d
 for pdf_file in pdf_files:
     pdf_file_path = os.path.join(optpdf_folder, pdf_file)
     base_name = pdf_file.rsplit('.', 1)[0]
-    total_pages = len(pdf.pages)
+    with open(pdf_file_path, "rb") as file:
+        pdf = PdfReader(file)
+        total_pages = len(pdf.pages)
 
     # specify method and numbur of parts to divide, depending on options and page nunbers
+    divide_value = 1
+    div_pages = default_max_pages
     if args.no_divide:
         divide_value = 1
     elif args.divide:
@@ -262,64 +272,21 @@ for pdf_file in pdf_files:
                 divide_value = total_pages // default_max_pages
             else:
                 divide_value = total_pages // default_max_pages + 1
+    debug_print(f"Divide value: {divide_value}, Divide pages: {div_pages}")
         
 
     try:
-        with open(pdf_file_path, "rb") as file:
-            pdf = PdfReader(file)
-        # Divide PDF into specified number of pages if specified, if total_pages is less than specified, process the whole PDF
-        # If total_pages is less than divide_pages or --no-divide is specified, process the whole PDF
-        if total_pages <= divide_pages or args.no_divide:
-            attempt = 0
-            max_attempts = args.attempts
-            #If processing full size PDF fails, divide into smaller parts and process
-            while attempt < max_attempts:
-                # Try to process the full size PDF
-                if attempt == 0:
-                    try:
-                        process_pdf(pdf_file_path, document_intelligence_client, json_folder)
-                        break
-                    except Exception as e:
-                        error_print(f"Error processing full size {pdf_file}: {e}")
-                        error_print(f"Attempting to divide {pdf_file} into smaller parts")
-                        attempt += 1
-                        # If total_pages is more than 300, divide into 2 parts
-                        if total_pages > args.divide:
-                            if total_pages % args.divide == 0:
-                                divide_value = total_pages // args.pages
-                            else:
-                                divide_value = total_pages // args.pages + 1
-                        else:
-                            divide_value = 2
-                # If processing full size PDF fails, divide into smaller parts and process
-                if attempt > 0:
-                    try:
-                        divide_and_process_pdf(pdf_file_path, divide_value, base_name, document_intelligence_client, divpdf_folder, divjson_folder, json_folder)
-                        break
-                    except Exception as e:
-                        error_print(f"Error processing {pdf_file} in parts: {e}")
-                        error_print(f"Attempting to divide {pdf_file} into smaller parts")
-                        attempt += 1
-                        divide_value += 1                        
-
-        else:
-            # If total_pages is more than 300*n, divide into (n+1) parts
-            if total_pages > divide_pages:
-                if total_pages % divide_pages == 0:
-                    divide_value = total_pages // divide_pages
-                else:
-                    divide_value = total_pages // divide_pages + 1
-            attempt = 0
-            max_attempts = args.attempts
-            #If proccesing fails divide into smaller parts and process
-            while attempt < max_attempts:
-                try:
-                    divide_and_process_pdf(pdf_file_path, divide_value, base_name, document_intelligence_client, divpdf_folder, divjson_folder, json_folder)
-                    break
-                except Exception as e:
-                    error_print(f"Error processing {pdf_file} in parts: {e}")
-                    error_print(f"Attempting to divide {pdf_file} into smaller parts")
-                    attempt += 1
-                    divide_value += 1
+        attempt = 0
+        max_attempts = args.attempts
+        #If proccesing fails divide into smaller parts and process
+        while attempt < max_attempts:
+            try:
+                divide_and_process_pdf(pdf_file_path, divide_value, div_pages, base_name, document_intelligence_client, divpdf_folder, divjson_folder, json_folder)
+                break
+            except Exception as e:
+                error_print(f"Failed to process {pdf_file}: {e}")
+                error_print(f"Attempting to divide {pdf_file} into smaller parts")
+                attempt += 1
+                divide_value += 1
     except Exception as e:
         powerlog.debug_print(f"Error processing {pdf_file}: {e}")
