@@ -478,23 +478,18 @@ for json_file in json_files:
                     origin_offset = 3
                 else:
                     origin_offset = 0
+                #one character text recognitions is usually off by 90 degrees due to the ratio.
+                if len(text) == 1:
+                    origin_offset += 1
                 # 長辺と短辺が近似的に等しいかどうかをチェック
-                if args.layout == 'word' or args.layout == 'line':
-                    if abs(long_side_length - short_side_length) / long_side_length < 0.6:
-                        rotation = 0
-                if args.layout == 'paragraph':
-                    if abs(long_side_length - short_side_length)/long_side_length < hv_threshold:
-                        rotation = 0
+                if abs(y3 - y1) < abs(x3 - x1):
+                    rotation = math.degrees(math.atan2(y1 - y2, x2 - x1)) + 90 * origin_offset
                 else:
-                    if abs(y3 - y1) < abs(x3 - x1):
-                        rotation = math.degrees(math.atan2(y1 - y2, x2 - x1)) + 90 * origin_offset
-                    else:
-                        rotation = math.degrees(math.atan2(y2 - y3, x3 - x2)) + 90 * origin_offset
-                    if -180 <= rotation <= -135 or -45 <= rotation <= 45 or 135 <= rotation <= 180:
-                        script_direction = 'horizontal'
-                    else:
-                        script_direction = 'vertical'
-                        rotation += 180
+                    rotation = math.degrees(math.atan2(y2 - y3, x3 - x2)) + 90 * origin_offset
+                if -180 <= rotation <= -135 or -45 <= rotation <= 45 or 135 <= rotation <= 180:
+                    script_direction = 'horizontal'
+                else:
+                    script_direction = 'vertical'
 
                 debug_print(f'text' + text + 'is' + script_direction)
                 debug_print(f'Is Japanese?:{is_japanese(text)}')
@@ -537,17 +532,32 @@ for json_file in json_files:
 
                 # 描画原点を設定
                 x = x1
-                y = page_height - y1 - ascent        
+                y = page_height - y1 - ascent
+                # オフセットを補正
+                if origin_offset == 0:
+                    offset_correction_x = 0
+                    offset_correction_y = 0
+                elif origin_offset == 1:
+                    offset_correction_x = -short_side_length
+                    offset_correction_y = + short_side_length
+                elif origin_offset == 2
+                     offset_correction_x = 0
+                     offset_correction_y = 0
+                else origin_offset == 3:
+                    offset_correction_x = + short_side_length
+                    offset_correction_y = - short_side_length
+
+
 
                 c.saveState()  # 現在の状態を保存
-                c.translate(x, y)  # 描画原点を移動
+                c.translate(x + offset_correction_x, y + offset_correction_y)  # 描画原点を移動
                 if script_direction == 'vertical':
                     if is_japanese(text):  # 文字が日本語の場合
-                        c.scale(1,scale )  # 垂直方向にスケール変換
-                        c.rotate(rotation+180)
+                        c.scale(1,scale )  
+                        c.rotate(rotation)
                     else:  # 文字が英語の場合
-                        c.scale(scale, 1)  # 水平方向にスケール変換
-                        c.rotate(rotation+180)
+                        c.scale(1, scale)  
+                        c.rotate(rotation)
                 else:
                     c.scale(scale, 1)
                     c.rotate(rotation)
