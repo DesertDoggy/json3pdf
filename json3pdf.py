@@ -155,7 +155,7 @@ def determine_origin(bbox_chk_coords):
         # 角度から起点を判断
         if 0 < angle <= math.pi /2:
             position = "top_right"
-        elif math.pi /2 < angle <= math.pi:
+        elif math.pi /2 < angle <= math.pi or angle == - math.pi:
             origin = "top_left"
         elif - math.pi < angle <= - math.pi/2:
             position = "bottom_left"
@@ -443,6 +443,10 @@ for json_file in json_files:
 
                 x1, y1, x2, y2, x3, y3, x4, y4 = [v * unit_to_point_conversion_factor for v in polygon]
                 bbox_chk_coords = [(x1,y1),(x2,y2),(x3,y3),(x4,y4)]
+                origin, polygon_direction = determine_origin(bbox_chk_coords)
+                if origin == "unknown" or polygon_direction == "diagonal":
+                    error_print(f'Unknown origin or diagonal polygon for item {text}. Layout may be incorrect.')
+                
                 # 座標間の距離を計算
                 distances = [
                     (calculate_distance(x1, y1, x2, y2), ((x1, y1), (x2, y2))),
@@ -464,6 +468,16 @@ for json_file in json_files:
                 long_side_length = (long_sides[0][0]+long_sides[1][0])/2
                 short_side_length = (short_sides[0][0]+short_sides[1][0])/2
 
+                if origin == "bottom_left":
+                    origin_offset = 0
+                elif origin == "bottom_right":
+                    origin_offset = 1
+                elif origin == "top_right":
+                    origin_offset = 2
+                elif origin == "top_left":
+                    origin_offset = 3
+                else:
+                    origin_offset = 0
                 # 長辺と短辺が近似的に等しいかどうかをチェック
                 if args.layout == 'word' or args.layout == 'line':
                     if abs(long_side_length - short_side_length) / long_side_length < 0.6:
@@ -473,14 +487,15 @@ for json_file in json_files:
                         rotation = 0
                 else:
                     if abs(y3 - y1) < abs(x3 - x1):
-                        rotation = math.degrees(math.atan2(y1 - y2, x2 - x1))
+                        rotation = math.degrees(math.atan2(y1 - y2, x2 - x1)) + 90 * origin_offset
                     else:
-                        rotation = math.degrees(math.atan2(y2 - y3, x3 - x2))
+                        rotation = math.degrees(math.atan2(y2 - y3, x3 - x2)) + 90 * origin_offset
                     if -180 <= rotation <= -135 or -45 <= rotation <= 45 or 135 <= rotation <= 180:
                         script_direction = 'horizontal'
                     else:
                         script_direction = 'vertical'
                         rotation += 180
+
                 debug_print(f'text' + text + 'is' + script_direction)
                 debug_print(f'Is Japanese?:{is_japanese(text)}')
                 debug_print(f'Origin and rotation is:{determine_origin(bbox_chk_coords)}')
@@ -528,11 +543,11 @@ for json_file in json_files:
                 c.translate(x, y)  # 描画原点を移動
                 if script_direction == 'vertical':
                     if is_japanese(text):  # 文字が日本語の場合
-                        c.scale(1,1 )  # 垂直方向にスケール変換
+                        c.scale(1,scale )  # 垂直方向にスケール変換
                         c.rotate(rotation+180)
                     else:  # 文字が英語の場合
-                        c.scale(1, 1)  # 水平方向にスケール変換
-                        c.rotate(rotation)
+                        c.scale(scale, 1)  # 水平方向にスケール変換
+                        c.rotate(rotation+180)
                 else:
                     c.scale(scale, 1)
                     c.rotate(rotation)
