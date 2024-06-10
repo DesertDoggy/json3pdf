@@ -8,12 +8,16 @@ from powerlog import logger,verbose_print, info_print,warning_print, error_print
 from PyPDF2 import PdfReader, PdfWriter
 import base64
 import shutil
+import math
 
 # コマンドライン引数を解析する
 parser = powerlog.create_parser()
-group = parser.add_mutually_exclusive_group()
-group.add_argument('-d', '--divide', type=int, default=300, help='divide the PDF into specified number of pages. Default:300')
-group.add_argument('--no-divide', action='store_true', help='Overrides auto divide of 300 pages and will try to process whole PDF')
+dividing = parser.add_mutually_exclusive_group()
+dividing.add_argument('-p', '--pages', type=int, help='divide the PDF into specified number of pages. Default:300')
+dividing.add_argument('--no-divide', action='store_true', help='Overrides auto divide of 300 pages and will try to process whole PDF')
+dividing.add_argument('--divide','-d', type=int, help='divide the PDF into specified number of parts. Default:300')
+default_max_pages = 300
+
 #divide default 3 for Test↑
 parser.add_argument('--attempts', type=int, default=3,
                     help='the maximum number of attempts. Default: 3')
@@ -43,16 +47,29 @@ os.makedirs(divjson_folder, exist_ok=True)
 pdf_files = [f for f in os.listdir(optpdf_folder) if f.endswith('.pdf')]
 
 # Function to divide PDF into specified number of pages
-def divide_pdf(file_path, num_pages):
-    error_print(f"Dividing {file_path} into {num_pages} page blocks")
+def divide_pdf_by_pages(file_path, div_pages):
+    error_print(f"Dividing {file_path} into {div_pages} page blocks")
     reader = PdfReader(file_path)
     total_pages = len(reader.pages)
-    if total_pages < num_pages:
-        error_print(f"Warning: {file_path} has only {total_pages} pages, which is less than the specified division size of {num_pages}")
-    for page in range(0, total_pages, num_pages):
-        debug_print(f"Processing pages {page} to {min(page + num_pages, total_pages)}")
+    if total_pages < div_pages:
+        error_print(f"Warning: {file_path} has only {total_pages} pages, which is less than the specified division size of {div_pages}")
+    for page in range(0, total_pages, div_pages):
+        debug_print(f"Processing pages {page} to {min(page + div_pages, total_pages)}")
         writer = PdfWriter()
-        for sub_page in range(page, min(page + num_pages, total_pages)):
+        for sub_page in range(page, min(page + div_pages, total_pages)):
+            writer.add_page(reader.pages[sub_page])
+        yield writer
+
+# Function to divide PDF into specified number of parts
+def divide_pdf(file_path, divide_value):
+    error_print(f"Dividing {file_path} into {divide_value} parts")
+    reader = PdfReader(file_path)
+    total_pages = len(reader.pages)
+    pages_per_part = math.ceil(total_pages / divide_value)
+    for page in range(0, total_pages, pages_per_part):
+        debug_print(f"Processing pages {page} to {min(page + pages_per_part, total_pages)}")
+        writer = PdfWriter()
+        for sub_page in range(page, min(page + pages_per_part, total_pages)):
             writer.add_page(reader.pages[sub_page])
         yield writer
 
@@ -189,8 +206,13 @@ def merge_ocr_results(base_name, divjson_folder, json_folder):
 
     return merged_results
 
-def divide_and_process_pdf(pdf_file_path, divide_value, base_name, document_intelligence_client, divpdf_folder, divjson_folder, json_folder):
-    pdf_parts = list(divide_pdf(pdf_file_path, divide_value))
+def divide_and_process_pdf(pdf_file_path, ,div_pages, divide_value, base_name, document_intelligence_client, divpdf_folder, divjson_folder, json_folder):
+    if args.divide:
+        pdf_parts = list(divide_pdf(pdf_file_path, divide_value))
+    elif args.pages:
+        pdf_parts = list(divide_pdf_by_pages(pdf_file_path, div_pages))
+    else:
+        pdf_parts = list(divide_pdf(pdf_file_path, divide_value))
     for i, pdf_part in enumerate(pdf_parts, start=1):  # start parameter set to 1
         output_pdf_path = os.path.join(divpdf_folder, f"{base_name}_part{i}.pdf")
         with open(output_pdf_path, "wb") as output_pdf:
@@ -223,13 +245,29 @@ def divide_and_process_pdf(pdf_file_path, divide_value, base_name, document_inte
 for pdf_file in pdf_files:
     pdf_file_path = os.path.join(optpdf_folder, pdf_file)
     base_name = pdf_file.rsplit('.', 1)[0]
+    total_pages = len(pdf.pages)
+
+    # specify method and numbur of parts to divide, depending on options and page nunbers
+    if args.no_divide:
+        divide_value = 1
+    elif args.divide:
+        divide_value = args.divide
+    elif args.pages:
+        div_pages = args.pages
+    else:
+        if total_pages <= default_max_pages:
+            divide_value = 1
+        else:
+            if total_pages % default_max_pages == 0:
+                divide_value = total_pages // default_max_pages
+            else:
+                divide_value = total_pages // default_max_pages + 1
+        
 
     try:
         with open(pdf_file_path, "rb") as file:
             pdf = PdfReader(file)
-            total_pages = len(pdf.pages)
         # Divide PDF into specified number of pages if specified, if total_pages is less than specified, process the whole PDF
-        divide_pages = args.divide
         # If total_pages is less than divide_pages or --no-divide is specified, process the whole PDF
         if total_pages <= divide_pages or args.no_divide:
             attempt = 0
@@ -248,9 +286,9 @@ for pdf_file in pdf_files:
                         # If total_pages is more than 300, divide into 2 parts
                         if total_pages > args.divide:
                             if total_pages % args.divide == 0:
-                                divide_value = total_pages // args.divide
+                                divide_value = total_pages // args.pages
                             else:
-                                divide_value = total_pages // args.divide + 1
+                                divide_value = total_pages // args.pages + 1
                         else:
                             divide_value = 2
                 # If processing full size PDF fails, divide into smaller parts and process
