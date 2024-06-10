@@ -134,9 +134,10 @@ def is_origin_bottom_right(bbox_chk_coords):
     # それ以外の場合、右下が起点となっていない
     return False
 
+# check origin and direction of polygon
 def determine_origin(bbox_chk_coords):
     # バウンディングボックスの4つの点の座標を取得
-    top_left, top_right, bottom_left, bottom_right = bbox_chk_coords
+    bbox1, bbox2, bbox3, bbox4 = bbox_chk_coords
 
     # ポリゴンを作成
     poly = Polygon(bbox_chk_coords)
@@ -144,25 +145,36 @@ def determine_origin(bbox_chk_coords):
     # ポリゴンの重心を計算
     centroid = poly.centroid
 
-    # 重心が各点に対してどの位置にあるかを判定
-    if centroid.x >= bottom_right[0] and centroid.y <= bottom_right[1]:
-        return "bottom_right"
-    elif centroid.x >= top_right[0] and centroid.y >= top_right[1]:
-        return "top_right"
-    elif centroid.x <= top_left[0] and centroid.y >= top_left[1]:
-        return "top_left"
-    elif centroid.x <= bottom_left[0] and centroid.y <= bottom_left[1]:
-        return "bottom_left"
-    elif centroid.x > bottom_left[0] and centroid.x < bottom_right[0] and centroid.y < bottom_left[1]:
-        return "bottom"
-    elif centroid.x > bottom_left[0] and centroid.x < bottom_right[0] and centroid.y > top_left[1]:
-        return "top"
-    elif centroid.y > bottom_left[1] and centroid.y < top_left[1] and centroid.x < bottom_left[0]:
-        return "left"
-    elif centroid.y > bottom_right[1] and centroid.y < top_right[1] and centroid.x > bottom_right[0]:
-        return "right"
+    angles = []
+    positions = []
+    for bbox in bbox_chk_coords:
+        position = None
+        # 重心とbbox1との角度を計算
+        angle = math.atan2(bbox[1] - centroid.y, bbox[0] - centroid.x)
+        angles.append(angle)
+        # 角度から起点を判断
+        if 0 < angle <= math.pi /2:
+            position = "top_right"
+        elif math.pi /2 < angle <= math.pi:
+            origin = "top_left"
+        elif - math.pi < angle <= - math.pi/2:
+            position = "bottom_left"
+        elif - math.pi/2 < angle <= 0:
+            position = "bottom_right"
+        else:
+            position = "unknown"
+        positions.append(position)
+    angle_diffs = [(angles[i] - angles[i-1] + math.pi) % (2*math.pi) - math.pi for i in range(1, len(angles))]
+    if all(angle_diffs) > 0:
+        polygon_direction = "clockwise"
+    elif all(angle_diffs) < 0:
+        polygon_direction = "counterclockwise"
     else:
-        return "unknown"
+        polygon_direction = "diagonal"
+
+    origin = positions [0]
+    return origin, polygon_direction
+
 
 
 # 横書き用のフォントを登録
@@ -470,7 +482,6 @@ for json_file in json_files:
                         script_direction = 'vertical'
                         rotation += 180
                 debug_print(f'text' + text + 'is' + script_direction)
-                debug_print(f'Origin is botttom right:{is_origin_bottom_right(bbox_chk_coords)}')
                 debug_print(f'Is Japanese?:{is_japanese(text)}')
                 debug_print(f'Origin and rotation is:{determine_origin(bbox_chk_coords)}')
 
