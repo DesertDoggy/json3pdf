@@ -59,7 +59,7 @@ if args.left and not args.right:
 elif args.right and not args.left:
     x_translation = -args.right
 else:
-    x_translation = -1
+    x_translation = 0
 
 # 上下の移動
 if args.up and not args.down:
@@ -67,7 +67,7 @@ if args.up and not args.down:
 elif args.down and not args.up:
     y_translation = -args.down
 else:
-    y_translation = -7
+    y_translation = 0
 
 translation_matrix = [1, 0, 0, 1, x_translation, y_translation]
 
