@@ -122,6 +122,49 @@ def get_font_path(get_font_name, font_type):
         font_path += '.ttf'
     return font_path
 
+# check if origin of bbox is bottom_right　(Some vertical texts, ex: English has a bounding box origin in bottom right.)
+def is_origin_bottom_right(bbox_chk_coords):
+    # バウンディングボックスの4つの点の座標を取得
+    top_left, top_right, bottom_left, bottom_right = bbox_chk_coords
+
+    # 右下の点が左下の点より右にあり、かつ、右上の点より下にあるか確認
+    if bottom_right[0] >= bottom_left[0] and bottom_right[1] <= top_right[1]:
+        return True
+
+    # それ以外の場合、右下が起点となっていない
+    return False
+
+def determine_origin(bbox_chk_coords):
+    # バウンディングボックスの4つの点の座標を取得
+    top_left, top_right, bottom_left, bottom_right = bbox_chk_coords
+
+    # ポリゴンを作成
+    poly = Polygon(bbox_chk_coords)
+
+    # ポリゴンの重心を計算
+    centroid = poly.centroid
+
+    # 重心が各点に対してどの位置にあるかを判定
+    if centroid.x >= bottom_right[0] and centroid.y <= bottom_right[1]:
+        return "bottom_right"
+    elif centroid.x >= top_right[0] and centroid.y >= top_right[1]:
+        return "top_right"
+    elif centroid.x <= top_left[0] and centroid.y >= top_left[1]:
+        return "top_left"
+    elif centroid.x <= bottom_left[0] and centroid.y <= bottom_left[1]:
+        return "bottom_left"
+    elif centroid.x > bottom_left[0] and centroid.x < bottom_right[0] and centroid.y < bottom_left[1]:
+        return "bottom"
+    elif centroid.x > bottom_left[0] and centroid.x < bottom_right[0] and centroid.y > top_left[1]:
+        return "top"
+    elif centroid.y > bottom_left[1] and centroid.y < top_left[1] and centroid.x < bottom_left[0]:
+        return "left"
+    elif centroid.y > bottom_right[1] and centroid.y < top_right[1] and centroid.x > bottom_right[0]:
+        return "right"
+    else:
+        return "unknown"
+
+
 # 横書き用のフォントを登録
 h_font_name = args.hfont
 h_font_path = get_font_path(h_font_name, 'h')
@@ -387,6 +430,7 @@ for json_file in json_files:
                                 break
 
                 x1, y1, x2, y2, x3, y3, x4, y4 = [v * unit_to_point_conversion_factor for v in polygon]
+                bbox_chk_coords = [(x1,y1),(x2,y2),(x3,y3),(x4,y4)]
                 # 座標間の距離を計算
                 distances = [
                     (calculate_distance(x1, y1, x2, y2), ((x1, y1), (x2, y2))),
@@ -425,6 +469,10 @@ for json_file in json_files:
                     else:
                         script_direction = 'vertical'
                         rotation += 180
+                debug_print(f'text' + text + 'is' + script_direction)
+                debug_print(f'Origin is botttom right:{is_origin_bottom_right(bbox_chk_coords)}')
+                debug_print(f'Is Japanese?:{is_japanese(text)}')
+                debug_print(f'Origin and rotation is:{determine_origin(bbox_chk_coords)}')
 
                 # フォントサイズを計算（高さに係数を適用）
                 font_size = short_side_length * font_size_factor
@@ -473,7 +521,7 @@ for json_file in json_files:
                         c.rotate(rotation+180)
                     else:  # 文字が英語の場合
                         c.scale(1, 1)  # 水平方向にスケール変換
-                        c.rotate(rotation+270)
+                        c.rotate(rotation)
                 else:
                     c.scale(scale, 1)
                     c.rotate(rotation)
