@@ -13,6 +13,9 @@ from colorama import Fore, Style
 import powerlog
 from powerlog import logger,verbose_print, info_print, error_print, variable_str, debug_print
 
+
+#####!!!!!!!!!!!!!!!!can't get estimated dpi in some cases? fix needed
+
 # CLIオプションの設定
 parser = powerlog.create_parser()
 parser = argparse.ArgumentParser()
