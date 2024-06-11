@@ -71,6 +71,7 @@ parser.add_argument('--adjust', '-ad', action='store_true', help='adjust the lay
 parser.add_argument('--coordinate', '-ct', type=float, default=80,help='Set the coordinate threshold for coordinate adjustment for lines and paragraph. Default is 80')
 parser.add_argument('--HV-threshold', '-hv', type=float, default=0.1, help='Set the threshold for horizontal and vertical text. Default is 0.1')
 parser.add_argument('--clear','-c', action='store_true', help='output clear text PDF')
+parser.add_argument('--search','-se', nargs=2, type=int, default=[50,2], help='search page limit and ignore character number for layout "line" main text direction detection. Default:(50,2)')
 args = parser.parse_args()
 
 powerlog.set_log_level(args)
@@ -122,32 +123,20 @@ def get_font_path(get_font_name, font_type):
         font_path += '.ttf'
     return font_path
 
-# check if origin of bbox is bottom_right　(Some vertical texts, ex: English has a bounding box origin in bottom right.)
-def is_origin_bottom_right(bbox_chk_coords):
-    # バウンディングボックスの4つの点の座標を取得
-    top_left, top_right, bottom_left, bottom_right = bbox_chk_coords
-
-    # 右下の点が左下の点より右にあり、かつ、右上の点より下にあるか確認
-    if bottom_right[0] >= bottom_left[0] and bottom_right[1] <= top_right[1]:
-        return True
-
-    # それ以外の場合、右下が起点となっていない
-    return False
-
 # check origin and direction of polygon
-def determine_origin(bbox_chk_coords):
+def determine_origin(item_polygon_coords):
     # バウンディングボックスの4つの点の座標を取得
-    bbox1, bbox2, bbox3, bbox4 = bbox_chk_coords
+    bbox1, bbox2, bbox3, bbox4 = item_polygon_coords
 
     # ポリゴンを作成
-    poly = Polygon(bbox_chk_coords)
+    poly = Polygon(item_polygon_coords)
 
     # ポリゴンの重心を計算
     centroid = poly.centroid
 
     angles = []
     positions = []
-    for bbox in bbox_chk_coords:
+    for bbox in item_polygon_coords:
         position = None
         # 重心とbbox1との角度を計算
         angle = math.atan2(bbox[1] - centroid.y, bbox[0] - centroid.x)
@@ -175,6 +164,58 @@ def determine_origin(bbox_chk_coords):
     origin = positions [0]
     return origin, polygon_direction
 
+# 本文テキストの方向を取得
+search_limit = args.search
+def get_standard_text_direction(pages, search_limit):
+    vertical_count = 0
+    horizontal_count = 0
+
+    # 各ページを処理
+    for i, page in enumerate(analyze_result['pages'])[:search_limit[0]]:
+        page_number = page['pageNumber']
+        # Document Intelligenceの単位系を取得
+        di_unit = page['unit']
+        # 単位系からポイントへの変換係数を取得
+        unit_to_point_conversion_factor = unit_to_point_conversion_factors.get(di_unit, 1)  # デフォルトは1
+        # ページサイズを取得
+        page_width = page['width'] * unit_to_point_conversion_factor
+        page_height = page['height'] * unit_to_point_conversion_factor
+        c.setPageSize((page_width, page_height))
+        items = page['lines']
+
+        #テスト走査
+        prev_font_size = None
+        for item in items:
+            text = item['content']
+            polygon = item['polygon']
+            # itemのpolygonを座標のペアのリストに変換            
+            x1, y1, x2, y2, x3, y3, x4, y4 = [v * unit_to_point_conversion_factor for v in polygon]
+            item_polygon_coords = [(x1,y1),(x2,y2),(x3,y3),(x4,y4)]
+            origin, polygon_direction = determine_origin(item_polygon_coords)
+            # only count text with known origin and non-diagonal polygon, with number of characters greater than search_limit[1]
+            if origin != "unknown" and polygon_direction != "diagonal" and len(text) > search_limit[1]:
+            
+                if origin == "bottom_left":
+                    origin_offset = 0
+                elif origin == "bottom_right":
+                    origin_offset = 1
+                elif origin == "top_right":
+                    origin_offset = 2
+                elif origin == "top_left":
+                    origin_offset = 3
+                else:
+                    origin_offset = 0
+                # 長辺と短辺が近似的に等しいかどうかをチェック
+                if abs(y3 - y1) < abs(x3 - x1):
+                    rotation = math.degrees(math.atan2(y1 - y2, x2 - x1)) + 90 * origin_offset
+                else:
+                    rotation = math.degrees(math.atan2(y2 - y3, x3 - x2)) + 90 * origin_offset
+                if -180 <= rotation <= -135 or -45 <= rotation <= 45 or 135 <= rotation <= 180:
+                    #script_direction = 'horizontal'
+                    horizontal_count += 1
+                else:
+                    #script_direction = 'vertical'
+                    vertical_count += 1
 
 
 # 横書き用のフォントを登録
@@ -382,13 +423,14 @@ for json_file in json_files:
                     text = ''
                     polygon = item['boundingRegions'][0]['polygon']
                     line_count = 0
-                    item_polygon_coords = [(polygon[i], polygon[i + 1]) for i in range(0, len(polygon), 2)]
+                    x1, y1, x2, y2, x3, y3, x4, y4 = [v * unit_to_point_conversion_factor for v in polygon]
+                    item_polygon_coords = [(x1,y1),(x2,y2),(x3,y3),(x4,y4)]
                     item_polygon = Polygon(item_polygon_coords)
                     prev_line_bottom = None
 
                     for line in lines_copy:
                         debug_print(f'checking line: {line}')
-                        line_polygon_coords = [(line['polygon'][i], line['polygon'][i + 1]) for i in range(0, len(line['polygon']), 2)]
+                        line_polygon_coords = [(line['polygon'][i] * unit_to_point_conversion_factor, line['polygon'][i + 1] * unit_to_point_conversion_factor) for i in range(0, len(line['polygon']), 2)]
                         line_polygon = Polygon(line_polygon_coords)
                         line_bottom = min(line_polygon_coords, key=lambda coord: coord[1])[1]
                         if prev_line_bottom is not None and line_bottom < prev_line_bottom:
@@ -420,7 +462,8 @@ for json_file in json_files:
                     text = item['content']
                     polygon = item['polygon']
                     # itemのpolygonを座標のペアのリストに変換
-                    item_polygon_coords = [(polygon[i], polygon[i + 1]) for i in range(0, len(polygon), 2)]
+                    x1, y1, x2, y2, x3, y3, x4, y4 = [v * unit_to_point_conversion_factor for v in polygon]
+                    item_polygon_coords = [(x1,y1),(x2,y2),(x3,y3),(x4,y4)]
                     item_polygon = Polygon(item_polygon_coords)
                     debug_print(f'item_polygon: {item_polygon_coords}')
                     
@@ -441,9 +484,7 @@ for json_file in json_files:
                                 verbose_print(f'Using osd polygon for item {text}')
                                 break
 
-                x1, y1, x2, y2, x3, y3, x4, y4 = [v * unit_to_point_conversion_factor for v in polygon]
-                bbox_chk_coords = [(x1,y1),(x2,y2),(x3,y3),(x4,y4)]
-                origin, polygon_direction = determine_origin(bbox_chk_coords)
+                origin, polygon_direction = determine_origin(item_polygon_coords)
                 if origin == "unknown" or polygon_direction == "diagonal":
                     error_print(f'Unknown origin or diagonal polygon for item {text}. Layout may be incorrect.')
                 
@@ -493,7 +534,7 @@ for json_file in json_files:
 
                 debug_print(f'text' + text + 'is' + script_direction)
                 debug_print(f'Is Japanese?:{is_japanese(text)}')
-                debug_print(f'Origin and rotation is:{determine_origin(bbox_chk_coords)}')
+                debug_print(f'Origin and rotation is:{determine_origin(item_polygon_coords)}')
 
                 # フォントサイズを計算（高さに係数を適用）
                 font_size = short_side_length * font_size_factor
@@ -540,10 +581,10 @@ for json_file in json_files:
                 elif origin_offset == 1:
                     offset_correction_x = -short_side_length
                     offset_correction_y = + short_side_length
-                elif origin_offset == 2
+                elif origin_offset == 2:
                      offset_correction_x = 0
                      offset_correction_y = 0
-                else origin_offset == 3:
+                elif origin_offset == 3:
                     offset_correction_x = + short_side_length
                     offset_correction_y = - short_side_length
 
