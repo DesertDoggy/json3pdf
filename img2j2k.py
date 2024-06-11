@@ -76,21 +76,21 @@ supported_extensions = (
 #本処理開始前の確認事項
 
 #DLLの存在を確認する関数
-def check_dll(dll_path):
+def check_dll(openjpeg_dll_path):
     try:
-        ctypes.cdll.LoadLibrary(dll_path)
-        print(dll_name+" was successfully loaded from system PATH.")
+        ctypes.cdll.LoadLibrary(openjpeg_dll_path)
+        print(openjpeg_dll_name+" was successfully loaded from system PATH.")
     except OSError:
-        error_print("Failed to load "+dll_name+" from system PATH.")
+        error_print("Failed to load "+openjpeg_dll_name+" from system PATH.")
 
 # DLLの名前を指定
-dll_name = 'openjp2.dll'
+openjpeg_dll_name = 'openjp2.dll'
 
 # システムのPATHからDLLを探す
 for path in os.environ['PATH'].split(os.pathsep):
-    full_dll_path = os.path.join(path, dll_name)
-    if os.path.exists(full_dll_path):
-        check_dll(full_dll_path)
+    full_openjpeg_dll_path = os.path.join(path, openjpeg_dll_name)
+    if os.path.exists(full_openjpeg_dll_path):
+        check_dll(full_openjpeg_dll_path)
 # glymurの確認
 try:
     import glymur
@@ -111,15 +111,6 @@ else:
     # 設定ファイルが存在しない場合、エラーメッセージを表示
     error_print("glymur setting file not found in "+glymur_config_path)
 
-# 画像出力できるか確認
-#test_image_path = './data/test/test.png'
-#jp2k_test_path = './data/test/test.jp2'
-# PILライブラリを使用して画像を読み込む
-#image = Image.open(test_image_path)
-# 画像データをnumpy配列に変換
-#image_data = np.array(image)
-# glymurライブラリを使用してJPEG 2000形式で保存
-#jp2 = glymur.Jp2k(jp2k_test_path, data=image_data)
 
 # グローバル変数とロックを初期化
 lossless_count = 0

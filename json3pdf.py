@@ -69,7 +69,6 @@ parser.add_argument('--similarity', '-st', type=float, default=0.1,
                     help='Set the similarity threshold for adding lines to a paragraph. Default is 0.1')
 parser.add_argument('--adjust', '-ad', action='store_true', help='adjust the layout of lines and paragraphs. Experimental!!!Default is False')
 parser.add_argument('--coordinate', '-ct', type=float, default=80,help='Set the coordinate threshold for coordinate adjustment for lines and paragraph. Default is 80')
-parser.add_argument('--HV-threshold', '-hv', type=float, default=0.1, help='Set the threshold for horizontal and vertical text. Default is 0.1')
 parser.add_argument('--clear','-c', action='store_true', help='output clear text PDF')
 parser.add_argument('--search','-se', nargs=2, type=int, default=[50,2], help='search page limit and ignore character number for layout "line" main text direction detection. Default:(50,2)')
 args = parser.parse_args()
@@ -262,10 +261,6 @@ font_size_factor = 1.0 if args.size is None else args.size / 100.0
 
 # フォントサイズ変化の閾値を取得（デフォルトはNone）
 font_size_change_threshold = None if args.font_threshold is None else args.font_threshold / 100.0
-
-# 水平方向と垂直方向のテキストの閾値を取得
-hv_threshold = args.HV_threshold
-info_print(f'Horizontal and vertical text threshold: {hv_threshold}')
 
 # 座標間の距離を計算
 def calculate_distance(x1, y1, x2, y2):

@@ -22,8 +22,6 @@ parser.add_argument('--log-level', '-log', default='INFO', choices=['DEBUG', 'VE
                     help='Set the logging level (default: INFO)')
 parser.add_argument('-debug', action='store_const', const='DEBUG', dest='log_level',
                     help='Set the logging level to DEBUG')
-parser.add_argument('--sub', action='store_true',
-                    help='Keep the subdirectory structure and generate a separate PDF for each image')
 args = parser.parse_args()
 
 powerlog.set_log_level(args)
@@ -40,7 +38,7 @@ total_optimized_pdfs = 0
 # 入力フォルダと出力フォルダのパスを設定
 logger.debug('Setting up input and output folder paths.')  # ログメッセージの追加
 lossless_folder = Path('./TEMP/lossless')
-output_folder = Path('./OriginalPDF')
+origpdf_folder = Path('./OriginalPDF')
 optimized_folder = Path('./TEMP/optimized')
 optpdf_folder = Path('./OptimizedPDF')
 
@@ -50,7 +48,7 @@ imagelog_folder = Path('./TEMP/imagelogs')
 
 # 出力フォルダと画像情報フォルダが存在しない場合は作成
 logger.debug('Creating output and image info folders if they do not exist.')  # ログメッセージの追加
-output_folder.mkdir(parents=True, exist_ok=True)
+origpdf_folder.mkdir(parents=True, exist_ok=True)
 optpdf_folder.mkdir(parents=True, exist_ok=True)
 imagelog_folder.mkdir(parents=True, exist_ok=True)
 
@@ -244,17 +242,17 @@ def get_total_p(subdir, image_extensions,total_p=0):
     return total_p
 
 # PDFファイル名を取得する関数を定義
-def get_pdf_filename(subdir, total_subdirs, output_folder, optpdf_folder):
+def get_pdf_filename(subdir, total_subdirs, origpdf_folder, optpdf_folder):
     if subdir in total_subdirs:
-        pdf_filename = output_folder / "{}.pdf".format(subdir.name)
+        pdf_filename = origpdf_folder / "{}.pdf".format(subdir.name)
     else:
         pdf_filename = optpdf_folder / "{}.pdf".format(subdir.name)
     return pdf_filename
 
 # PDFディレクトリ名を取得する関数を定義
-def get_pdf_directory_name(img_path, lossless_folder, output_folder, optimized_folder, optpdf_folder):
+def get_pdf_directory_name(img_path, lossless_folder, origpdf_folder, optimized_folder, optpdf_folder):
     if img_path.parent.parent.name == lossless_folder.name:
-        return output_folder.name
+        return origpdf_folder.name
     elif img_path.parent.parent.name == optimized_folder.name:
         return optpdf_folder.name
     else:
@@ -285,7 +283,7 @@ for index, subdir in enumerate(total_subdirs + total_optimized_subdirs, start=1)
         total_p = get_total_p(subdir, image_extensions)
 
         # PDFファイル名を取得
-        pdf_filename = get_pdf_filename(subdir, total_subdirs, output_folder, optpdf_folder)
+        pdf_filename = get_pdf_filename(subdir, total_subdirs, origpdf_folder, optpdf_folder)
 
         # 画像ファイルがある場合のみPDFに結合
         if images:
@@ -306,7 +304,7 @@ for index, subdir in enumerate(total_subdirs + total_optimized_subdirs, start=1)
  
                     # 画像ファイルがどのフォルダにあるかによってPDFディレクトリ名を設定
                     if img_path.parent.parent.name == lossless_folder.name:
-                        pdf_directory_name = output_folder.name
+                        pdf_directory_name = origpdf_folder.name
                     elif img_path.parent.parent.name == optimized_folder.name:
                         pdf_directory_name = optpdf_folder.name
                     else:
