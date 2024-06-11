@@ -266,6 +266,8 @@ def get_dpi_info(img, total_p):
     dpi = img.info.get('dpi', (600, 600))
     estimated_dpi = imagelog_image_info(img,total_p)
     width_px, height_px = img.size
+    if estimated_dpi == None: # !!!!!Quick fix
+        estimated_dpi = 600  # !!!!!Quick fix
     width_pt = width_px / estimated_dpi * 72  # 幅をポイントで計算
     height_pt = height_px / estimated_dpi * 72  # 高さをポイントで計算
     return dpi, estimated_dpi, width_pt, height_pt, width_px, height_px
