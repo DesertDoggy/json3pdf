@@ -652,4 +652,4 @@ for json_file in json_files:
         info_print(f'No JSON files found, so no PDF file was created.')
 
 info_print('All PDF file processing is complete.')
-info_print(f'font_threshold:{font_size_change_threshold}, individual:{args.individual}, layout:{args.layout}, HV-threshold:{hv_threshold}')
+info_print(f'font_threshold:{font_size_change_threshold}, individual:{args.individual}, layout:{args.layout}')
