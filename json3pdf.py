@@ -169,9 +169,15 @@ search_limit = args.search
 def get_standard_text_direction(pages, search_limit):
     vertical_count = 0
     horizontal_count = 0
+    japanese_count = 0
+    english_count = 0
+    bottom_left_count = 0
+    bottom_right_count = 0
+    top_right_count = 0
+    top_left_count = 0
 
     # 各ページを処理
-    for i, page in enumerate(analyze_result['pages'])[:search_limit[0]]:
+    for i, page in enumerate(analyze_result['pages'][:search_limit[0]]):
         page_number = page['pageNumber']
         # Document Intelligenceの単位系を取得
         di_unit = page['unit']
@@ -184,7 +190,6 @@ def get_standard_text_direction(pages, search_limit):
         items = page['lines']
 
         #テスト走査
-        prev_font_size = None
         for item in items:
             text = item['content']
             polygon = item['polygon']
@@ -196,6 +201,14 @@ def get_standard_text_direction(pages, search_limit):
             if origin != "unknown" and polygon_direction != "diagonal" and len(text) > search_limit[1]:
             
                 if origin == "bottom_left":
+                    bottom_left_count += 1
+                elif origin == "bottom_right":
+                    bottom_left_count += 1
+                elif origin == "top_right":
+                    top_right_count += 1
+                elif origin == "top_left":
+                    top_left_count += 1
+                if origin == "bottom_left":
                     origin_offset = 0
                 elif origin == "bottom_right":
                     origin_offset = 1
@@ -203,8 +216,6 @@ def get_standard_text_direction(pages, search_limit):
                     origin_offset = 2
                 elif origin == "top_left":
                     origin_offset = 3
-                else:
-                    origin_offset = 0
                 # 長辺と短辺が近似的に等しいかどうかをチェック
                 if abs(y3 - y1) < abs(x3 - x1):
                     rotation = math.degrees(math.atan2(y1 - y2, x2 - x1)) + 90 * origin_offset
@@ -216,6 +227,22 @@ def get_standard_text_direction(pages, search_limit):
                 else:
                     #script_direction = 'vertical'
                     vertical_count += 1
+                if is_japanese(text):
+                    japanese_count += 1
+                else:
+                    english_count += 1
+    if vertical_count > horizontal_count:
+        main_text_direction = "vertical"
+    else:
+        main_text_direction = "horizontal"
+    if japanese_count > english_count:
+        main_text_language = "japanese"
+    else:
+        main_text_language = "english"
+    origin_counts = {("bottom_left", 0): bottom_left_count, ("bottom_right", 1): bottom_right_count, ("top_right", 2): top_right_count, ("top_left", 3): top_left_count}
+    main_text_origin_tuple = max(origin_counts, key=origin_counts.get)
+    main_text_origin, main_text_offset = main_text_origin_tuple
+    return main_text_origin, main_text_offset, main_text_direction, main_text_language
 
 
 # 横書き用のフォントを登録
@@ -348,6 +375,9 @@ for json_file in json_files:
 
         info_print(f'Creating PDF file {new_pdf_filename}...')
         info_print(f'Layout: {args.layout}')
+
+        #本文テキストの方向を取得
+        main_text_origin, main_text_offset, main_text_direction, main_text_language = get_standard_text_direction(analyze_result['pages'], search_limit)
 
         # 各ページを処理
         for i, page in enumerate(analyze_result['pages']):
@@ -520,8 +550,8 @@ for json_file in json_files:
                 else:
                     origin_offset = 0
                 #one character text recognitions is usually off by 90 degrees due to the ratio.
-                if len(text) == 1:
-                    origin_offset += 1
+                #if len(text) == 1:
+                #    origin_offset += 1
                 # 長辺と短辺が近似的に等しいかどうかをチェック
                 if abs(y3 - y1) < abs(x3 - x1):
                     rotation = math.degrees(math.atan2(y1 - y2, x2 - x1)) + 90 * origin_offset
@@ -531,6 +561,10 @@ for json_file in json_files:
                     script_direction = 'horizontal'
                 else:
                     script_direction = 'vertical'
+                if len(text) == 1:
+                    script_direction = main_text_direction
+                    rotation = 90 * main_text_offset
+                        
 
                 debug_print(f'text' + text + 'is' + script_direction)
                 debug_print(f'Is Japanese?:{is_japanese(text)}')
