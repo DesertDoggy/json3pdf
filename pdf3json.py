@@ -258,6 +258,9 @@ for pdf_file in pdf_files:
     # specify method and numbur of parts to divide, depending on options and page nunbers
     divide_value = 1
     div_pages = default_max_pages
+    if args.pages:
+        if args.pages >= default_max_pages:
+            args.pages = None
     if args.no_divide:
         divide_value = 1
     elif args.divide:
@@ -280,13 +283,23 @@ for pdf_file in pdf_files:
         max_attempts = args.attempts
         #If proccesing fails divide into smaller parts and process
         while attempt < max_attempts:
-            try:
-                divide_and_process_pdf(pdf_file_path, divide_value, div_pages, base_name, document_intelligence_client, divpdf_folder, divjson_folder, json_folder)
-                break
-            except Exception as e:
-                error_print(f"Failed to process {pdf_file}: {e}")
-                error_print(f"Attempting to divide {pdf_file} into smaller parts")
-                attempt += 1
-                divide_value += 1
+            if divide_value == 1 and not args.pages:
+                try:
+                    process_pdf(pdf_file_path, document_intelligence_client, json_folder)
+                    break
+                except Exception as e:
+                    error_print(f"Failed to process {pdf_file}: {e}")
+                    error_print(f"Attempting to divide {pdf_file} into smaller parts")
+                    attempt += 1
+                    divide_value += 1
+            else:
+                try:
+                    divide_and_process_pdf(pdf_file_path, divide_value, div_pages, base_name, document_intelligence_client, divpdf_folder, divjson_folder, json_folder)
+                    break
+                except Exception as e:
+                    error_print(f"Failed to process {pdf_file}: {e}")
+                    error_print(f"Attempting to divide {pdf_file} into smaller parts")
+                    attempt += 1
+                    divide_value += 1
     except Exception as e:
         powerlog.debug_print(f"Error processing {pdf_file}: {e}")
