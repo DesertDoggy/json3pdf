@@ -15,7 +15,7 @@ from reportlab.lib.colors import Color
 import json
 import powerlog
 from powerlog import logger,verbose_print, info_print, error_print, variable_str, debug_print,warning_print
-from pypdf import PdfReader
+from PyPDF2 import PdfReader
 import math
 import re
 from shapely.geometry import Polygon
