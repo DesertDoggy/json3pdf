@@ -20,7 +20,11 @@ import math
 import re
 from shapely.geometry import Polygon
 from difflib import SequenceMatcher
-import pytesseract
+try:
+    import pytesseract
+except ImportError:
+    error_print('pytesseract is not installed. All ajusting functions using pytesseract will be disabled.')"')
+    pytesseract_exists = False
 from PIL import Image
 import pandas as pd
 from colorama import Fore, Style
@@ -74,6 +78,9 @@ parser.add_argument('--search','-se', nargs=2, type=int, default=[50,2], help='s
 args = parser.parse_args()
 
 powerlog.set_log_level(args)
+if args.adjust and not pytesseract_exists:
+    error_print('pytesseract is not installed. --adjust option will be ignored.')
+    args.adjust = False
 
 # area/coordinate/similarity thresholdの値をパーセンテージから小数に変換
 args.area /= 100.0
