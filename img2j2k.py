@@ -1,15 +1,12 @@
 import os
-import sys
 import tempfile
 import queue
 import threading
 import psutil
 import argparse
 from pathlib import Path
-import logging
 from colorama import Fore, Style
 import traceback
-import glob
 from datetime import datetime
 from PIL import Image
 import shutil
