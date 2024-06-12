@@ -23,7 +23,7 @@ from difflib import SequenceMatcher
 try:
     import pytesseract
 except ImportError:
-    error_print('pytesseract is not installed. All ajusting functions using pytesseract will be disabled.')"')
+    error_print('pytesseract is not installed. All ajusting functions using pytesseract will be disabled.')
     pytesseract_exists = False
 from PIL import Image
 import pandas as pd
