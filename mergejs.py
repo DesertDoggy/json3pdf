@@ -25,9 +25,11 @@ groupUD.add_argument('--down', '-d', type=int, help='Number of points to move do
 parser.add_argument('--dpi', type=int, default=600, help='Specify the DPI of the document. The default is 600dpi.')
 parser.add_argument('--threshold', '-t', default='Blanket', help='Specify the threshold page size incase dpi is not correct.Default is Blanket(Newspaper size).')
 parser.add_argument('--clear', '-c', action='store_true', help='Merge clear text PDF to Original PDF.')
+parser.add_argument('--process-pages', '-p', type=int, default=50, help='Number of pages to process.')
 args = parser.parse_args()
 
 powerlog.set_log_level(args)
+process_num_pages = args.process_pages
 
 # DPI変換係数を設定
 units_per_inch = args.dpi
@@ -140,30 +142,32 @@ for text_pdf_file in text_pdf_files:
         existing_pdf = PdfReader(existing_pdf_path)
         output_pdf = PdfWriter()
 
-        for page_number in range(len(existing_pdf.pages)):
-            existing_page = existing_pdf.pages[page_number]
-            text_page = text_pdf.pages[page_number]
+        for i in range(0, len(existing_pdf.pages), process_num_pages):
+            for page_number in range(i, min(i + process_num_pages, len(existing_pdf.pages))):
+                existing_page = existing_pdf.pages[page_number]
+                text_page = text_pdf.pages[page_number]
 
-            # ページサイズを確認し、必要に応じて調整
-            if existing_page.mediabox != text_page.mediabox:
-                text_page.mediabox = existing_page.mediabox
+                # ページサイズを確認し、必要に応じて調整
+                if existing_page.mediabox != text_page.mediabox:
+                    text_page.mediabox = existing_page.mediabox
 
-            # ページサイズが異常に大きい場合、translation_matrixをdpi_conversion_factorで除算する
-            page_width, page_height = existing_page.mediabox[2], existing_page.mediabox[3]
-            if page_width > threshold_page_size[0] or page_height > threshold_page_size[1]:
-                adjusted_translation_matrix = translation_matrix.copy()
-                adjusted_translation_matrix[-2] /= dpi_conversion_factor
-                adjusted_translation_matrix[-1] /= dpi_conversion_factor
-            else:
-                adjusted_translation_matrix = translation_matrix
-            # テキストレイヤーの座標を調整する変換行列を定義
-            text_page.add_transformation(adjusted_translation_matrix)
+                # ページサイズが異常に大きい場合、translation_matrixをdpi_conversion_factorで除算する
+                page_width, page_height = existing_page.mediabox[2], existing_page.mediabox[3]
+                if page_width > threshold_page_size[0] or page_height > threshold_page_size[1]:
+                    adjusted_translation_matrix = translation_matrix.copy()
+                    adjusted_translation_matrix[-2] /= dpi_conversion_factor
+                    adjusted_translation_matrix[-1] /= dpi_conversion_factor
+                else:
+                    adjusted_translation_matrix = translation_matrix
+                # テキストレイヤーの座標を調整する変換行列を定義
+                text_page.add_transformation(adjusted_translation_matrix)
 
-            existing_page.merge_page(text_page)
-            output_pdf.add_page(existing_page)
+                existing_page.merge_page(text_page)
+                output_pdf.add_page(existing_page)
 
-        with open(output_pdf_path, 'wb') as f:
-            output_pdf.write(f)
+            with open(output_pdf_path, 'ab') as f:
+                output_pdf.write(f)
+                output_pdf = PdfWriter()  # メモリを解放するために新しいPdfWriterを作成
 
         print(f'{output_pdf_file} の合成が完了しました。')
     else:
