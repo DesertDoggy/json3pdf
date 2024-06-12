@@ -4,7 +4,7 @@ from pathlib import Path
 import logging
 import glob
 from datetime import datetime
-from pypdf import PdfReader, PdfWriter
+from PyPDF2 import PdfReader, PdfWriter
 import powerlog
 from powerlog import logger,verbose_print, info_print, error_print, variable_str, debug_print
 
