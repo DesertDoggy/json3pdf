@@ -28,8 +28,8 @@ needed pip install (per script)
 img2j2k: PIL (pillow), numpy, glymur, lxml, colorama
 j2k2pdf: img2pdf, PIL (pillow), PyPDF2, colorama
 pdf3json: dotenv,azure.core.credentials,azure.ai.documentintelligence
-json3pdfB/C: reportlab
-mergejsB/C: pypdf
+json3pdf: reportlab
+mergejs: PyPDF2
 
 ## How to use (CLI options for scripts are described in following section)
 ### Preperation. 
@@ -73,28 +73,27 @@ These scripts are intended for performing OCR on scanned books for archive purpo
    Only Document Intelligence*1 Studio Read is supported. It might work with other modes, but there is no plan to implement it.
    Document Intelligence*1 Max file size limit is 500MB, but large files seem to fail frequently. If you run into this problem, try spliting the PDF file into multiple files. This will sometimes solve the problem.
 
-### json3pdfB.py (create black text PDF file to use for adjustment for final file)
+### json3pdf.py (create black text PDF file to use for adjustment for final file)
 
 1. Run script. This will output a _TextOnly PDF file from the json to output folder (./OCRtextPDF), with approximately the same layout as the original. 
 
 You might need to adjust the font size with options. You can also use other ttf fonts if you place them in .data/fonts and set options. As a default NotoSansJP-Regular is bundled.*4
-At the moment different fonts and sizes for different block is not supported. I might work on it later, but since it is intended to make scanned PDF searchable and adjusting to the main text is enough for such use, the priority is low.
 
-### mergejsB.py (merge black text PDF file with optimized PDF file for adjustment)
+### mergejs.py (merge black text PDF file with optimized PDF file for adjustment)
 1. Run script. This will output a _merged PDF file with the optimized PDF with a text layer merged from the _TextOnly PDF.
 2. If the layout is off, adjust it with options and merge again until it is right.
 
 Layout adjustment is set in points (1inch = 72pt, 1cm = 28.3465pt ) by options. 
 Due to the fact that some PDF files are created without dpi in account (as is those from jpeg2000) and pagesize and result in a huge page size causing the dimensions vastly differing from regular size PDF and causing the fonts and layout to break or become missing th script will detect the pagesize and if the page size is over the threshold with a 10% margin, it will take into account the dpi when adjusting the layout by points.
-At the moment vertical text layout is not supported, (adds as horizontal text. ).
+Vertical text is supported partially and can be used for clear text, or horizontal languages (ex.English). 
 
-### json3pdfC (create clear text PDF file to use for searchable text layer)
-1. Run script. This will output a _ClearText PDF file to output folder (./OCRclearPDF).
-   Use same (adjusted) options as json3pdfB.
+### json3pdf (create clear text PDF file to use for searchable text layer)
+1. Run script with --clear,-c option. This will output a _ClearText PDF file to output folder (./OCRclearPDF).
+   Use same (adjusted) options as the draft.
 
-### mergejsC (merge clear text PDF file with original PDF file for final output.)
-1. Run script. This will output a _OCR searchable clear text PDF file to output folder (./OCRfinalPDF)
-   Use same (adjusted) options as mergejsB.
+### mergejs (merge clear text PDF file with original PDF file for final output.)
+1. Run script with --clear,-c option. This will output a _OCR searchable clear text PDF file to output folder (./OCRfinalPDF)
+   Use same (adjusted) options as the draft.
 
 *1. Microsoft,Azure,Document Intelligence　are trademarks of the Microsoft group of companies.
 *2 openjpeg is licensed under the BSD license.
@@ -113,5 +112,34 @@ At the moment vertical text layout is not supported, (adds as horizontal text. )
 --lossless,-l: performs only lossless conversion
 --optimize,-o: performs only optimize conversion. lossless check will be skipped.
 
+### j2k2pdf
+--simple-check,-s: performes a simple check if PDF was created successfully. Default:1, 0=off)
 
+### json3pdf
+--pages,-p:divide the PDF into specified number of pages. Default will divide if PDF is over 300 pages.
+--divide,-d:help='divide the PDF into specified number of parts. Default:1
+--no-divide,help='Overrides auto divide maximum of 300 pages and will try to process whole PDF
+--attempts,the maximum number of attempts. Default: 3
+--no-delete will keep the divided PDF files and non-merged json files in case the merge fails.
 
+### pdf3json
+--size,-s: adjusts the font size. Default 100 (%)
+--font-threshold,-t:--individual:Keeps the same font size for items unless the change exceeds the threshold. units is %. --individual ignores threshold (at the moment threshold will default to none)
+--hfont,-hf:Sets horizontal font.default: NotoSansJP-Regular.ttf *4
+--vfont,-vf':Sets vertical font.default:NotoSansJP-Regular.ttf *4
+--dpi,-d: default:600
+--page,-p, Set page size of the PDF. Default:A5 if cannot read page size from JSON
+--layout:Method to draw text. word, line, or paragraph. Default: line(line is recommended for serchable text PDF. word is recommended if for some reason you need vertical visible text (ex:copy layout for Japanese). at the monent paragraph is unusable).
+#--area,-ar:area threshold for counting lines in a paragraph. Experimental!!!default: 80
+#--similarity,-st:Set the similarity threshold for adding lines to a paragraph. Experimental!!!Default:0.1
+#--adjust, -ad:adjust the layout of lines and paragraphs. Experimental!!!Default:False
+#--coordinate, -ct:Set the coordinate threshold for coordinate adjustment for lines and paragraph.Experimental!!! Default:80 #Probably no need. Optimized base code.
+--clear,-c:output clear text PDF
+--search,-se,search page limit and ignore character number for layout "line" main text direction detection. Default:(50,2)
+
+### mergejs
+--left',-l,--right,-r,--up,-u,--down,-d:Number of points to move and adjust text layer (1 inch = 72 pt, 1 cm = 28.35 pt)
+--dpi:Specify the DPI of the document.default:600
+--threshold,-t:Specify the threshold page size incase dpi is not correct.Default:Blanket(Newspaper size)
+--clear,-c:Merge clear text PDF to Original PDF.
+--process-pages,-p, type=int, default=50, help=Number of pages to process at once.
