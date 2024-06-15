@@ -4,7 +4,7 @@ from pathlib import Path
 import logging
 import glob
 from datetime import datetime
-from PyPDF2 import PdfReader, PdfWriter
+from PyPDF2 import PdfReader, PdfWriter,PdfMerger
 import powerlog
 from powerlog import logger,verbose_print, info_print, error_print, variable_str, debug_print
 
@@ -140,9 +140,10 @@ for text_pdf_file in text_pdf_files:
     if os.path.exists(text_pdf_path) and os.path.exists(existing_pdf_path):
         text_pdf = PdfReader(text_pdf_path)
         existing_pdf = PdfReader(existing_pdf_path)
-        output_pdf = PdfWriter()
+        merger = PdfMerger()
 
         for i in range(0, len(existing_pdf.pages), process_num_pages):
+            output_pdf = PdfWriter()
             for page_number in range(i, min(i + process_num_pages, len(existing_pdf.pages))):
                 existing_page = existing_pdf.pages[page_number]
                 text_page = text_pdf.pages[page_number]
@@ -165,9 +166,17 @@ for text_pdf_file in text_pdf_files:
                 existing_page.merge_page(text_page)
                 output_pdf.add_page(existing_page)
 
-            with open(output_pdf_path, 'ab') as f:
+            # 一時ファイルに書き出し
+            temp_pdf_path = f'temp_{i}.pdf'
+            with open(temp_pdf_path, 'wb') as f:
                 output_pdf.write(f)
-                output_pdf = PdfWriter()  # メモリを解放するために新しいPdfWriterを作成
+
+            # 一時ファイルをマージ
+            merger.append(temp_pdf_path)
+
+        # 最終的なPDFを書き出し
+        with open(output_pdf_path, 'wb') as f:
+            merger.write(f)
 
         print(f'{output_pdf_file} の合成が完了しました。')
     else:
