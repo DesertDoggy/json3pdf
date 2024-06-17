@@ -25,9 +25,12 @@ parser.add_argument('--log-level', '-log', default='INFO', choices=['DEBUG', 'VE
                     help='Set the logging level (default: INFO)')
 parser.add_argument('-debug', action='store_const', const='DEBUG', dest='log_level',
                     help='Set the logging level to DEBUG')
+parser.add_argument('--dpi', type=int, help='DPI for the output image. Default estimates dpi and rounds read DPI to typical integer DPI values or 600 if read DPI N/A. Positive integer will use set value if read DPI is N/A. Negative integer will force set value. --dpi 0 will use read DPI without rounding.')
 args = parser.parse_args()
 
 powerlog.set_log_level(args)
+
+default_dpi = 600  # デフォルトのDPI
 
 # 簡易チェックの結果を保存するカウンター
 logger.debug('Setting up counters for simple check results.')  # ログメッセージの追加
@@ -93,114 +96,119 @@ def is_lossless(img):
 # 画像情報を取得する関数
 def imagelog_image_info(img,total_p):
     logger.debug('Getting image information.')  # ログメッセージの追加
-    try:
-        # 画像情報ファイルのパス
-        imagelog_file_path = './imagelog_folder/imagelog_file.imglog'
-        logger.debug('Image log file path: %s', imagelog_file_path)  # ログメッセージの追加
+    # 画像情報ファイルのパス
+    imagelog_file_path = './imagelog_folder/imagelog_file.imglog'
+    logger.debug('Image log file path: %s', imagelog_file_path)  # ログメッセージの追加
 
-        filename = img.filename
-        logger.debug('Image filename: %s', filename)  # ログメッセージの追加
+    filename = img.filename
+    logger.debug('Image filename: %s', filename)  # ログメッセージの追加
 
-        resolution = img.size
-        logger.debug('Image resolution: %s', resolution)  # ログメッセージの追加
+    resolution = img.size
+    logger.debug('Image resolution: %s', resolution)  # ログメッセージの追加
 
-        encoding_format = img.format
-        logger.debug('Image encoding format: %s', encoding_format)  # ログメッセージの追加
+    encoding_format = img.format
+    logger.debug('Image encoding format: %s', encoding_format)  # ログメッセージの追加
 
-        # filenameからページ番号を抽出
-        match_p = re.search(r'_p(\d+)', filename)
-        match_z = re.search(r'_z(\d+)', filename)
+    # filenameからページ番号を抽出
+    match_p = re.search(r'_p(\d+)', filename)
+    match_z = re.search(r'_z(\d+)', filename)
 
-        if "_cover" in filename:
-            filename_page = 1
-        elif match_p:
-            filename_page = int(match_p.group(1)) + 2
-        elif match_z:
-            filename_page = int(match_z.group(1)) + total_p + 3
-            total_p += 1  # _zの接尾辞がついたファイルが処理されたので、total_pを更新
-            logger.debug('Updated total_p to: %s', total_p)  # ログメッセージの追加
-        else:
-            filename_page = None
+    if "_cover" in filename:
+        filename_page = 1
+    elif match_p:
+        filename_page = int(match_p.group(1)) + 2
+    elif match_z:
+        filename_page = int(match_z.group(1)) + total_p + 3
+        total_p += 1  # _zの接尾辞がついたファイルが処理されたので、total_pを更新
+        logger.debug('Updated total_p to: %s', total_p)  # ログメッセージの追加
+    else:
+        filename_page = None
 
-        logger.debug('Filename page: %s', filename_page)  # ログメッセージの追加
-        
-        # DPIを取得
-        dpi = img.info.get('dpi', 'N/A')
+    logger.debug('Filename page: %s', filename_page)  # ログメッセージの追加
+    
+    # DPIを取得
+    dpi = img.info.get('dpi', None)
 
-        # Estimated DPIを計算
-        logger.debug('Calculating estimated DPI.')  # ログメッセージの追加
-        if dpi != 'N/A':
+    # Estimated DPIを計算
+    logger.debug('Calculating estimated DPI.')  # ログメッセージの追加
+    if args.dpi != None and args.dpi<0:
+        estimated_dpi = -args.dpi
+    else:            
+        if dpi != None:
             if dpi < 72 or dpi % 50 != 0:
                 estimated_dpi = max(72, ((dpi + 24) // 50) * 50)
             else:
                 estimated_dpi = dpi
         else:
-            estimated_dpi = 600
+            if args.dpi != None and args.dpi > 0:
+                estimated_dpi = args.dpi
+            else:
+                estimated_dpi = default_dpi
+        debug_print("DPI is"+variable_str(dpi)+"Estimated DPI is"+variable_str(estimated_dpi))
 
-        # ロスレスかどうかを判断
-        logger.debug('Determining if the image is lossless.')  # ログメッセージの追加
-        try:
-            is_lossless_result = is_lossless(img)
-        except Exception as e:
-            logger.error("Error in is_lossless_result: {}".format(e))
-            is_lossless_result = 'N/A'
-
-        # 画像情報ファイル名を生成
-        logger.debug('Generating image info filename.')  # ログメッセージの追加
-        now = datetime.now()
-        imagelog_filename = f'{now.strftime("%Y%m%d%H%M%S")}.imglog'
-
-        # スクリプトのあるディレクトリのパスを取得
-        logger.debug('Getting the path of the directory where the script is located.')  # ログメッセージの追加
-        base_path = os.path.dirname(os.path.abspath(__file__))
-
-        # filenameを相対パスに変換
-        logger.debug('Converting filename to relative path.')  # ログメッセージの追加
-        filename = os.path.relpath(filename, base_path)
-
-        imagelog_filepath = imagelog_folder / imagelog_filename
-        logger.debug('Image log file path: %s', imagelog_filepath)  # ログメッセージの追加
-
-        # 画像情報を辞書に格納
-        logger.debug('Storing image info in a dictionary.')  # ログメッセージの追加
-        image_info = {
-            "Filename": filename,
-            "Resolution": resolution,
-            "DPI": dpi,
-            "Estimated DPI": estimated_dpi,
-            "Encoding Format": encoding_format,
-            "Is Lossless": is_lossless_result,
-            "Image format": img.format,
-            "Image size": img.size,
-            "Image mode": img.mode,
-            "PDF page number": filename_page,
-            "PDF file name": subdirectory_name+'.pdf',
-            "PDF directory name": pdf_directory_name,
-            "PDF file path": './'+pdf_directory_name+'/'+subdirectory_name+'.pdf',
-        }
-
-        # スクリプトのあるディレクトリのパスを取得
-        logger.debug('Getting the path of the directory where the script is located.')  # ログメッセージの追加
-        base_path = os.path.dirname(os.path.abspath(__file__))
-
-        # filenameを相対パスに変換
-        logger.debug('Converting filename to relative path.')  # ログメッセージの追加
-        filename = os.path.relpath(filename, base_path)
-
-        # 画像情報ファイルに書き込む
-        logger.debug('Writing image info to imagelog file.')  # ログメッセージの追加
-        try:
-            with open(imagelog_filepath, 'a', encoding='utf-8') as imagelog_file:
-                json.dump(image_info, imagelog_file, ensure_ascii=False)
-                imagelog_file.write('\n')  # Add a newline after each image info
-        except Exception as e:
-            logger.error("Error writing image info to imagelog file: {}".format(e))
-
-        logger.debug('Returning estimated DPI: %s', estimated_dpi)  # ログメッセージの追加
-        return estimated_dpi
-
+    # ロスレスかどうかを判断
+    logger.debug('Determining if the image is lossless.')  # ログメッセージの追加
+    try:
+        is_lossless_result = is_lossless(img)
     except Exception as e:
-        logger.error("Error in imagelog_image_info: {}".format(e))
+        logger.error("Error in is_lossless_result: {}".format(e))
+        is_lossless_result = 'N/A'
+
+    # 画像情報ファイル名を生成
+    logger.debug('Generating image info filename.')  # ログメッセージの追加
+    now = datetime.now()
+    imagelog_filename = f'{now.strftime("%Y%m%d%H%M%S")}.imglog'
+
+    # スクリプトのあるディレクトリのパスを取得
+    logger.debug('Getting the path of the directory where the script is located.')  # ログメッセージの追加
+    base_path = os.path.dirname(os.path.abspath(__file__))
+
+    # filenameを相対パスに変換
+    logger.debug('Converting filename to relative path.')  # ログメッセージの追加
+    filename = os.path.relpath(filename, base_path)
+
+    imagelog_filepath = imagelog_folder / imagelog_filename
+    logger.debug('Image log file path: %s', imagelog_filepath)  # ログメッセージの追加
+
+    # 画像情報を辞書に格納
+    logger.debug('Storing image info in a dictionary.')  # ログメッセージの追加
+    image_info = {
+        "Filename": filename,
+        "Resolution": resolution,
+        "DPI": dpi if dpi != None else "N/A",
+        "Estimated DPI": estimated_dpi,
+        "Encoding Format": encoding_format,
+        "Is Lossless": is_lossless_result,
+        "Image format": img.format,
+        "Image size": img.size,
+        "Image mode": img.mode,
+        "PDF page number": filename_page,
+        "PDF file name": subdirectory_name+'.pdf',
+        "PDF directory name": pdf_directory_name,
+        "PDF file path": './'+pdf_directory_name+'/'+subdirectory_name+'.pdf',
+    }
+
+    # スクリプトのあるディレクトリのパスを取得
+    logger.debug('Getting the path of the directory where the script is located.')  # ログメッセージの追加
+    base_path = os.path.dirname(os.path.abspath(__file__))
+
+    # filenameを相対パスに変換
+    logger.debug('Converting filename to relative path.')  # ログメッセージの追加
+    filename = os.path.relpath(filename, base_path)
+
+    # 画像情報ファイルに書き込む
+    logger.debug('Writing image info to imagelog file.')  # ログメッセージの追加
+    try:
+        with open(imagelog_filepath, 'a', encoding='utf-8') as imagelog_file:
+            json.dump(image_info, imagelog_file, ensure_ascii=False)
+            imagelog_file.write('\n')  # Add a newline after each image info
+    except Exception as e:
+        logger.error("Error writing image info to imagelog file: {}".format(e))
+
+    logger.debug('Returning estimated DPI: %s', estimated_dpi)  # ログメッセージの追加
+    debug_print("Test before return Estimated DPI"+variable_str(estimated_dpi))
+    return estimated_dpi
+
 
 def layout_fun(img_width_px, img_height_px, ndpi):
     logger.debug('Entering function layout_fun with parameters img_width_px=%s, img_height_px=%s, ndpi=%s', img_width_px, img_height_px, ndpi)  # 関数の開始をログに記録
@@ -265,6 +273,7 @@ def get_pdf_directory_name(img_path, lossless_folder, origpdf_folder, optimized_
 def get_dpi_info(img, total_p):
     dpi = img.info.get('dpi', (600, 600))
     estimated_dpi = imagelog_image_info(img,total_p)
+    debug_print("Test after return Estimated DPI is"+variable_str(estimated_dpi))
     width_px, height_px = img.size
     if estimated_dpi == None: # !!!!!Quick fix
         estimated_dpi = 600  # !!!!!Quick fix
