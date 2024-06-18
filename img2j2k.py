@@ -4,6 +4,7 @@ import queue
 import threading
 import psutil
 import argparse
+import configparser
 from pathlib import Path
 from colorama import Fore, Style
 import traceback
@@ -27,6 +28,7 @@ parser.add_argument('--log-level', '-log', default='INFO', choices=['DEBUG', 'VE
 parser.add_argument('-debug', action='store_const', const='DEBUG', dest='log_level',
                     help='Set the logging level to DEBUG')
 parser.add_argument('--dpi', type=int, help='DPI for the output image. Default estimates dpi and rounds read DPI to typical integer DPI values or 600 if read DPI N/A. Positive integer will use set value if read DPI is N/A. Negative integer will force set value. --dpi 0 will use read DPI without rounding.')
+
 group_check = parser.add_mutually_exclusive_group()
 group_check.add_argument('--quick', '-q', action='store_true', help='Skip bit-perfect lossless conversion check.')
 group_check.add_argument("--check", choices=["fast", "slow"], default="slow", help="Check for bit-perfect lossless conversion. Default = slow 'fast' uses glymur before renaming tmp file, 'slow' uses pillow/numpy after final output. This is to avoid Japanese input to glymur")
