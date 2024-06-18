@@ -21,7 +21,7 @@ args = parser.parse_args()
 
 powerlog.set_log_level(args)
 
-# 接待ファイルのパス
+# 設定ファイルのパス
 default_path = './default.ini'
 settings_path = './settings.ini'
 
@@ -32,38 +32,24 @@ def load_config(default_path, settings_path):
     config.read(settings_path)  # ユーザーの設定を読み込む（存在する場合）
     return config
 
-# main関数
+# 
+parser = argparse.ArgumentParser()
+parser.add_argument('module', choices=['image', 'pdf', 'ocr', 'text', 'merge', 'full'], help='The module to run')
+parser.add_argument('--image', nargs=argparse.REMAINDER, help='Arguments for the image module')
+parser.add_argument('--pdf', nargs=argparse.REMAINDER, help='Arguments for the pdf module')
+parser.add_argument('--ocr', nargs=argparse.REMAINDER, help='Arguments for the ocr module')
+parser.add_argument('--text', nargs=argparse.REMAINDER, help='Arguments for the text module')
+parser.add_argument('--merge', nargs=argparse.REMAINDER, help='Arguments for the merge module')
+args = parser.parse_args()
 
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('module', choices=['image', 'pdf', 'ocr', 'text', 'merge', 'full'], help='The module to run')
-    parser.add_argument('--image', nargs=argparse.REMAINDER, help='Arguments for the image module')
-    parser.add_argument('--pdf', nargs=argparse.REMAINDER, help='Arguments for the pdf module')
-    parser.add_argument('--ocr', nargs=argparse.REMAINDER, help='Arguments for the ocr module')
-    parser.add_argument('--text', nargs=argparse.REMAINDER, help='Arguments for the text module')
-    parser.add_argument('--merge', nargs=argparse.REMAINDER, help='Arguments for the merge module')
-    args = parser.parse_args()
+config = load_config(default_path, settings_path)
 
-    if args.module == 'full':
-        img2j2k.run(*args.image_args)
-        j2k2pdf.run(*args.pdf_args)
-        pdf3json.run(*args.ocr_args)
-        json3pdf.run(*args.text_args)
-        mergejs.run(*args.merge_args)
-    elif args.module == 'image':
-        img2j2k.run(*args.args)
-    elif args.module == 'pdf':
-        j2k2pdf.run(*args.args)
-    elif args.module == 'ocr':
-        pdf3json.run(*args.args)
-    elif args.module == 'text':
-        json3pdf.run(*args.args)
-    elif args.module == 'merge':
-        mergejs.run(*args.args)
-
+# .ini [logs] section
+log_folder = config.get('logs', 'log_folder',fallback='./logs') #--log_folder for all scripts
+log_level = config.get('logs', 'log_level',fallback='INFO') #--log_level for all scripts
+debug = config.getboolean('logs', 'debug',fallback= False) #--debug for all scripts
 
 # .ini [Paths] section
-config = load_config(default_path, settings_path)
 input_folder = config.get('Paths', 'input_folder', fallback='./OriginalImages') # input_folder for img2j2k.py
 lossless_folder = config.get('Paths', 'lossless_folder',fallback='./TEMP/lossless' ) #lossless_folder for img2j2k.py
 optimized_folder = config.get('Paths', 'optimized_folder',fallback='./TEMP/optimized') #optimized_folder for img2j2k.py
@@ -81,6 +67,22 @@ tmp_path = config.get('Paths', 'tmp_path', fallback='.TEMP/tmp') #--temp for img
 if args.temp.lower() == 'system':
     tmp_path = tempfile.gettempdir()
 imagelog_folder = config.get('Paths', 'imagelog_folder',fallback='./TEMP/imagelogs')
+
+# .ini [PageSizes] section
+page_sizes = {
+    "A3": (842, 1191),
+    "A4": (595, 842),
+    "A5": (420, 595),
+    "A6": (298, 420),
+    "B4": (729, 1032),
+    "B5": (516, 729),
+    "B6": (363, 516),
+    "B7": (258, 363),
+    "Tabloid": (792, 1224),
+}
+
+for key in config['PageSizes']:
+    page_sizes[key] = tuple(ast.literal_eval(config['PageSizes'][key]))
 
 # .ini [dpi settings] section
 use_individual_dpi = config.getboolean('dpi settings', 'use_individual_dpi',fallback= False)
@@ -344,24 +346,20 @@ if args.module == 'merge':
         if process_index + 1 < len(args.merge):
             proccess_num_pages = int(args.merge[process_index + 1])
 
-# .ini [PageSizes] section
-page_sizes = {
-    "A3": (842, 1191),
-    "A4": (595, 842),
-    "A5": (420, 595),
-    "A6": (298, 420),
-    "B4": (729, 1032),
-    "B5": (516, 729),
-    "B6": (363, 516),
-    "B7": (258, 363),
-    "Tabloid": (792, 1224),
-}
-
-for key in config['PageSizes']:
-    page_sizes[key] = tuple(ast.literal_eval(config['PageSizes'][key]))
-
-# .ini [logs] section
-log_folder = config.get('logs', 'log_folder',fallback='./logs') #--log_folder for all scripts
-log_level = config.get('logs', 'log_level',fallback='INFO') #--log_level for all scripts
-debug = config.getboolean('logs', 'debug',fallback= False) #--debug for all scripts
-
+#Main script
+if args.module == 'full':
+    img2j2k.run(*args.image_args)
+    j2k2pdf.run(*args.pdf_args)
+    pdf3json.run(*args.ocr_args)
+    json3pdf.run(*args.text_args)
+    mergejs.run(*args.merge_args)
+elif args.module == 'image':
+    img2j2k.run(*args.args)
+elif args.module == 'pdf':
+    j2k2pdf.run(*args.args)
+elif args.module == 'ocr':
+    pdf3json.run(*args.args)
+elif args.module == 'text':
+    json3pdf.run(*args.args)
+elif args.module == 'merge':
+    mergejs.run(*args.args)

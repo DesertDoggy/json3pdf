@@ -4,7 +4,6 @@ import queue
 import threading
 import psutil
 import argparse
-import configparser
 from pathlib import Path
 from colorama import Fore, Style
 import traceback

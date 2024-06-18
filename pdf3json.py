@@ -1,7 +1,6 @@
 from dotenv import load_dotenv
 import os
 import argparse
-import configparser
 from azure.core.credentials import AzureKeyCredential
 from azure.ai.documentintelligence import DocumentIntelligenceClient
 import json
@@ -14,6 +13,7 @@ import math
 
 # コマンドライン引数を解析する
 parser = powerlog.create_parser()
+parser = argparse.ArgumentParser(description='Add a text layer to a PDF file.')
 dividing = parser.add_mutually_exclusive_group()
 dividing.add_argument('-p', '--pages', type=int, help='divide the PDF into specified number of pages. Default:300')
 dividing.add_argument('--no-divide', action='store_true', help='Overrides auto divide of 300 pages and will try to process whole PDF')
