@@ -324,7 +324,7 @@ for json_file in json_files:
         # PDFファイルが存在する場合のみページサイズを読み取る
 
         if args.page is not None:
-            page_size = page_sizes[args.size]
+            page_size = page_sizes[args.page]
         else:
             if ocr_pdf_path.exists():
                 with open(ocr_pdf_path, 'rb') as f:
