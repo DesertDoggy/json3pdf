@@ -39,39 +39,6 @@ args = parser.parse_args()
 
 powerlog.set_log_level(args)
 
-verbose_print("This is a verbose print test.")
-debug_print("This is a debug print test.")
-
-# 入力フォルダと出力フォルダのパス
-input_folder = './OriginalImages'
-lossless_folder = './TEMP/lossless'  
-optimized_folder = './TEMP/optimized'
-if args.temp.lower() == 'system':
-    tmp_path = tempfile.gettempdir()
-else:
-    tmp_path = os.path.abspath(args.temp)
-
-# 出力フォルダが存在しない場合は作成
-if not os.path.exists(lossless_folder):
-    os.makedirs(lossless_folder)
-if not os.path.exists(optimized_folder):
-    os.makedirs(optimized_folder)
-if not os.path.exists(tmp_path):
-    os.makedirs(tmp_path)
-
-# 変換をスキップする拡張子リスト
-skip_conversion_extensions = (
-    '.j2c', '.j2k', '.jpc', '.jp2', '.jpf', '.jpg', '.jpeg', 
-    '.jpm', '.jpg2', '.jpx', '.mj2'
-)
-
-# Pillowがサポートする画像形式の拡張子リスト
-supported_extensions = (
-    '.bmp', '.gif', '.j2c', '.j2k', '.jpc', '.jp2', '.jpf', '.jpg', '.jpeg', 
-    '.jpm', '.jpg2', '.jpx', '.mj2', '.png', '.psd', '.tif', '.tiff', '.webp'
-)
-
-#本処理開始前の確認事項
 
 #DLLの存在を確認する関数
 def check_dll(openjpeg_dll_path):
@@ -80,60 +47,6 @@ def check_dll(openjpeg_dll_path):
         print(openjpeg_dll_name+" was successfully loaded from system PATH.")
     except OSError:
         error_print("Failed to load "+openjpeg_dll_name+" from system PATH.")
-
-# DLLの名前を指定
-openjpeg_dll_name = 'openjp2.dll'
-
-# システムのPATHからDLLを探す
-for path in os.environ['PATH'].split(os.pathsep):
-    full_openjpeg_dll_path = os.path.join(path, openjpeg_dll_name)
-    if os.path.exists(full_openjpeg_dll_path):
-        check_dll(full_openjpeg_dll_path)
-# glymurの確認
-try:
-    import glymur
-    print("Glymur is installed correctly.")
-except ImportError:
-    print("Glymur is not installed.")
-if glymur.lib.openjp2.OPENJP2:
-    print("OpenJPEG is available. JP2K conversion is supported.")
-else:
-    print("OpenJPEG is not available. JP2K conversion is not supported.")
-
-# glymurの設定ファイルの場所を確認する
-glymur_config_path = os.path.join(os.path.expanduser('~'), 'glymur', 'glymurrc')
-if os.path.isfile(glymur_config_path):
-    # 設定ファイルが存在する場合、その場所を表示
-    info_print("glymur setting file in " + glymur_config_path)
-else:
-    # 設定ファイルが存在しない場合、エラーメッセージを表示
-    error_print("glymur setting file not found in "+glymur_config_path)
-
-
-# グローバル変数とロックを初期化
-lossless_count = 0
-optimized_count = 0
-img_per_subdir_count = 0
-subdir_count = 0
-subdir_total = 0
-lossless_OK = 0
-lossless_NO = 0
-lossless_CHK = 0
-count_lock = threading.Lock()
-lossless_total = 0
-optimized_total = 0
-img_total = 0
-
-
-# Glymurのスレッド数を2に設定 (JPEG2000は2 core以上はあまり効果がない)
-glymur.set_option('lib.num_threads', 2)
-
-# 物理コア数を取得
-num_physical_cores = psutil.cpu_count(logical=False)
-
-# Pythonのスレッド数（またはプロセス数）を物理コア数の半分に設定
-num_threads = num_physical_cores // 2
-
 
 #ディレクトリ内のサブディレクトリを扱う関数を定義
 def convert_all_images(input_folder, lossless_folder, optimized_folder):
@@ -317,6 +230,95 @@ def convert_image(file_queue, lossless_subdir, optimized_subdir):
         finally:
             file_queue.task_done()
 
+
+#def check_openjpeg_dll(openjpeg_dll_path):
+
+#def run (input_folder,lossless_folder,optimized_folder,tmp_path,skip_conversion_extensions,supported_extensions,openjpeg_dll_name,):
+
+# 入力フォルダと出力フォルダのパス
+input_folder = './OriginalImages'
+lossless_folder = './TEMP/lossless'  
+optimized_folder = './TEMP/optimized'
+if args.temp.lower() == 'system':
+    tmp_path = tempfile.gettempdir()
+else:
+    tmp_path = os.path.abspath(args.temp)
+
+# 出力フォルダが存在しない場合は作成
+if not os.path.exists(lossless_folder):
+    os.makedirs(lossless_folder)
+if not os.path.exists(optimized_folder):
+    os.makedirs(optimized_folder)
+if not os.path.exists(tmp_path):
+    os.makedirs(tmp_path)
+
+# 変換をスキップする拡張子リスト
+skip_conversion_extensions = (
+    '.j2c', '.j2k', '.jpc', '.jp2', '.jpf', '.jpg', '.jpeg', 
+    '.jpm', '.jpg2', '.jpx', '.mj2'
+)
+
+# Pillowがサポートする画像形式の拡張子リスト
+supported_extensions = (
+    '.bmp', '.gif', '.j2c', '.j2k', '.jpc', '.jp2', '.jpf', '.jpg', '.jpeg', 
+    '.jpm', '.jpg2', '.jpx', '.mj2', '.png', '.psd', '.tif', '.tiff', '.webp'
+)
+
+#本処理開始前の確認事項
+# DLLの名前を指定
+openjpeg_dll_name = 'openjp2.dll'
+
+# システムのPATHからDLLを探す
+for path in os.environ['PATH'].split(os.pathsep):
+    full_openjpeg_dll_path = os.path.join(path, openjpeg_dll_name)
+    if os.path.exists(full_openjpeg_dll_path):
+        check_dll(full_openjpeg_dll_path)
+# glymurの確認
+try:
+    import glymur
+    print("Glymur is installed correctly.")
+except ImportError:
+    print("Glymur is not installed.")
+if glymur.lib.openjp2.OPENJP2:
+    print("OpenJPEG is available. JP2K conversion is supported.")
+else:
+    print("OpenJPEG is not available. JP2K conversion is not supported.")
+
+# glymurの設定ファイルの場所を確認する
+glymur_config_path = os.path.join(os.path.expanduser('~'), 'glymur', 'glymurrc')
+if os.path.isfile(glymur_config_path):
+    # 設定ファイルが存在する場合、その場所を表示
+    info_print("glymur setting file in " + glymur_config_path)
+else:
+    # 設定ファイルが存在しない場合、エラーメッセージを表示
+    error_print("glymur setting file not found in "+glymur_config_path)
+
+
+# グローバル変数とロックを初期化
+lossless_count = 0
+optimized_count = 0
+img_per_subdir_count = 0
+subdir_count = 0
+subdir_total = 0
+lossless_OK = 0
+lossless_NO = 0
+lossless_CHK = 0
+count_lock = threading.Lock()
+lossless_total = 0
+optimized_total = 0
+img_total = 0
+
+
+# Glymurのスレッド数を2に設定 (JPEG2000は2 core以上はあまり効果がない)
+glymur.set_option('lib.num_threads', 2)
+
+# 物理コア数を取得
+num_physical_cores = psutil.cpu_count(logical=False)
+
+# Pythonのスレッド数（またはプロセス数）を物理コア数の半分に設定
+num_threads = num_physical_cores // 2
+
+
 #本処理開始
 subdir_total = len([name for name in os.listdir(input_folder) if os.path.isdir(os.path.join(input_folder, name))])
 
@@ -331,3 +333,5 @@ if args.quick or args.optimize:
     info_print("Note: Lossless check was skipped due to --quick or --optimize option.")
 else:
     info_print(Fore.YELLOW + "Bitperfect " +Fore.WHITE+"lossless convertion check"+ Fore.GREEN + " OK " + variable_str(lossless_OK) + Fore.WHITE +"/" +  Fore.RED + "NO " + Fore.CYAN + variable_str(lossless_NO) + Fore.WHITE + "/" + Fore.MAGENTA + "Total " + Fore.CYAN + variable_str(lossless_CHK) + Style.RESET_ALL)
+
+
